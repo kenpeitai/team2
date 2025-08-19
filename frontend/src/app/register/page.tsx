@@ -1,5 +1,8 @@
+import Layout from '@/components/Layout';
+
 export default function RegisterPage() {
   return (
+    <Layout>
     <div className="min-h-screen flex items-start justify-center p-6 sm:p-10">
       <div className="w-full max-w-2xl">
         <h1 className="text-2xl font-semibold mb-2">新規登録</h1>
@@ -132,6 +135,7 @@ export default function RegisterPage() {
         </form>
       </div>
     </div>
+    </Layout>
   );
 }
 
