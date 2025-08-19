@@ -92,7 +92,7 @@ export default function Home() {
         {/* 避難者・怪我人状況 */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">避難者・怪我人状況</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
