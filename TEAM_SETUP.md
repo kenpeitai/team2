@@ -18,7 +18,7 @@
 2. **インストール確認**
    ```cmd
    docker --version
-   docker-compose --version
+   docker compose version
    ```
 
 ### WSL2ユーザー（推奨）
@@ -38,14 +38,14 @@
 
 ### 方式1：Docker起動（チーム使用推奨）
 ```bash
-# すべてのサービスを起動
-docker-compose up -d
+# すべてのサービスを起動（Docker Compose v2）
+docker compose up
 
 # サービス状態を確認
-docker-compose ps
+docker compose ps
 
 # ログを表示
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### 方式2：ローカル開発
@@ -110,13 +110,113 @@ npm start
 - [ ] Docker Composeがインストール済み
 - [ ] プロジェクトコードがクローン済み
 - [ ] ポート3000、8080、5432が使用されていない
-- [ ] `docker-compose up -d`が正常に実行された
+- [ ] `docker compose up `が正常に実行された
 
 ## 🆘 問題が発生した場合？
 
 1. Dockerサービスの状態を確認
-2. コンテナログを確認：`docker-compose logs`
+2. コンテナログを確認：`docker compose logs`
 3. Dockerサービスを再起動
 4. チームの他のメンバーに連絡
 
-**チーム開発が順調に進むことを願っています！** 🚀
+
+---
+
+## 🔑 ローカル開発の前提ソフトウェア（Backend/Frontend）
+
+ローカルでバックエンドやフロントエンドを起動する場合、各自のマシンに以下が必要です。
+
+- Java Development Kit (JDK) 21（バックエンド用）
+- Node.js 20 LTS 以上（フロントエンド用）
+
+Docker でのみ起動する場合は、各自のマシンに Java/Node は不要です（Docker Desktop/Engine は必要）。
+
+### macOS（Homebrew）での JDK 21 インストール
+```bash
+brew install openjdk@21
+echo 'export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"' >> ~/.zshrc
+echo 'export JAVA_HOME="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"' >> ~/.zshrc
+exec zsh
+java -version
+```
+
+### Windows（Winget）での JDK 21 例
+```powershell
+winget install Oracle.JDK.21
+java -version
+```
+
+### Linux（apt の例）
+```bash
+sudo apt update
+sudo apt install -y openjdk-21-jdk
+java -version
+```
+
+### Node.js（推奨: 20 LTS）
+Node はフロントエンドのローカル開発に必要です。バージョン管理には nvm を推奨します。
+```bash
+curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+nvm install --lts=hydrogen # Node 20 LTS
+nvm use --lts=hydrogen
+node -v
+```
+
+---
+
+## 🧭 ローカル開発の詳細手順
+
+### バックエンド（SQLite・開発用）
+`backend/src/main/resources/application.yml` を使用（デフォルトプロファイル）。
+```bash
+cd backend
+./gradlew clean build
+SPRING_PROFILES_ACTIVE=default ./gradlew bootRun
+# ヘルス確認
+curl http://localhost:8080/api/health
+# APIドキュメント
+# http://localhost:8080/swagger-ui.html
+```
+
+簡易API疎通テスト：
+```bash
+bash backend/test-api.sh
+```
+
+### バックエンド（PostgreSQL・Docker用）
+`compose.yaml` で `SPRING_PROFILES_ACTIVE=docker` が設定されています。DB はコンテナの Postgres を使用します。
+```bash
+docker compose up -d database backend
+open http://localhost:8080/swagger-ui.html
+```
+
+### フロントエンド
+```bash
+cd frontend
+npm install
+npm run dev
+# http://localhost:3000
+```
+
+---
+
+## 🧪 動作確認リンク
+
+- バックエンドヘルス: http://localhost:8080/api/health
+- システムヘルス: http://localhost:8080/api/health/system
+- DBヘルス: http://localhost:8080/api/health/database
+- Swagger UI: http://localhost:8080/swagger-ui.html
+
+---
+
+## ✅ オンボーディング・チェックリスト（新規参加者向け）
+
+- [ ] リポジトリをクローンして最新化した
+- [ ] Docker Desktop/Engine をインストール済み（Docker 起動方式の場合）
+- [ ] JDK 21 をインストールし `java -version` が通る（ローカル起動方式の場合）
+- [ ] Node.js 20 LTS をインストール（フロントエンドをローカル起動する場合）
+- [ ] `docker compose up -d` でサービスが立ち上がる
+- [ ] `http://localhost:8080/swagger-ui.html` にアクセスできる
+- [ ] `http://localhost:3000` にアクセスできる
