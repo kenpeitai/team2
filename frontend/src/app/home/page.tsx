@@ -33,6 +33,43 @@ export default function Home() {
     }
   ];
 
+  const supportData = [
+    {
+      supporter: '田中建設株式会社',
+      support: '避難所のテント設営',
+      date: '2024-01-15',
+    },
+    {
+      supporter: '地域ボランティアグループ',
+      support: '食料品の配給支援',
+      date: '2024-01-15',
+    },
+    {
+      supporter: '医療チームA',
+      support: '健康診断・医療支援',
+      date: '2024-01-14',
+    },
+    {
+      supporter: '運輸会社B',
+      support: '物資の輸送支援',
+      date: '2024-01-14',
+    },
+    {
+      supporter: '地域消防署',
+      support: '安全確認・巡回',
+      date: '2024-01-13',
+    }
+  ];
+
+  // 避難者・怪我人データ
+  const evacuationData = {
+    totalEvacuees: 156,
+    injuredPeople: 23,
+    elderlyPeople: 45,
+    children: 28,
+    lastUpdated: '2024-01-15 14:30'
+  };
+
   return (
     <main className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
@@ -54,33 +91,20 @@ export default function Home() {
 
       {/* メインコンテンツ */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* ダッシュボード概要 */}
+        {/* 避難者・怪我人状況 */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">ダッシュボード</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">避難者・怪我人状況</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 text-sm font-medium">🏠</span>
+                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                    <span className="text-red-600 text-sm font-medium">👥</span>
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">避難者数</p>
-                  <p className="text-2xl font-semibold text-gray-900">125</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <span className="text-green-600 text-sm font-medium">📦</span>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">必要物資</p>
-                  <p className="text-2xl font-semibold text-gray-900">23</p>
+                  <p className="text-sm font-medium text-gray-500">総避難者数</p>
+                  <p className="text-2xl font-semibold text-gray-900">{evacuationData.totalEvacuees}</p>
                 </div>
               </div>
             </div>
@@ -88,19 +112,126 @@ export default function Home() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                    <span className="text-orange-600 text-sm font-medium">📊</span>
+                    <span className="text-orange-600 text-sm font-medium">🏥</span>
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">在庫アイテム</p>
-                  <p className="text-2xl font-semibold text-gray-900">156</p>
+                  <p className="text-sm font-medium text-gray-500">怪我人</p>
+                  <p className="text-2xl font-semibold text-gray-900">{evacuationData.injuredPeople}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <span className="text-yellow-600 text-sm font-medium">👴</span>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">高齢者</p>
+                  <p className="text-2xl font-semibold text-gray-900">{evacuationData.elderlyPeople}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <span className="text-green-600 text-sm font-medium">👶</span>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">子供</p>
+                  <p className="text-2xl font-semibold text-gray-900">{evacuationData.children}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 text-right">
+            <p className="text-sm text-gray-500">最終更新: {evacuationData.lastUpdated}</p>
+          </div>
+        </div>
+
+        {/* 支援状況サマリー */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">支援状況サマリー</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 text-sm font-medium">📋</span>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">支援記録数</p>
+                  <p className="text-2xl font-semibold text-gray-900">5</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <span className="text-purple-600 text-sm font-medium">👥</span>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">支援者数</p>
+                  <p className="text-2xl font-semibold text-gray-900">5</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* メニューカード */}
+        {/* 支援状況詳細 */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">支援状況詳細</h2>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      支援者
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      支援内容
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      日付
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {supportData.map((item, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {item.supporter}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{item.support}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">{item.date}</div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* 機能メニュー */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">機能メニュー</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -143,21 +274,21 @@ export default function Home() {
             <div className="flex items-center p-4 bg-gray-50 rounded-lg">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">新しい避難者が登録されました</p>
+                <p className="text-sm font-medium text-gray-900">避難所状況が更新されました</p>
                 <p className="text-xs text-gray-500">2時間前</p>
               </div>
             </div>
             <div className="flex items-center p-4 bg-gray-50 rounded-lg">
               <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">物資の在庫が更新されました</p>
+                <p className="text-sm font-medium text-gray-900">必要物資リストが更新されました</p>
                 <p className="text-xs text-gray-500">4時間前</p>
               </div>
             </div>
             <div className="flex items-center p-4 bg-gray-50 rounded-lg">
               <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">必要物資リストが更新されました</p>
+                <p className="text-sm font-medium text-gray-900">在庫管理が更新されました</p>
                 <p className="text-xs text-gray-500">6時間前</p>
               </div>
             </div>
