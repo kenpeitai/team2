@@ -13,9 +13,10 @@ services:
     environment:
       # 使用宿主机IP，让前端能正确调用后端API
       - REACT_APP_API_URL=http://host.docker.internal:8080
-      - CHOKIDAR_USEPOLLING=true  # Windows文件系统兼容性
-    depends_on:
-      - backend
+      - CHOKIDIDAR_USEPOLLING=true  # Windows文件系统兼容性
+    # 移除依赖关系，让前端可以独立启动
+    # depends_on:
+    #   - backend
     # 添加extra_hosts确保host.docker.internal可用
     extra_hosts:
       - "host.docker.internal:host-gateway"
