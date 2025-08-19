@@ -6,7 +6,7 @@ spring:
     name: demo-api
   
   datasource:
-    url: jdbc:sqlite:/data/demo.db
+    url: jdbc:sqlite:./demo.db
     driver-class-name: org.sqlite.JDBC
     username: 
     password: 

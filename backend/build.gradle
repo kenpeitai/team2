@@ -24,12 +24,18 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.flywaydb:flyway-core'
-	// SQLite JDBC driver
+	
+	// SQLite JDBC driver (本地开发)
 	implementation 'org.xerial:sqlite-jdbc:3.47.2.0'
 	// Hibernate community dialects for SQLite
 	implementation 'org.hibernate.orm:hibernate-community-dialects:6.6.5.Final'
+	
+	// PostgreSQL JDBC driver (Docker环境)
+	implementation 'org.postgresql:postgresql:42.7.8'
+	
 	// OpenAPI UI
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
