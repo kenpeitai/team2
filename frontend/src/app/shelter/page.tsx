@@ -112,12 +112,18 @@ export default function ShelterStatusPage() {
           </section>
 
           {/* 更新ボタン */}
-          <div className="pt-4 border-t">
-            <button type="submit" className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-                <path d="M10 2.5a.75.75 0 01.75.75v.755a7 7 0 016.023 8.484.75.75 0 01-1.49.132 5.5 5.5 0 00-4.783-6.1V7a.75.75 0 01-1.5 0V3.25A.75.75 0 0110 2.5zM3.5 10a.75.75 0 01.75-.75h.755a7 7 0 018.484 6.023.75.75 0 01-1.365.34l-.348-2.09a5.5 5.5 0 00-6.1-4.783H4.25a.75.75 0 01-.75-.75z" />
+          <div className="pt-2">
+            <button type="button" className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="h-4 w-4"
+                aria-hidden="true"
+              >
+                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 11-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
-              <span>回答を送信して更新</span>
+              <span>回答を送信</span>
             </button>
           </div>
         </form>
