@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-
-export const metadata: Metadata = {
-  title: "ログイン - 避難所情報共有システム",
-  description: "避難所情報共有システムへのログイン",
-};
 
 export default function LoginLayout({
   children,
