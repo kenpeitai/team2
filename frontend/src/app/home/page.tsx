@@ -4,6 +4,7 @@ import MenuCard from '@/components/MenuCard';
 import StatCard from './components/StatCard';
 import SupportTable from './components/SupportTable';
 import RecentActivities from './components/RecentActivities';
+import Layout from '@/components/Layout';
 
 export default function Home() {
 
@@ -62,93 +63,95 @@ export default function Home() {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* ページタイトル */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h1 className="text-2xl font-bold text-gray-900">災害支援システム</h1>
-        <p className="text-gray-600 mt-2">避難所の状況と支援情報を管理します</p>
-      </div>
-
-      {/* メインコンテンツ */}
+    <Layout>
       <div className="space-y-6">
-        {/* 避難者・怪我人状況 */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">避難者・怪我人状況</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <StatCard
-              title="総避難者数"
-              value={evacuationData.totalEvacuees}
-              icon="👥"
-              bgColor="bg-red-100"
-              textColor="text-red-600"
-            />
-            <StatCard
-              title="怪我人"
-              value={evacuationData.injuredPeople}
-              icon="🏥"
-              bgColor="bg-orange-100"
-              textColor="text-orange-600"
-            />
-          </div>
-          <div className="mt-4 text-right">
-            <p className="text-sm text-gray-500">最終更新: {evacuationData.lastUpdated}</p>
-          </div>
+        {/* ページタイトル */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h1 className="text-2xl font-bold text-gray-900">災害支援システム</h1>
+          <p className="text-gray-600 mt-2">避難所の状況と支援情報を管理します</p>
         </div>
 
-        {/* 支援状況サマリー */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">支援状況サマリー</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <StatCard
-              title="支援記録数"
-              value="5"
-              icon="📋"
-              bgColor="bg-blue-100"
-              textColor="text-blue-600"
-            />
-            <StatCard
-              title="支援者数"
-              value="5"
-              icon="👥"
-              bgColor="bg-purple-100"
-              textColor="text-purple-600"
-            />
+        {/* メインコンテンツ */}
+        <div className="space-y-6">
+          {/* 避難者・怪我人状況 */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">避難者・怪我人状況</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <StatCard
+                title="総避難者数"
+                value={evacuationData.totalEvacuees}
+                icon="👥"
+                bgColor="bg-red-100"
+                textColor="text-red-600"
+              />
+              <StatCard
+                title="怪我人"
+                value={evacuationData.injuredPeople}
+                icon="🏥"
+                bgColor="bg-orange-100"
+                textColor="text-orange-600"
+              />
+            </div>
+            <div className="mt-4 text-right">
+              <p className="text-sm text-gray-500">最終更新: {evacuationData.lastUpdated}</p>
+            </div>
           </div>
-        </div>
 
-        <SupportTable supportData={supportData} />
-
-        {/* 機能メニュー */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">機能メニュー</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <MenuCard
-              href="/shelter_status"
-              title="避難所状況"
-              description="避難所状況の登録・確認"
-              icon="🏠"
-              color="bg-blue-500"
-            />
-            <MenuCard
-              href="/supplies"
-              title="必要物資リスト"
-              description="必要物資の登録・確認"
-              icon="📦"
-              color="bg-green-500"
-            />
-            <MenuCard
-              href="/inventory"
-              title="在庫管理"
-              description="物資の在庫状況管理"
-              icon="📊"
-              color="bg-orange-500"
-            />
+          {/* 支援状況サマリー */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">支援状況サマリー</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <StatCard
+                title="支援記録数"
+                value="5"
+                icon="📋"
+                bgColor="bg-blue-100"
+                textColor="text-blue-600"
+              />
+              <StatCard
+                title="支援者数"
+                value="5"
+                icon="👥"
+                bgColor="bg-purple-100"
+                textColor="text-purple-600"
+              />
+            </div>
           </div>
-        </div>
 
-        <RecentActivities activities={recentActivities} />
+          <SupportTable supportData={supportData} />
+
+          {/* 機能メニュー */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">機能メニュー</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <MenuCard
+                href="/shelter_status"
+                title="避難所状況"
+                description="避難所状況の登録・確認"
+                icon="🏠"
+                color="bg-blue-500"
+              />
+              <MenuCard
+                href="/supplies"
+                title="必要物資リスト"
+                description="必要物資の登録・確認"
+                icon="📦"
+                color="bg-green-500"
+              />
+              <MenuCard
+                href="/inventory"
+                title="在庫管理"
+                description="物資の在庫状況管理"
+                icon="📊"
+                color="bg-orange-500"
+              />
+            </div>
+          </div>
+
+          <RecentActivities activities={recentActivities} />
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 }
 

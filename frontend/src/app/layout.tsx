@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Image from "next/image";
-import Link from "next/link";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "災害支援システム",
-  description: "災害時の支援を行うシステム",
+  title: "避難所情報共有システム",
+  description: "避難所の情報を共有するシステム",
 };
 
 export default function RootLayout({
@@ -29,25 +27,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="pt-16">
-          <div className="fixed inset-x-0 top-0 z-50 bg-white border-b border-black/10">
-            <div className="h-16 flex items-center px-3">
-              <Link href="/" aria-label="Home" className="inline-flex items-center">
-                <Image
-                  src="/rakuten-logo.png"
-                  alt="App icon"
-                  width={120}
-                  height={40}
-                  priority
-                />
-              </Link>
-            </div>
-          </div>
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );
 }
-
-
