@@ -65,8 +65,6 @@ export default function Home() {
   const evacuationData = {
     totalEvacuees: 156,
     injuredPeople: 23,
-    elderlyPeople: 45,
-    children: 28,
     lastUpdated: '2024-01-15 14:30'
   };
 
@@ -118,32 +116,6 @@ export default function Home() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">怪我人</p>
                   <p className="text-2xl font-semibold text-gray-900">{evacuationData.injuredPeople}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <span className="text-yellow-600 text-sm font-medium">👴</span>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">高齢者</p>
-                  <p className="text-2xl font-semibold text-gray-900">{evacuationData.elderlyPeople}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <span className="text-green-600 text-sm font-medium">👶</span>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">子供</p>
-                  <p className="text-2xl font-semibold text-gray-900">{evacuationData.children}</p>
                 </div>
               </div>
             </div>
