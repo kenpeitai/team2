@@ -2,7 +2,7 @@
 FROM gradle:8.9.0-jdk21-alpine AS build
 WORKDIR /workspace
 COPY . .
-RUN --mount=type=cache,target=/root/.gradle ./gradlew clean bootJar
+RUN ./gradlew clean bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

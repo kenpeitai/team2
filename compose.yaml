@@ -1,4 +1,7 @@
+version: '3.8'
+
 services:
+  # 前端服务
   frontend:
     build:
       context: ./frontend
@@ -7,6 +10,48 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    environment:
+      # 使用宿主机IP，让前端能正确调用后端API
+      - REACT_APP_API_URL=http://host.docker.internal:8080
+      - CHOKIDAR_USEPOLLING=true  # Windows文件系统兼容性
+    depends_on:
+      - backend
+    # 添加extra_hosts确保host.docker.internal可用
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # 后端服务
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - ./backend:/workspace
+      - sqlite_data:/data
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - JAVA_OPTS=-Xmx512m -Xms256m  # 内存限制，适合不同配置
+    depends_on:
+      - database
+
+  # 数据库服务 - 使用更兼容的配置
+  database:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_DB: demo
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # 移除可能有问题的command配置
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
+  postgres_data:
     
 
 
