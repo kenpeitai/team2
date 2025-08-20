@@ -95,7 +95,7 @@ public class OrderService {
         item.setProductId(itemDetails.getProductId());
         item.setProductName(itemDetails.getProductName());
         item.setQuantity(itemDetails.getQuantity());
-        item.setUnitPrice(itemDetails.getUnitPrice());
+        item.setPricePerUnit(itemDetails.getPricePerUnit());
         item.setTotalPrice(itemDetails.getTotalPrice());
         item.setUpdatedAt(LocalDateTime.now());
         
