@@ -1,4 +1,4 @@
-import { baseApi } from './base';
+import { request } from './base';
 
 export interface Payment {
   id?: number;
@@ -15,61 +15,44 @@ export interface Payment {
 }
 
 // 创建支付记录
-export const createPayment = async (payment: Payment): Promise<Payment> => {
-  const response = await baseApi.post('/payments', payment);
-  return response.data;
-};
+export const createPayment = (payment: Payment): Promise<Payment> =>
+  request<Payment>('/api/payments', {
+    method: 'POST',
+    body: JSON.stringify(payment),
+  });
 
 // 处理支付
-export const processPayment = async (paymentId: number): Promise<Payment> => {
-  const response = await baseApi.post(`/payments/${paymentId}/process`);
-  return response.data;
-};
+export const processPayment = (paymentId: number): Promise<Payment> =>
+  request<Payment>(`/api/payments/${paymentId}/process`, { method: 'POST' });
 
 // 更新支付状态
-export const updatePaymentStatus = async (paymentId: number, status: string): Promise<Payment> => {
-  const response = await baseApi.put(`/payments/${paymentId}/status?status=${status}`);
-  return response.data;
-};
+export const updatePaymentStatus = (paymentId: number, status: string): Promise<Payment> =>
+  request<Payment>(`/api/payments/${paymentId}/status?status=${status}`, { method: 'PUT' });
 
 // 获取支付记录
-export const getPaymentById = async (paymentId: number): Promise<Payment> => {
-  const response = await baseApi.get(`/payments/${paymentId}`);
-  return response.data;
-};
+export const getPaymentById = (paymentId: number): Promise<Payment> =>
+  request<Payment>(`/api/payments/${paymentId}`);
 
 // 根据订单ID获取支付记录
-export const getPaymentsByOrderId = async (orderId: number): Promise<Payment[]> => {
-  const response = await baseApi.get(`/payments/order/${orderId}`);
-  return response.data;
-};
+export const getPaymentsByOrderId = (orderId: number): Promise<Payment[]> =>
+  request<Payment[]>(`/api/payments/order/${orderId}`);
 
 // 根据用户ID获取支付记录
-export const getPaymentsByUserId = async (userId: number): Promise<Payment[]> => {
-  const response = await baseApi.get(`/payments/user/${userId}`);
-  return response.data;
-};
+export const getPaymentsByUserId = (userId: number): Promise<Payment[]> =>
+  request<Payment[]>(`/api/payments/user/${userId}`);
 
 // 根据支付状态获取支付记录
-export const getPaymentsByStatus = async (status: string): Promise<Payment[]> => {
-  const response = await baseApi.get(`/payments/status/${status}`);
-  return response.data;
-};
+export const getPaymentsByStatus = (status: string): Promise<Payment[]> =>
+  request<Payment[]>(`/api/payments/status/${status}`);
 
 // 获取所有支付记录
-export const getAllPayments = async (): Promise<Payment[]> => {
-  const response = await baseApi.get('/payments');
-  return response.data;
-};
+export const getAllPayments = (): Promise<Payment[]> =>
+  request<Payment[]>('/api/payments');
 
 // 获取订单的总支付金额
-export const getTotalPaidAmount = async (orderId: number): Promise<number> => {
-  const response = await baseApi.get(`/payments/order/${orderId}/total`);
-  return response.data;
-};
+export const getTotalPaidAmount = (orderId: number): Promise<number> =>
+  request<number>(`/api/payments/order/${orderId}/total`);
 
 // 检查订单是否已完全支付
-export const isOrderFullyPaid = async (orderId: number): Promise<boolean> => {
-  const response = await baseApi.get(`/payments/order/${orderId}/fully-paid`);
-  return response.data;
-};
+export const isOrderFullyPaid = (orderId: number): Promise<boolean> =>
+  request<boolean>(`/api/payments/order/${orderId}/fully-paid`);
