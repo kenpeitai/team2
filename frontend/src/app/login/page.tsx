@@ -1,6 +1,22 @@
+"use client";
 import Link from 'next/link';
+import { useState } from 'react';
+import { loginUser } from '@/lib/api';
 
 export default function LoginPage() {
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const email = form.get('email');
+    const password = form.get('password');
+    const body = { email: typeof email === 'string' ? email : '', password: typeof password === 'string' ? password : '' };
+    const res = await loginUser(body);
+    if (res.token) localStorage.setItem('token', res.token);
+    setMessage(res.message ?? 'ログインしました');
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center p-8 bg-gray-50">
       <div className="w-full max-w-md -translate-y-4 md:-translate-y-16">
@@ -14,14 +30,14 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="space-y-6">
-            {/* メールアドレス入力 */}
+          <form className="space-y-6" onSubmit={onSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 メールアドレス
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                 placeholder="example@email.com"
@@ -29,13 +45,13 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* パスワード入力 */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 パスワード
               </label>
               <input
                 id="password"
+                name="password"
                 type="password"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                 placeholder="パスワードを入力"
@@ -43,16 +59,13 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* ログインボタン */}
-            <button
-              className="w-full btn btn-primary"
-            >
+            <button className="w-full btn btn-primary" type="submit">
               ログイン
             </button>
-          </div>
 
-          {/* TODO: 新規作成画面へ遷移 */}
-          {/* 追加リンク */}
+            {message && <p className="text-center text-sm text-gray-700">{message}</p>}
+          </form>
+
           <div className="mt-6 text-center">
             <Link 
               href="/register" 
@@ -63,7 +76,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* フッター */}
         <div className="mt-8 text-center">
           <p className="text-gray-500 text-sm">
             © 2024 楽天グループ. All rights reserved.

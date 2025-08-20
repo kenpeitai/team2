@@ -1,6 +1,77 @@
+"use client";
+import { useReducer } from 'react';
 import Layout from '@/components/Layout';
+import { createShelter } from '@/lib/api';
+import type { ApiError, ShelterDto } from '@/types/api';
+
+type RegisterState = {
+  loading: boolean;
+  message: string | null;
+  errors: Record<string, string> | null;
+};
+
+type RegisterAction = 
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_MESSAGE'; payload: string | null }
+  | { type: 'SET_ERRORS'; payload: Record<string, string> | null }
+  | { type: 'RESET' };
+
+const registerReducer = (state: RegisterState, action: RegisterAction): RegisterState => {
+  switch (action.type) {
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
+    case 'SET_MESSAGE':
+      return { ...state, message: action.payload };
+    case 'SET_ERRORS':
+      return { ...state, errors: action.payload };
+    case 'RESET':
+      return { loading: false, message: null, errors: null };
+    default:
+      return state;
+  }
+};
 
 export default function RegisterPage() {
+  const [state, dispatch] = useReducer(registerReducer, {
+    loading: false,
+    message: null,
+    errors: null
+  });
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: 'SET_MESSAGE', payload: null });
+    dispatch({ type: 'SET_ERRORS', payload: null });
+
+    const form = new FormData(e.currentTarget);
+    const getStr = (key: string) => {
+      const v = form.get(key);
+      return typeof v === 'string' ? v : '';
+    };
+    const body: ShelterDto = {
+      shelterName: getStr('shelterName'),
+      shelterAddress: getStr('shelterAddress'),
+      representativeLastName: getStr('representativeLastName'),
+      representativeFirstName: getStr('representativeFirstName'),
+      phoneNumber: getStr('phoneNumber'),
+      email: getStr('email'),
+      password: getStr('password'),
+    };
+
+    try {
+      await createShelter(body);
+      dispatch({ type: 'SET_MESSAGE', payload: '登録が完了しました' });
+      (e.currentTarget as HTMLFormElement).reset();
+    } catch (err) {
+      const apiErr = err as ApiError;
+      dispatch({ type: 'SET_MESSAGE', payload: apiErr.message ?? '登録に失敗しました' });
+      if (apiErr.details) dispatch({ type: 'SET_ERRORS', payload: apiErr.details });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }
+
   return (
     <Layout>
     <div className="min-h-screen flex items-start justify-center p-6 sm:p-10">
@@ -8,7 +79,7 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-semibold mb-2">新規登録</h1>
         <p className="text-sm text-foreground/70 mb-6">避難所情報登録</p>
 
-        <form className="space-y-6" noValidate>
+        <form className="space-y-6" noValidate onSubmit={onSubmit}>
           <section className="space-y-4">
             <div>
               <label htmlFor="shelterName" className="block text-sm font-medium mb-1">
@@ -119,7 +190,7 @@ export default function RegisterPage() {
           </section>
 
           <div className="pt-2">
-            <button type="button" className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full">
+            <button type="submit" disabled={state.loading} className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-60">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -129,9 +200,19 @@ export default function RegisterPage() {
               >
                 <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 11-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
-              <span>登録</span>
+              <span>{state.loading ? '送信中...' : '登録'}</span>
             </button>
           </div>
+          {state.message && (
+            <p className="text-sm mt-2">{state.message}</p>
+          )}
+          {state.errors && (
+            <ul className="text-sm mt-2 list-disc pl-6">
+              {Object.entries(state.errors).map(([k, v]) => (
+                <li key={k}>{k}: {v}</li>
+              ))}
+            </ul>
+          )}
         </form>
       </div>
     </div>
