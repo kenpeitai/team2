@@ -1,4 +1,4 @@
-import { baseApi } from './base';
+import { request } from './base';
 
 export interface OrderItem {
   id?: number;
@@ -34,49 +34,39 @@ export interface Order {
 }
 
 // 创建订单
-export const createOrder = async (order: Order): Promise<Order> => {
-  const response = await baseApi.post('/orders', order);
-  return response.data;
-};
+export const createOrder = (order: Order): Promise<Order> =>
+  request<Order>('/api/orders', {
+    method: 'POST',
+    body: JSON.stringify(order),
+  });
 
 // 获取订单详情
-export const getOrderById = async (orderId: number): Promise<Order> => {
-  const response = await baseApi.get(`/orders/${orderId}`);
-  return response.data;
-};
+export const getOrderById = (orderId: number): Promise<Order> =>
+  request<Order>(`/api/orders/${orderId}`);
 
 // 获取用户的订单列表
-export const getOrdersByUser = async (userId: number): Promise<Order[]> => {
-  const response = await baseApi.get(`/orders/user/${userId}`);
-  return response.data;
-};
+export const getOrdersByUser = (userId: number): Promise<Order[]> =>
+  request<Order[]>(`/api/orders/user/${userId}`);
 
 // 更新订单状态
-export const updateOrderStatus = async (orderId: number, status: string): Promise<Order> => {
-  const response = await baseApi.put(`/orders/${orderId}/status?status=${status}`);
-  return response.data;
-};
+export const updateOrderStatus = (orderId: number, status: string): Promise<Order> =>
+  request<Order>(`/api/orders/${orderId}/status?status=${status}`, { method: 'PUT' });
 
 // 获取订单项目
-export const getOrderItems = async (orderId: number): Promise<OrderItem[]> => {
-  const response = await baseApi.get(`/orders/${orderId}/items`);
-  return response.data;
-};
+export const getOrderItems = (orderId: number): Promise<OrderItem[]> =>
+  request<OrderItem[]>(`/api/orders/${orderId}/items`);
 
 // 添加订单项目
-export const addOrderItem = async (orderId: number, item: OrderItem): Promise<OrderItem> => {
-  const response = await baseApi.post(`/orders/${orderId}/items`, item);
-  return response.data;
-};
+export const addOrderItem = (orderId: number, item: OrderItem): Promise<OrderItem> =>
+  request<OrderItem>(`/api/orders/${orderId}/items`, {
+    method: 'POST',
+    body: JSON.stringify(item),
+  });
 
 // 获取所有订单
-export const getAllOrders = async (): Promise<Order[]> => {
-  const response = await baseApi.get('/orders');
-  return response.data;
-};
+export const getAllOrders = (): Promise<Order[]> =>
+  request<Order[]>('/api/orders');
 
 // 根据状态获取订单
-export const getOrdersByStatus = async (status: string): Promise<Order[]> => {
-  const response = await baseApi.get(`/orders/status/${status}`);
-  return response.data;
-};
+export const getOrdersByStatus = (status: string): Promise<Order[]> =>
+  request<Order[]>(`/api/orders/status/${status}`);
