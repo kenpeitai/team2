@@ -24,6 +24,18 @@ public class UserDto {
     @Size(max = 100, message = "氏名は100文字以内で入力してください")
     private String fullName;
     
+    @Size(max = 20, message = "電話番号は20文字以内で入力してください")
+    private String phoneNumber;
+    
+    @Size(max = 20, message = "カード番号は20文字以内で入力してください")
+    private String cardNumber;
+    
+    @Size(max = 10, message = "有効期限は10文字以内で入力してください")
+    private String cardExpiry;
+    
+    @Size(max = 10, message = "CVCは10文字以内で入力してください")
+    private String cardCvc;
+    
     private UserRole role;
     private Boolean isActive;
     private LocalDateTime createdAt;
@@ -47,6 +59,18 @@ public class UserDto {
     
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
+    
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+    
+    public String getCardNumber() { return cardNumber; }
+    public void setCardNumber(String cardNumber) { this.cardNumber = cardNumber; }
+    
+    public String getCardExpiry() { return cardExpiry; }
+    public void setCardExpiry(String cardExpiry) { this.cardExpiry = cardExpiry; }
+    
+    public String getCardCvc() { return cardCvc; }
+    public void setCardCvc(String cardCvc) { this.cardCvc = cardCvc; }
     
     public UserRole getRole() { return role; }
     public void setRole(UserRole role) { this.role = role; }

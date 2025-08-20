@@ -9,7 +9,7 @@
 - **避難所**: 避難所専用のログインAPIを使用
 - **支援者**: 一般ユーザーログインAPIを使用
 
-**更新日**: 2024年8月20日
+**更新日**: 2024年8月20日（支援者登録・在庫管理・避難所状況入力機能追加）
 **バージョン**: 2.0
 
 ## 認証関連 API
@@ -23,7 +23,11 @@
   "username": "supporter001",
   "email": "supporter@example.com",
   "password": "password123",
-  "fullName": "支援者 太郎"
+  "fullName": "支援者 太郎",
+  "phoneNumber": "090-1234-5678",
+  "cardNumber": "1234567890123456",
+  "cardExpiry": "12/25",
+  "cardCvc": "123"
 }
 ```
 
@@ -273,55 +277,49 @@
 
 ## 在庫管理 API
 
-### 1. 在庫状況取得
-**エンドポイント**: `GET /api/inventory/status`
-
-**レスポンス**:
-```json
-{
-  "totalItems": 150,
-  "availableItems": 120,
-  "reservedItems": 30,
-  "lowStockItems": 5,
-  "categories": {
-    "医薬品": 45,
-    "衛生": 25,
-    "食料": 50,
-    "生活用品": 30
-  }
-}
-```
-
-### 2. 在庫詳細取得
-**エンドポイント**: `GET /api/inventory/items`
+### 1. 在庫一覧取得
+**エンドポイント**: `GET /api/inventory/{shelterId}`
 
 **レスポンス**:
 ```json
 [
   {
-    "productId": "p-water-2l",
-    "productName": "飲料水 2L×6本（1ケース）",
-    "category": "食料",
-    "currentStock": 50,
-    "reservedStock": 10,
-    "availableStock": 40,
-    "minStockLevel": 5,
-    "lastUpdated": "2024-01-01T10:00:00"
+    "id": 1,
+    "shelterId": 1,
+    "name": "水",
+    "quantity": 0,
+    "category": "水・飲料",
+    "createdAt": "2024-01-01T10:00:00",
+    "updatedAt": "2024-01-01T10:00:00"
   }
 ]
 ```
 
-### 3. 在庫更新
-**エンドポイント**: `PUT /api/inventory/items/{productId}`
+### 2. 在庫数量更新
+**エンドポイント**: `PUT /api/inventory/{id}`
 
 **リクエストボディ**:
 ```json
 {
-  "currentStock": 45,
-  "reservedStock": 8,
-  "notes": "入荷分を追加"
+  "quantity": 10
 }
 ```
+
+### 3. 在庫アイテム追加
+**エンドポイント**: `POST /api/inventory`
+
+**リクエストボディ**:
+```json
+{
+  "shelterId": 1,
+  "name": "新しいアイテム",
+  "quantity": 0,
+  "category": "食料"
+}
+```
+
+### 4. 在庫アイテム削除
+**エンドポイント**: `DELETE /api/inventory/{id}`
 
 ## 支援者管理 API
 
@@ -336,6 +334,10 @@
     "username": "supporter001",
     "email": "supporter@example.com",
     "fullName": "支援者 太郎",
+    "phoneNumber": "090-1234-5678",
+    "cardNumber": "1234567890123456",
+    "cardExpiry": "12/25",
+    "cardCvc": "123",
     "role": "USER",
     "isActive": true,
     "createdAt": "2024-01-01T10:00:00",
@@ -356,7 +358,41 @@
 ### 5. 支援者削除
 **エンドポイント**: `DELETE /api/users/{id}`
 
+## 避難所状況管理 API
 
+### 1. 避難所状況取得
+**エンドポイント**: `GET /api/shelter-status/{shelterId}`
+
+**レスポンス**:
+```json
+{
+  "id": 1,
+  "shelterId": 1,
+  "evacueeCount": 50,
+  "injuredCount": 2,
+  "electricityStatus": "AVAILABLE",
+  "gasStatus": "UNAVAILABLE",
+  "waterStatus": "AVAILABLE",
+  "trafficStatus": "RESTRICTED",
+  "createdAt": "2024-01-01T10:00:00",
+  "updatedAt": "2024-01-01T10:00:00"
+}
+```
+
+### 2. 避難所状況更新
+**エンドポイント**: `PUT /api/shelter-status/{shelterId}`
+
+**リクエストボディ**:
+```json
+{
+  "evacueeCount": 50,
+  "injuredCount": 2,
+  "electricityStatus": "AVAILABLE",
+  "gasStatus": "UNAVAILABLE",
+  "waterStatus": "AVAILABLE",
+  "trafficStatus": "RESTRICTED"
+}
+```
 
 ## システム状態確認 API
 
@@ -475,6 +511,18 @@ const registerSupporter = async (userData: any): Promise<AuthResponse> => {
   }
   throw new Error('登録に失敗しました');
 };
+
+// 3. 支援者登録データの型定義
+interface SupporterRegistrationData {
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
+  phoneNumber: string;
+  cardNumber: string;
+  cardExpiry: string;
+  cardCvc: string;
+}
 ```
 
 #### 2. 避難所ログイン後の必要物資リスト作成フロー
@@ -878,6 +926,16 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 - `PUT /api/shelters/{id}/status` - 避難所状況更新
 - `GET /api/shelters/search` - 避難所検索
 
+### 在庫管理
+- `GET /api/inventory/{shelterId}` - 在庫一覧取得
+- `PUT /api/inventory/{id}` - 在庫数量更新
+- `POST /api/inventory` - 在庫アイテム追加
+- `DELETE /api/inventory/{id}` - 在庫アイテム削除
+
+### 避難所状況管理
+- `GET /api/shelter-status/{shelterId}` - 避難所状況取得
+- `PUT /api/shelter-status/{shelterId}` - 避難所状況更新
+
 ### 必要物資管理
 - `GET /api/supplies/products` - 全商品取得
 - `POST /api/supplies/products` - 商品登録
@@ -891,3 +949,15 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 - `GET /api/health` - アプリケーション健康状態
 - `GET /api/health/database` - データベース健康状態
 - `GET /api/health/system` - システム情報取得
+
+## 📊 **API 総数統計**
+
+**現在利用可能なAPI総数：25個**
+
+- **認証関連**: 5個
+- **支援者管理**: 5個  
+- **避難所管理**: 4個
+- **在庫管理**: 4個
+- **避難所状況管理**: 2個
+- **必要物資管理**: 7個
+- **システム状態確認**: 3個
