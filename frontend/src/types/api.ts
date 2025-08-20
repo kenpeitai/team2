@@ -8,14 +8,16 @@ export enum UserRole {
 // ユーティリティステータスの列挙型
 export enum UtilityStatus {
   AVAILABLE = 'AVAILABLE',
-  UNAVAILABLE = 'UNAVAILABLE'
+  UNAVAILABLE = 'UNAVAILABLE',
+  UNKNOWN = 'UNKNOWN'
 }
 
 // 交通状況の列挙型
 export enum TrafficStatus {
   NORMAL = 'NORMAL',
   RESTRICTED = 'RESTRICTED',
-  CLOSED = 'CLOSED'
+  CLOSED = 'CLOSED',
+  UNKNOWN = 'UNKNOWN'
 }
 
 // 商品カテゴリの列挙型
@@ -42,6 +44,10 @@ export interface UserDto {
   email: string;
   password?: string;
   fullName: string;
+  phoneNumber?: string;
+  cardNumber?: string;
+  cardExpiry?: string;
+  cardCvc?: string;
   role?: UserRole;
   isActive?: boolean;
   createdAt?: string;
@@ -153,6 +159,31 @@ export interface NeedsListDto {
   createdAt?: string;
   updatedAt?: string;
   items?: NeedsListItemDto[];
+}
+
+// 在庫DTOの型定義
+export interface InventoryDto {
+  id?: number;
+  shelterId: number;
+  name: string;
+  quantity: number;
+  category: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// 避難所状況DTOの型定義
+export interface ShelterStatusDto {
+  id?: number;
+  shelterId: number;
+  evacueeCount: number;
+  injuredCount: number;
+  electricityStatus: UtilityStatus;
+  gasStatus: UtilityStatus;
+  waterStatus: UtilityStatus;
+  trafficStatus: TrafficStatus;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // 健康チェックレスポンスの型定義

@@ -1,9 +1,28 @@
 "use client"; // Next.jsのApp Router環境で必要になる場合があります
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useShelter } from '@/hooks/useShelter';
 import Layout from '@/components/Layout';
+import { getShelterStatus } from '@/lib/api/shelterStatus';
+import type { ShelterStatusDto } from '@/types/api';
+import { UtilityStatus, TrafficStatus } from '@/types/api';
+
+const utilityStatusLabel: Record<UtilityStatus, string> = {
+  [UtilityStatus.AVAILABLE]: '利用可',
+  [UtilityStatus.UNAVAILABLE]: '停止中',
+  [UtilityStatus.UNKNOWN]: '不明',
+};
+
+const trafficStatusLabel: Record<TrafficStatus, string> = {
+  [TrafficStatus.NORMAL]: '通常',
+  [TrafficStatus.RESTRICTED]: '一部規制あり',
+  [TrafficStatus.CLOSED]: '通行止め',
+  [TrafficStatus.UNKNOWN]: '不明',
+};
+
+const toUtilityLabel = (value?: UtilityStatus) => (value ? utilityStatusLabel[value] ?? '不明' : '不明');
+const toTrafficLabel = (value?: TrafficStatus) => (value ? trafficStatusLabel[value] ?? '不明' : '不明');
 
 // --- コンポーネント本体 ---
 export default function ShelterStatusPage() {
@@ -12,13 +31,43 @@ export default function ShelterStatusPage() {
   const shelterId = params.id as string;
   const { shelter, loading, error, refetch } = useShelter();
 
+  const [status, setStatus] = useState<ShelterStatusDto | null>(null);
+  const [statusLoading, setStatusLoading] = useState<boolean>(true);
+  const [statusError, setStatusError] = useState<string | null>(null);
+
+  const fetchStatus = async () => {
+    const idNum = Number(shelterId);
+    if (!idNum || Number.isNaN(idNum)) {
+      setStatusError('避難所IDが不正です');
+      setStatusLoading(false);
+      return;
+    }
+    try {
+      setStatusLoading(true);
+      setStatusError(null);
+      const data = await getShelterStatus(idNum);
+      setStatus(data);
+    } catch (e) {
+      console.error('避難所状況の取得に失敗しました:', e);
+      setStatusError('避難所状況の取得に失敗しました');
+      setStatus(null);
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shelterId]);
+
   // 「修正する」ボタンが押されたときの動作
   const handleEditClick = () => {
     // 避難所入力ページに遷移
     router.push(`/shelter/${shelterId}/shelter-input`);
   };
 
-  if (loading) {
+  if (loading || statusLoading) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -31,7 +80,7 @@ export default function ShelterStatusPage() {
     );
   }
 
-  if (error) {
+  if (error || statusError) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -41,9 +90,12 @@ export default function ShelterStatusPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <p className="text-red-600 font-medium">{error}</p>
+            <p className="text-red-600 font-medium">{statusError || error}</p>
             <button 
-              onClick={refetch}
+              onClick={() => {
+                void refetch();
+                void fetchStatus();
+              }}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               再試行
@@ -54,7 +106,7 @@ export default function ShelterStatusPage() {
     );
   }
 
-  if (!shelter) {
+  if (!shelter || !status) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -73,9 +125,7 @@ export default function ShelterStatusPage() {
           {/* ヘッダー */}
           <div className="mb-8">
             <h1 className="text-2xl font-semibold">避難所の状況</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              {shelter.shelterName} の現在の状況です。
-            </p>
+            <p className="text-sm text-gray-600 mt-1">{shelter?.shelterName || '避難所'} の現在の状況です。</p>
           </div>
 
           {/* --- 表示エリア --- */}
@@ -87,11 +137,11 @@ export default function ShelterStatusPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium">避難人数</p>
-                  <p className="text-xl font-bold">{shelter.evacueeCount || 0} 人</p>
+                  <p className="text-xl font-bold">{status.evacueeCount ?? 0} 人</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium">けが人数</p>
-                  <p className="text-xl font-bold">{shelter.injuredCount || 0} 人</p>
+                  <p className="text-xl font-bold">{status.injuredCount ?? 0} 人</p>
                 </div>
               </div>
             </section>
@@ -102,9 +152,9 @@ export default function ShelterStatusPage() {
             <section>
               <h2 className="text-lg font-medium text-gray-900 mb-3">ライフラインの状況</h2>
               <div className="space-y-2 text-base">
-                <p>電気：<span className="font-bold ml-2">{shelter.electricityStatus || '不明'}</span></p>
-                <p>ガス：<span className="font-bold ml-2">{shelter.gasStatus || '不明'}</span></p>
-                <p>水道：<span className="font-bold ml-2">{shelter.waterStatus || '不明'}</span></p>
+                <p>電気：<span className="font-bold ml-2">{toUtilityLabel(status.electricityStatus)}</span></p>
+                <p>ガス：<span className="font-bold ml-2">{toUtilityLabel(status.gasStatus)}</span></p>
+                <p>水道：<span className="font-bold ml-2">{toUtilityLabel(status.waterStatus)}</span></p>
               </div>
             </section>
 
@@ -113,7 +163,7 @@ export default function ShelterStatusPage() {
             {/* 交通情報 */}
             <section>
               <h2 className="text-lg font-medium text-gray-900 mb-2">周囲の交通情報</h2>
-              <p className="text-base font-bold">{shelter.trafficStatus || '不明'}</p>
+              <p className="text-base font-bold">{toTrafficLabel(status.trafficStatus)}</p>
             </section>
           </div>
           
