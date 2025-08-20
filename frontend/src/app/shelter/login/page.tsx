@@ -55,7 +55,7 @@ export default function LoginPage() {
           {/* 追加リンク */}
           <div className="mt-6 text-center">
             <Link 
-              href="/register" 
+              href="/shelter/register" 
               className="text-red-600 hover:text-red-700 text-sm font-medium transition-colors"
             >
               アカウントをお持ちでない方はこちら

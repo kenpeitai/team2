@@ -14,7 +14,7 @@ export default function LoginLayout({
           <div className="flex items-center justify-between h-16">
             {/* ロゴとタイトル */}
             <div className="flex items-center space-x-4">
-              <Link href="/" aria-label="Home" className="inline-flex items-center">
+              <Link href="/shelter/home" aria-label="Home" className="inline-flex items-center">
                 <Image
                   src="/rakuten-logo.png"
                   alt="楽天ロゴ"
