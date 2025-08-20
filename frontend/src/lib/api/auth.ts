@@ -13,3 +13,9 @@ export const loginUser = (body: LoginRequest) =>
     method: 'POST',
     body: JSON.stringify(body),
   });
+
+export const loginShelter = (body: LoginRequest) =>
+  request<AuthResponse>('/api/auth/login-shelter', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });

@@ -66,7 +66,6 @@ export default function RegisterPage() {
     } catch (err) {
       const apiErr = err as ApiError;
       dispatch({ type: 'SET_MESSAGE', payload: apiErr.message ?? '登録に失敗しました' });
-      if (apiErr.details) dispatch({ type: 'SET_ERRORS', payload: apiErr.details });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }

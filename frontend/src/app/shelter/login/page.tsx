@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginUser } from '@/lib/api';
+import { loginShelter } from '@/lib/api';
 
 export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
@@ -14,7 +14,7 @@ export default function LoginPage() {
     const email = form.get('email');
     const password = form.get('password');
     const body = { email: typeof email === 'string' ? email : '', password: typeof password === 'string' ? password : '' };
-    const res = await loginUser(body);
+    const res = await loginShelter(body);
     if (res.token) {
       localStorage.setItem('token', res.token);
       setMessage('ログインしました。リダイレクト中...');
