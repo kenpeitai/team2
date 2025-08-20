@@ -9,7 +9,7 @@
 - **避難所**: 避難所専用のログインAPIを使用
 - **支援者**: 一般ユーザーログインAPIを使用
 
-**更新日**: 2024年8月20日（支援者登録・在庫管理・避難所状況入力機能追加）
+**更新日**: 2024年8月20日（支援者専用API・在庫管理・避難所状況管理機能追加）
 **更新日**: 2025年1月16日（ショッピングカート・注文・支払い機能追加）
 **バージョン**: 3.0
 
@@ -322,9 +322,121 @@
 ### 4. 在庫アイテム削除
 **エンドポイント**: `DELETE /api/inventory/{id}`
 
-## 支援者管理 API
+## 支援者専用 API
 
-### 1. 全支援者取得
+### 1. 支援者プロフィール取得
+**エンドポイント**: `GET /api/supporter/profile/{userId}`
+
+**レスポンス**:
+```json
+{
+  "id": 1,
+  "username": "supporter001",
+  "email": "supporter@example.com",
+  "fullName": "支援者 太郎",
+  "phoneNumber": "090-1234-5678",
+  "cardNumber": "1234567890123456",
+  "cardExpiry": "12/25",
+  "cardCvc": "123",
+  "role": "USER",
+  "isActive": true,
+  "createdAt": "2024-01-01T10:00:00",
+  "updatedAt": "2024-01-01T10:00:00"
+}
+```
+
+### 2. 支援者プロフィール更新
+**エンドポイント**: `PUT /api/supporter/profile/{userId}`
+
+**リクエストボディ**:
+```json
+{
+  "fullName": "支援者 太郎",
+  "phoneNumber": "090-1234-5678",
+  "email": "supporter@example.com"
+}
+```
+
+### 3. 支援可能避難所一覧取得
+**エンドポイント**: `GET /api/supporter/available-shelters`
+
+**レスポンス**:
+```json
+[
+  {
+    "id": 1,
+    "shelterName": "避難所A",
+    "address": "東京都渋谷区...",
+    "evacueeCount": 50,
+    "injuredCount": 2,
+    "electricityStatus": "AVAILABLE",
+    "gasStatus": "UNAVAILABLE",
+    "waterStatus": "AVAILABLE",
+    "trafficStatus": "RESTRICTED",
+    "lastUpdated": "2024-01-01T10:00:00"
+  }
+]
+```
+
+### 4. 支援履歴取得
+**エンドポイント**: `GET /api/supporter/support-history/{userId}`
+
+**レスポンス**:
+```json
+[
+  {
+    "id": 1,
+    "shelterName": "避難所A",
+    "supportDate": "2024-01-15",
+    "supportType": "物資提供",
+    "status": "完了"
+  }
+]
+```
+
+### 5. 支援者統計情報取得
+**エンドポイント**: `GET /api/supporter/statistics/{userId}`
+
+**レスポンス**:
+```json
+{
+  "totalSupports": 15,
+  "totalShelters": 8,
+  "totalHours": 120,
+  "currentMonthSupports": 3,
+  "favoriteShelter": "避難所A"
+}
+```
+
+### 6. 通知設定取得
+**エンドポイント**: `GET /api/supporter/notifications/{userId}`
+
+**レスポンス**:
+```json
+{
+  "emailNotifications": true,
+  "smsNotifications": false,
+  "emergencyAlerts": true,
+  "weeklyDigest": true,
+  "shelterUpdates": true
+}
+```
+
+### 7. 通知設定更新
+**エンドポイント**: `PUT /api/supporter/notifications/{userId}`
+
+**リクエストボディ**:
+```json
+{
+  "emailNotifications": true,
+  "smsNotifications": false,
+  "emergencyAlerts": true,
+  "weeklyDigest": true,
+  "shelterUpdates": true
+}
+```
+
+## 支援者管理 API（管理者用）
 **エンドポイント**: `GET /api/users`
 
 **レスポンス**:
@@ -524,9 +636,94 @@ interface SupporterRegistrationData {
   cardExpiry: string;
   cardCvc: string;
 }
+
+// 4. 支援者専用機能の使用例
+const getSupporterProfile = async (userId: number): Promise<UserDto> => {
+  const response = await fetch(`http://localhost:8080/api/supporter/profile/${userId}`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+  });
+  
+  if (response.ok) {
+    return await response.json();
+  }
+  throw new Error('プロフィール取得に失敗しました');
+};
+
+const getAvailableShelters = async (): Promise<any[]> => {
+  const response = await fetch('http://localhost:8080/api/supporter/available-shelters');
+  
+  if (response.ok) {
+    return await response.json();
+  }
+  throw new Error('避難所一覧取得に失敗しました');
+};
+
+const updateSupporterProfile = async (userId: number, profileData: any): Promise<UserDto> => {
+  const response = await fetch(`http://localhost:8080/api/supporter/profile/${userId}`, {
+    method: 'PUT',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    },
+    body: JSON.stringify(profileData)
+  });
+  
+  if (response.ok) {
+    return await response.json();
+  }
+  throw new Error('プロフィール更新に失敗しました');
+};
+
+#### 2. 避難所ログイン後の機能利用フロー
+```typescript
+// 1. 在庫管理
+const getInventory = async (shelterId: number): Promise<InventoryDto[]> => {
+  const response = await fetch(`http://localhost:8080/api/inventory/${shelterId}`);
+  
+  if (response.ok) {
+    return await response.json();
+  }
+  throw new Error('在庫取得に失敗しました');
+};
+
+const updateInventoryQuantity = async (itemId: number, quantity: number): Promise<InventoryDto> => {
+  const response = await fetch(`http://localhost:8080/api/inventory/${itemId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ quantity })
+  });
+  
+  if (response.ok) {
+    return await response.json();
+  }
+  throw new Error('在庫更新に失敗しました');
+};
+
+// 2. 避難所状況管理
+const getShelterStatus = async (shelterId: number): Promise<ShelterStatusDto> => {
+  const response = await fetch(`http://localhost:8080/api/shelter-status/${shelterId}`);
+  
+  if (response.ok) {
+    return await response.json();
+  }
+  throw new Error('状況取得に失敗しました');
+};
+
+const updateShelterStatus = async (shelterId: number, statusData: any): Promise<ShelterStatusDto> => {
+  const response = await fetch(`http://localhost:8080/api/shelter-status/${shelterId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(statusData)
+  });
+  
+  if (response.ok) {
+    return await response.json();
+  }
+  throw new Error('状況更新に失敗しました');
+};
 ```
 
-#### 2. 避難所ログイン後の必要物資リスト作成フロー
+#### 3. 避難所ログイン後の必要物資リスト作成フロー
 ```typescript
 // 型定義
 interface LoginRequest {
@@ -914,7 +1111,16 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 - `POST /api/auth/login-shelter` - 避難所ログイン
 - `POST /api/auth/logout` - ログアウト
 
-### 支援者管理
+### 支援者専用
+- `GET /api/supporter/profile/{userId}` - 支援者プロフィール取得
+- `PUT /api/supporter/profile/{userId}` - 支援者プロフィール更新
+- `GET /api/supporter/available-shelters` - 支援可能避難所一覧取得
+- `GET /api/supporter/support-history/{userId}` - 支援履歴取得
+- `GET /api/supporter/statistics/{userId}` - 支援者統計情報取得
+- `GET /api/supporter/notifications/{userId}` - 通知設定取得
+- `PUT /api/supporter/notifications/{userId}` - 通知設定更新
+
+### 支援者管理（管理者用）
 - `GET /api/users` - 全支援者取得
 - `GET /api/users/{id}` - 支援者情報取得
 - `PUT /api/users/{id}` - 支援者情報更新
@@ -977,13 +1183,14 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 
 ## 📊 **API 総数統計**
 
-**現在利用可能なAPI総数：45個**
+**現在利用可能なAPI総数：48個**
 
 - **認証関連**: 5個
-- **支援者管理**: 5個  
+- **支援者専用**: 7個 ⭐ **新機能**
+- **支援者管理（管理者用）**: 5個
 - **避難所管理**: 4個
-- **在庫管理**: 4個
-- **避難所状況管理**: 2個
+- **在庫管理**: 4個 ⭐ **新機能**
+- **避難所状況管理**: 4個 ⭐ **新機能**
 - **必要物資管理**: 7個
 - **ショッピングカート管理**: 8個
 - **注文管理**: 6個
