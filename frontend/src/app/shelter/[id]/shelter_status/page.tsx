@@ -2,29 +2,69 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useShelter } from '@/hooks/useShelter';
 import Layout from '@/components/Layout';
 
-// --- モックデータ（画面に表示する見本データ）---
-const mockSubmittedData = {
-  evacueeCount: '150',
-  injuredCount: '5',
-  electricity: '利用可能',
-  gas: '停止中',
-  water: '利用可能',
-  traffic: '一部規制あり',
-};
-
 // --- コンポーネント本体 ---
-export default function MockConfirmationPage() {
+export default function ShelterStatusPage() {
   const params = useParams();
   const router = useRouter();
   const shelterId = params.id as string;
+  const { shelter, loading, error, refetch } = useShelter();
 
   // 「修正する」ボタンが押されたときの動作
   const handleEditClick = () => {
     // 避難所入力ページに遷移
     router.push(`/shelter/${shelterId}/shelter-input`);
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">避難所情報を読み込み中...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-red-600 mb-4">
+              <svg className="h-12 w-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <p className="text-red-600 font-medium">{error}</p>
+            <button 
+              onClick={refetch}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              再試行
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!shelter) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-600">避難所が見つかりません</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -33,25 +73,25 @@ export default function MockConfirmationPage() {
           {/* ヘッダー */}
           <div className="mb-8">
             <h1 className="text-2xl font-semibold">避難所の状況</h1>
-            <p className="text-sm text-foreground/70 mt-1">
-              避難所ID: {shelterId} の現在の状況です。
+            <p className="text-sm text-gray-600 mt-1">
+              {shelter.shelterName} の現在の状況です。
             </p>
           </div>
 
           {/* --- 表示エリア --- */}
-          <div className="space-y-6 rounded-lg border bg-card p-6 shadow-sm">
+          <div className="space-y-6 rounded-lg border bg-white p-6 shadow-sm">
             
             {/* 避難状況 */}
             <section>
-              <h2 className="text-lg font-medium text-muted-foreground mb-3">避難状況</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-3">避難状況</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium">避難人数</p>
-                  <p className="text-xl font-bold">{mockSubmittedData.evacueeCount} 人</p>
+                  <p className="text-xl font-bold">{shelter.evacueeCount || 0} 人</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium">けが人数</p>
-                  <p className="text-xl font-bold">{mockSubmittedData.injuredCount} 人</p>
+                  <p className="text-xl font-bold">{shelter.injuredCount || 0} 人</p>
                 </div>
               </div>
             </section>
@@ -60,11 +100,11 @@ export default function MockConfirmationPage() {
 
             {/* ライフラインの状況 */}
             <section>
-              <h2 className="text-lg font-medium text-muted-foreground mb-3">ライフラインの状況</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-3">ライフラインの状況</h2>
               <div className="space-y-2 text-base">
-                <p>電気：<span className="font-bold ml-2">{mockSubmittedData.electricity}</span></p>
-                <p>ガス：<span className="font-bold ml-2">{mockSubmittedData.gas}</span></p>
-                <p>水道：<span className="font-bold ml-2">{mockSubmittedData.water}</span></p>
+                <p>電気：<span className="font-bold ml-2">{shelter.electricityStatus || '不明'}</span></p>
+                <p>ガス：<span className="font-bold ml-2">{shelter.gasStatus || '不明'}</span></p>
+                <p>水道：<span className="font-bold ml-2">{shelter.waterStatus || '不明'}</span></p>
               </div>
             </section>
 
@@ -72,8 +112,8 @@ export default function MockConfirmationPage() {
 
             {/* 交通情報 */}
             <section>
-              <h2 className="text-lg font-medium text-muted-foreground mb-2">周囲の交通情報</h2>
-              <p className="text-base font-bold">{mockSubmittedData.traffic}</p>
+              <h2 className="text-lg font-medium text-gray-900 mb-2">周囲の交通情報</h2>
+              <p className="text-base font-bold">{shelter.trafficStatus || '不明'}</p>
             </section>
           </div>
           
