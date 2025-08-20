@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -98,8 +100,27 @@ public class ShelterService {
     
     // 代表者名で検索
     public List<Shelter> searchByRepresentativeName(String lastName, String firstName) {
-        return shelterRepository.findByRepresentativeLastNameContainingIgnoreCaseOrRepresentativeFirstNameContainingIgnoreCase(
-            lastName, firstName);
+        return shelterRepository.findByRepresentativeLastNameContainingIgnoreCaseOrRepresentativeFirstNameContainingIgnoreCase(lastName, firstName);
+    }
+    
+    // 支援者が支援可能な避難所一覧取得
+    public List<Object> getActiveSheltersForSupporters() {
+        List<Shelter> activeShelters = shelterRepository.findByIsActiveTrue();
+        
+        return activeShelters.stream()
+            .map(shelter -> Map.of(
+                "id", shelter.getId(),
+                "shelterName", shelter.getShelterName(),
+                "address", shelter.getShelterAddress(),
+                "evacueeCount", shelter.getEvacueeCount(),
+                "injuredCount", shelter.getInjuredCount(),
+                "electricityStatus", shelter.getElectricityStatus(),
+                "gasStatus", shelter.getGasStatus(),
+                "waterStatus", shelter.getWaterStatus(),
+                "trafficStatus", shelter.getTrafficStatus(),
+                "lastUpdated", shelter.getUpdatedAt()
+            ))
+            .collect(Collectors.toList());
     }
     
     // 避難者数で検索

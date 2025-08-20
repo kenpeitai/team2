@@ -1,5 +1,6 @@
 'use client';
 
+import { useParams } from 'next/navigation';
 import MenuCard from '@/components/MenuCard';
 import StatCard from './components/StatCard';
 import SupportTable from './components/SupportTable';
@@ -7,6 +8,8 @@ import RecentActivities from './components/RecentActivities';
 import Layout from '@/components/Layout';
 
 export default function Home() {
+  const params = useParams();
+  const shelterId = params.id as string;
 
   const supportData = [
     {
@@ -68,7 +71,9 @@ export default function Home() {
         {/* ページタイトル */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h1 className="text-2xl font-bold text-gray-900">災害支援システム</h1>
-          <p className="text-gray-600 mt-2">避難所の状況と支援情報を管理します</p>
+          <p className="text-gray-600 mt-2">
+            避難所ID: {shelterId} の状況と支援情報を管理します
+          </p>
         </div>
 
         {/* メインコンテンツ */}
@@ -125,21 +130,21 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">機能メニュー</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <MenuCard
-                href="/shelter/input"
+                href={`/shelter/${shelterId}/shelter_status`}
                 title="避難所状況"
                 description="避難所状況の登録・確認"
                 icon="🏠"
                 color="bg-blue-500"
               />
               <MenuCard
-                href="/shelter/supplies"
+                href={`/shelter/${shelterId}/supplies`}
                 title="必要物資リスト"
                 description="必要物資の登録・確認"
                 icon="📦"
                 color="bg-green-500"
               />
               <MenuCard
-                href="/inventory"
+                href={`/shelter/${shelterId}/inventory`}
                 title="在庫管理"
                 description="物資の在庫状況管理"
                 icon="📊"
