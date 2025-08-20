@@ -1,4 +1,4 @@
-import type { AuthResponse, LoginRequest, UserDto } from '@/types/api';
+import type { AuthResponse, LoginRequest, UserDto, ShelterDto } from '@/types/api';
 import { request } from './base';
 
 // 認証
@@ -18,4 +18,15 @@ export const loginShelter = (body: LoginRequest) =>
   request<AuthResponse>('/api/auth/login-shelter', {
     method: 'POST',
     body: JSON.stringify(body),
+  });
+
+export const registerShelter = (body: ShelterDto) =>
+  request<AuthResponse>('/api/auth/register-shelter', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+
+export const logout = () =>
+  request<AuthResponse>('/api/auth/logout', {
+    method: 'POST',
   });

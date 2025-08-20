@@ -3,9 +3,31 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useShelter } from '@/hooks/useShelter';
-import { updateShelterStatus } from '@/lib/api';
-import { ShelterDto, UtilityStatus, TrafficStatus } from '@/types/api';
+import { ShelterStatusDto, UtilityStatus, TrafficStatus } from '@/types/api';
 import Layout from '@/components/Layout';
+import { updateShelterStatusRecord } from '@/lib/api/shelterStatus';
+
+type ShelterStatusForm = Omit<ShelterStatusDto, 'id' | 'shelterId' | 'createdAt' | 'updatedAt'>;
+
+const DEFAULT_FORM: ShelterStatusForm = {
+  evacueeCount: 0,
+  injuredCount: 0,
+  electricityStatus: UtilityStatus.AVAILABLE,
+  gasStatus: UtilityStatus.AVAILABLE,
+  waterStatus: UtilityStatus.AVAILABLE,
+  trafficStatus: TrafficStatus.NORMAL,
+};
+
+const UTILITY_STATUS_OPTIONS: { value: UtilityStatus; label: string }[] = [
+  { value: UtilityStatus.AVAILABLE, label: '利用可能' },
+  { value: UtilityStatus.UNAVAILABLE, label: '停止中' },
+];
+
+const TRAFFIC_STATUS_OPTIONS: { value: TrafficStatus; label: string }[] = [
+  { value: TrafficStatus.NORMAL, label: '通常' },
+  { value: TrafficStatus.RESTRICTED, label: '一部規制あり' },
+  { value: TrafficStatus.CLOSED, label: '通行止め' },
+];
 
 export default function ShelterInputPage() {
   const params = useParams();
@@ -13,14 +35,7 @@ export default function ShelterInputPage() {
   const shelterId = params.id as string;
   const { shelter, loading, error, refetch } = useShelter();
 
-  const [formData, setFormData] = useState<Partial<ShelterDto>>({
-    evacueeCount: 0,
-    injuredCount: 0,
-    electricityStatus: UtilityStatus.AVAILABLE,
-    gasStatus: UtilityStatus.AVAILABLE,
-    waterStatus: UtilityStatus.AVAILABLE,
-    trafficStatus: TrafficStatus.NORMAL,
-  });
+  const [formData, setFormData] = useState<ShelterStatusForm>(DEFAULT_FORM);
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -28,17 +43,17 @@ export default function ShelterInputPage() {
   useEffect(() => {
     if (shelter) {
       setFormData({
-        evacueeCount: shelter.evacueeCount || 0,
-        injuredCount: shelter.injuredCount || 0,
-        electricityStatus: shelter.electricityStatus || UtilityStatus.AVAILABLE,
-        gasStatus: shelter.gasStatus || UtilityStatus.AVAILABLE,
-        waterStatus: shelter.waterStatus || UtilityStatus.AVAILABLE,
-        trafficStatus: shelter.trafficStatus || TrafficStatus.NORMAL,
+        evacueeCount: shelter.evacueeCount ?? DEFAULT_FORM.evacueeCount,
+        injuredCount: shelter.injuredCount ?? DEFAULT_FORM.injuredCount,
+        electricityStatus: shelter.electricityStatus ?? DEFAULT_FORM.electricityStatus,
+        gasStatus: shelter.gasStatus ?? DEFAULT_FORM.gasStatus,
+        waterStatus: shelter.waterStatus ?? DEFAULT_FORM.waterStatus,
+        trafficStatus: shelter.trafficStatus ?? DEFAULT_FORM.trafficStatus,
       });
     }
   }, [shelter]);
 
-  const handleInputChange = (field: keyof ShelterDto, value: any) => {
+  const handleInputChange = <K extends keyof ShelterStatusForm>(field: K, value: ShelterStatusForm[K]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -55,7 +70,12 @@ export default function ShelterInputPage() {
 
     try {
       setSubmitting(true);
-      await updateShelterStatus(parseInt(shelterId), formData as ShelterDto);
+      const payload: ShelterStatusDto = {
+        shelterId: parseInt(shelterId),
+        ...DEFAULT_FORM,
+        ...formData,
+      };
+      await updateShelterStatusRecord(parseInt(shelterId), payload);
       alert('避難所情報が更新されました');
       router.push(`/shelter/${shelterId}/shelter_status`);
     } catch (err) {
@@ -134,26 +154,28 @@ export default function ShelterInputPage() {
               <h2 className="text-lg font-medium text-gray-900 mb-4">避難者情報</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="evacueeCount" className="block text-sm font-medium text-gray-700 mb-2">
                     避難者数
                   </label>
                   <input
+                    id="evacueeCount"
                     type="number"
-                    min="0"
-                    value={formData.evacueeCount || 0}
-                    onChange={(e) => handleInputChange('evacueeCount', parseInt(e.target.value) || 0)}
+                    min={0}
+                    value={formData.evacueeCount ?? 0}
+                    onChange={(e) => handleInputChange('evacueeCount', Number(e.target.value) || 0)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="injuredCount" className="block text-sm font-medium text-gray-700 mb-2">
                     けが人数
                   </label>
                   <input
+                    id="injuredCount"
                     type="number"
-                    min="0"
-                    value={formData.injuredCount || 0}
-                    onChange={(e) => handleInputChange('injuredCount', parseInt(e.target.value) || 0)}
+                    min={0}
+                    value={formData.injuredCount ?? 0}
+                    onChange={(e) => handleInputChange('injuredCount', Number(e.target.value) || 0)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -167,42 +189,48 @@ export default function ShelterInputPage() {
               <h2 className="text-lg font-medium text-gray-900 mb-4">ライフラインの状況</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="electricityStatus" className="block text-sm font-medium text-gray-700 mb-2">
                     電気
                   </label>
                   <select
-                    value={formData.electricityStatus || UtilityStatus.AVAILABLE}
+                    id="electricityStatus"
+                    value={formData.electricityStatus ?? UtilityStatus.AVAILABLE}
                     onChange={(e) => handleInputChange('electricityStatus', e.target.value as UtilityStatus)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value={UtilityStatus.AVAILABLE}>利用可能</option>
-                    <option value={UtilityStatus.UNAVAILABLE}>停止中</option>
+                    {UTILITY_STATUS_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="gasStatus" className="block text-sm font-medium text-gray-700 mb-2">
                     ガス
                   </label>
                   <select
-                    value={formData.gasStatus || UtilityStatus.AVAILABLE}
+                    id="gasStatus"
+                    value={formData.gasStatus ?? UtilityStatus.AVAILABLE}
                     onChange={(e) => handleInputChange('gasStatus', e.target.value as UtilityStatus)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value={UtilityStatus.AVAILABLE}>利用可能</option>
-                    <option value={UtilityStatus.UNAVAILABLE}>停止中</option>
+                    {UTILITY_STATUS_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="waterStatus" className="block text-sm font-medium text-gray-700 mb-2">
                     水道
                   </label>
                   <select
-                    value={formData.waterStatus || UtilityStatus.AVAILABLE}
+                    id="waterStatus"
+                    value={formData.waterStatus ?? UtilityStatus.AVAILABLE}
                     onChange={(e) => handleInputChange('waterStatus', e.target.value as UtilityStatus)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value={UtilityStatus.AVAILABLE}>利用可能</option>
-                    <option value={UtilityStatus.UNAVAILABLE}>停止中</option>
+                    {UTILITY_STATUS_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -214,17 +242,18 @@ export default function ShelterInputPage() {
             <section>
               <h2 className="text-lg font-medium text-gray-900 mb-4">交通状況</h2>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="trafficStatus" className="block text-sm font-medium text-gray-700 mb-2">
                   周囲の交通状況
                 </label>
                 <select
-                  value={formData.trafficStatus || TrafficStatus.NORMAL}
+                  id="trafficStatus"
+                  value={formData.trafficStatus ?? TrafficStatus.NORMAL}
                   onChange={(e) => handleInputChange('trafficStatus', e.target.value as TrafficStatus)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value={TrafficStatus.NORMAL}>通常</option>
-                  <option value={TrafficStatus.RESTRICTED}>一部規制あり</option>
-                  <option value={TrafficStatus.CLOSED}>通行止め</option>
+                  {TRAFFIC_STATUS_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
                 </select>
               </div>
             </section>
