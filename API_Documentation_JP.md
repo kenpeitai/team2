@@ -437,6 +437,102 @@
 }
 ```
 
+### 8. 支援者登録
+**エンドポイント**: `POST /api/supporter/register`
+
+**リクエストボディ**:
+```json
+{
+  "username": "supporter001",
+  "email": "supporter@example.com",
+  "password": "password123",
+  "fullName": "支援者 太郎",
+  "phoneNumber": "090-1234-5678",
+  "cardNumber": "1234567890123456",
+  "cardExpiry": "12/25",
+  "cardCvc": "123"
+}
+```
+
+**レスポンス**:
+```json
+{
+  "id": 1,
+  "username": "supporter001",
+  "email": "supporter@example.com",
+  "fullName": "支援者 太郎",
+  "phoneNumber": "090-1234-5678",
+  "cardNumber": "1234567890123456",
+  "cardExpiry": "12/25",
+  "cardCvc": "123",
+  "role": "USER",
+  "isActive": true,
+  "createdAt": "2024-01-01T10:00:00",
+  "updatedAt": "2024-01-01T10:00:00"
+}
+```
+
+### 9. 支援可能なニーズリスト取得
+**エンドポイント**: `GET /api/supporter/needs-lists`
+
+**レスポンス**:
+```json
+[
+  {
+    "id": 1,
+    "shelterName": "緑区徳重地区会館",
+    "evacueeCount": 85,
+    "targetDays": 5,
+    "totalItems": 7,
+    "priority": "high"
+  },
+  {
+    "id": 2,
+    "shelterName": "名古屋市立大学病院",
+    "evacueeCount": 120,
+    "targetDays": 3,
+    "totalItems": 12,
+    "priority": "medium"
+  }
+]
+```
+
+### 10. 避難所別ニーズリスト取得
+**エンドポイント**: `GET /api/supporter/needs-lists/{shelterId}`
+
+**レスポンス**:
+```json
+{
+  "shelterName": "緑区徳重地区会館",
+  "evacueeCount": 85,
+  "targetDays": 5,
+  "items": [
+    {
+      "id": "1",
+      "productId": "p-water-2l",
+      "productName": "飲料水 2L×6本（1ケース）",
+      "unit": "ケース",
+      "quantity": 43,
+      "priority": "high",
+      "category": "食料",
+      "notes": "生命維持に不可欠",
+      "estimatedPrice": 1000
+    },
+    {
+      "id": "2",
+      "productId": "p-instant-rice",
+      "productName": "サトウのごはん 200g×5食",
+      "unit": "箱",
+      "quantity": 85,
+      "priority": "high",
+      "category": "食料",
+      "notes": "主食として重要",
+      "estimatedPrice": 600
+    }
+  ]
+}
+```
+
 ## 支援者管理 API（管理者用）
 **エンドポイント**: `GET /api/users`
 
@@ -1335,6 +1431,9 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 - `GET /api/supporter/statistics/{userId}` - 支援者統計情報取得
 - `GET /api/supporter/notifications/{userId}` - 通知設定取得
 - `PUT /api/supporter/notifications/{userId}` - 通知設定更新
+- `POST /api/supporter/register` - 支援者登録
+- `GET /api/supporter/needs-lists` - 支援可能なニーズリスト取得
+- `GET /api/supporter/needs-lists/{shelterId}` - 避難所別ニーズリスト取得
 
 ### 支援者管理（管理者用）
 - `GET /api/users` - 全支援者取得
@@ -1405,10 +1504,10 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 
 ## 📊 **API 総数統計**
 
-**現在利用可能なAPI総数：67個**
+**現在利用可能なAPI総数：70個**
 
 - **認証関連**: 5個
-- **支援者専用**: 7個 ⭐ **新機能**
+- **支援者専用**: 10個 ⭐ **新機能**
 - **支援者管理（管理者用）**: 5個
 - **避難所管理**: 4個
 - **在庫管理**: 4個 ⭐ **新機能**
