@@ -1,5 +1,6 @@
 "use client";
 import { useReducer } from 'react';
+import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { createShelter } from '@/lib/api';
 import type { ApiError, ShelterDto } from '@/types/api';
@@ -32,6 +33,7 @@ const registerReducer = (state: RegisterState, action: RegisterAction): Register
 };
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [state, dispatch] = useReducer(registerReducer, {
     loading: false,
     message: null,
@@ -62,7 +64,14 @@ export default function RegisterPage() {
     try {
       await createShelter(body);
       dispatch({ type: 'SET_MESSAGE', payload: '登録が完了しました' });
-      (e.currentTarget as HTMLFormElement).reset();
+      // フォームのリセット処理を安全に行う
+      if (e.currentTarget) {
+        e.currentTarget.reset();
+      }
+      // 登録成功後、home画面に遷移
+      setTimeout(() => {
+        router.push('/shelter/home');
+      }, 1500);
     } catch (err) {
       const apiErr = err as ApiError;
       dispatch({ type: 'SET_MESSAGE', payload: apiErr.message ?? '登録に失敗しました' });
