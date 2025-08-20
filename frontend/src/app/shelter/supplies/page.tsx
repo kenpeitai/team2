@@ -1,4 +1,5 @@
 "use client";
+import Layout from "@/components/Layout";
 import React, { useMemo, useState, useEffect } from "react";
 
 // ===== Types =====
@@ -157,7 +158,7 @@ const DEFAULT_CATALOG: Product[] = [
   { id: "m-povidone",      name: "消毒液（ポビドンヨード）100mL",        unit: "本", weightGrams: 120, recommendedPerPersonPerDay: 0.01, category: "医薬品", imageVerified: false },
   { id: "m-sterile-gauze", name: "滅菌ガーゼ 10枚入",                     unit: "袋", weightGrams: 50,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageVerified: false },
   { id: "m-bandage-roll",  name: "包帯 5cm×5m",                           unit: "巻", weightGrams: 30,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageVerified: false },
-  { id: "m-surgical-tape", name: "サージカルテープ 12mm×9m",              unit: "巻", weightGrams: 25,  recommendedPerPersonPerPersonPerDay: 0.02 as any, category: "医薬品", imageVerified: false }, // 防止: 型崩れ回避
+  { id: "m-surgical-tape", name: "サージカルテープ 12mm×9m",              unit: "巻", weightGrams: 25,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageVerified: false },
   { id: "m-bandaids",      name: "ばんそうこう（アソート20枚）",           unit: "箱", weightGrams: 80,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageVerified: false },
   { id: "m-thermometer",   name: "体温計",                                   unit: "本", weightGrams: 50,  recommendedPerPersonPerDay: 0.005, category: "医薬品", imageVerified: false },
   { id: "m-eyedrops",      name: "目薬（人工涙液）",                        unit: "本", weightGrams: 20,  recommendedPerPersonPerDay: 0.01, category: "医薬品", imageVerified: false },
@@ -388,6 +389,7 @@ export default function NeedsListForm({
   }
 
   return (
+    <Layout>
     <div className="min-h-screen bg-white overflow-x-hidden pb-24">{/* pbで固定バー分の余白 */}
       {/* ヒーロー */}
       <div className="mx-auto max-w-screen-xl px-4 pt-8 pb-4">
@@ -595,6 +597,7 @@ export default function NeedsListForm({
         </div>
       </div>
     </div>
+    </Layout>
   );
 }
 
