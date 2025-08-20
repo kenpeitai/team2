@@ -16,11 +16,11 @@ export * from './supplies';
 // 健康チェック関連
 export * from './health';
 
-// 在庫管理（必要に応じて個別モジュールから直接importしてください）
-// export * from './inventory';
+// ショッピングカート関連
+export * from './cart';
 
-// 避難所状況管理（必要に応じて個別モジュールから直接importしてください）
-// export * from './shelterStatus';
+// 注文関連
+export * from './orders';
 
-// 支援者専用（必要に応じて個別モジュールから直接importしてください）
-// export * from './supporter';
+// 支払い関連
+export * from './payments';
