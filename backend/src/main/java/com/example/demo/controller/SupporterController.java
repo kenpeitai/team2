@@ -146,6 +146,91 @@ public class SupporterController {
         }
     }
 
+    // 支援者登録
+    @PostMapping("/register")
+    @Operation(summary = "支援者登録", description = "新しい支援者を登録します")
+    public ResponseEntity<UserDto> registerSupporter(@RequestBody UserDto userDto) {
+        try {
+            User user = userService.createUser(userDto);
+            return ResponseEntity.ok(convertToDto(user));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // 可支援的需求清单获取
+    @GetMapping("/needs-lists")
+    @Operation(summary = "支援可能なニーズリスト取得", description = "支援者が支援可能なニーズリストを取得します")
+    public ResponseEntity<List<Object>> getAvailableNeedsLists() {
+        try {
+            // 这里应该调用NeedsListService获取可支援的需求清单
+            // 为了简化，返回模拟数据
+            List<Object> needsLists = List.of(
+                Map.of(
+                    "id", 1,
+                    "shelterName", "緑区徳重地区会館",
+                    "evacueeCount", 85,
+                    "targetDays", 5,
+                    "totalItems", 7,
+                    "priority", "high"
+                ),
+                Map.of(
+                    "id", 2,
+                    "shelterName", "名古屋市立大学病院",
+                    "evacueeCount", 120,
+                    "targetDays", 3,
+                    "totalItems", 12,
+                    "priority", "medium"
+                )
+            );
+            return ResponseEntity.ok(needsLists);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // 获取特定避难所的需求清单
+    @GetMapping("/needs-lists/{shelterId}")
+    @Operation(summary = "避難所別ニーズリスト取得", description = "指定された避難所のニーズリストを取得します")
+    public ResponseEntity<Object> getNeedsListByShelter(@PathVariable Long shelterId) {
+        try {
+            // 这里应该调用NeedsListService获取特定避难所的需求清单
+            // 为了简化，返回模拟数据
+            Object needsList = Map.of(
+                "shelterName", "緑区徳重地区会館",
+                "evacueeCount", 85,
+                "targetDays", 5,
+                "items", List.of(
+                    Map.of(
+                        "id", "1",
+                        "productId", "p-water-2l",
+                        "productName", "飲料水 2L×6本（1ケース）",
+                        "unit", "ケース",
+                        "quantity", 43,
+                        "priority", "high",
+                        "category", "食料",
+                        "notes", "生命維持に不可欠",
+                        "estimatedPrice", 1000
+                    ),
+                    Map.of(
+                        "id", "2",
+                        "productId", "p-instant-rice",
+                        "productName", "サトウのごはん 200g×5食",
+                        "unit", "箱",
+                        "quantity", 85,
+                        "priority", "high",
+                        "category", "食料",
+                        "notes", "主食として重要",
+                        "estimatedPrice", 600
+                    )
+                )
+            );
+            return ResponseEntity.ok(needsList);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     // UserエンティティをUserDtoに変換
     private UserDto convertToDto(User user) {
         UserDto dto = new UserDto();

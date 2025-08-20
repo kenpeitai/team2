@@ -57,7 +57,7 @@
 - **HealthController** - ヘルスチェックAPI
 - **DatabaseHealthController** - データベースヘルスチェックAPI
 
-### ✅ 新規追加された支援者側機能
+### ✅ 新規追加された支援者側機能（完全実装）
 
 #### 1. 新規追加されたEntity（データモデル）
 - **Cart** - ショッピングカートエンティティ
@@ -69,24 +69,47 @@
 - **PaymentMethod** - 支払い方法列挙型
 - **PaymentStatus** - 支払い状態列挙型
 
-#### 2. 新規追加されたRepository
+#### 2. 新規追加されたDTO（データ転送オブジェクト）
+- **CartDto** - ショッピングカートDTO
+- **CartItemDto** - ショッピングカート項目DTO
+- **OrderDto** - 注文DTO
+- **OrderItemDto** - 注文項目DTO
+- **PaymentDto** - 支払いDTO
+
+#### 3. 新規追加されたRepository
 - **CartRepository** - ショッピングカートデータアクセス
 - **CartItemRepository** - ショッピングカート項目データアクセス
 - **PaymentRepository** - 支払いデータアクセス
 
-#### 3. 新規追加されたService
+#### 4. 新規追加されたService
 - **CartService** - ショッピングカートビジネスロジック
+  - ユーザー別ショッピングカート管理
+  - 避難所別ショッピングカート管理
+  - 商品追加・更新・削除機能
+  - ショッピングカート計算機能
 - **PaymentService** - 支払いビジネスロジック
+  - 支払い記録作成・管理
+  - 支払い処理・状態更新
+  - 取引ID生成
+  - 支払い完了確認機能
 
-#### 4. 新規追加されたController
-- **CartController** - ショッピングカートAPI
-- **OrderController** - 注文API
-- **PaymentController** - 支払いAPI
+#### 5. 新規追加されたController
+- **CartController** - ショッピングカートAPI（6個のエンドポイント）
+- **OrderController** - 注文API（8個のエンドポイント）
+- **PaymentController** - 支払いAPI（10個のエンドポイント）
+
+#### 6. 新規追加されたフロントエンドAPIサービス
+- **cart.ts** - ショッピングカートAPI呼び出しサービス
+- **orders.ts** - 注文API呼び出しサービス
+- **payments.ts** - 支払いAPI呼び出しサービス
 
 ### ❌ まだ不足しているレイヤー
 
 #### 1. 不足しているController
 - **NeedsListController** - 必要物資リストAPI（SupplyControllerに統合することを検討）
+
+#### 2. 不足しているService
+- **OrderService** - 注文ビジネスロジック（OrderControllerで直接実装されている部分を分離）
 
 ## アーキテクチャ設計原則
 
@@ -125,22 +148,25 @@ Entity (データモデル層)
    - 統計機能API
    - 既存のSupplyControllerへの統合を検討
 
-2. **OrderControllerの完成**
-   - 注文管理API
-   - 注文状態更新API
-   - 注文項目管理API
-   - 注文履歴検索API
+2. **OrderServiceの完成**
+   - OrderControllerからビジネスロジックを分離
+   - 注文管理ビジネスロジック
+   - 注文状態更新ビジネスロジック
+   - 注文項目管理ビジネスロジック
+   - 注文履歴検索ビジネスロジック
 
 ### 2. 中優先度 - 機能最適化
-1. **CartServiceとCartControllerの完成**
+1. **CartServiceとCartControllerの最適化**
    - ショッピングカート機能最適化
    - ショッピングカート項目管理最適化
    - ショッピングカート統合機能
+   - パフォーマンス改善
 
-2. **PaymentServiceとPaymentControllerの完成**
+2. **PaymentServiceとPaymentControllerの最適化**
    - 支払い処理最適化
    - 支払い状態管理最適化
    - 支払いコールバック処理
+   - セキュリティ強化
 
 ### 3. 低優先度 - 最適化と拡張
 1. **キャッシュ層の追加**
@@ -200,11 +226,13 @@ Entity (データモデル層)
 6. **支援者側機能** - ショッピングカート、注文、支払いシステム
 
 ### 📊 統計情報
-- **総API数**: 45個
-- **データベーステーブル**: 11個
-- **Controller層**: 9個
-- **Service層**: 7個
-- **Repository層**: 9個
-- **Entity層**: 13個（列挙型を含む）
+- **総API数**: 67個
+- **データベーステーブル**: 12個
+- **Controller層**: 12個
+- **Service層**: 8個
+- **Repository層**: 12個
+- **Entity層**: 18個（列挙型を含む）
+- **DTO層**: 8個
+- **フロントエンドAPIサービス**: 8個
 
 このアーキテクチャ設計はSpring Bootのベストプラクティスに従い、良好な保守性と拡張性を備えています。支援者側機能の追加により、システム機能がより完全になり、完全なECフローをサポートしています。
