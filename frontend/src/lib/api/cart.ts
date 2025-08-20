@@ -1,4 +1,4 @@
-import { baseApi } from './base';
+import { request } from './base';
 
 export interface CartItem {
   id?: number;
@@ -26,40 +26,35 @@ export interface Cart {
 }
 
 // 获取用户的购物车
-export const getCart = async (userId: number, shelterId: number): Promise<Cart> => {
-  const response = await baseApi.get(`/cart/${userId}/${shelterId}`);
-  return response.data;
-};
+export const getCart = (userId: number, shelterId: number): Promise<Cart> =>
+  request<Cart>(`/api/cart/${userId}/${shelterId}`);
 
 // 获取用户的所有购物车
-export const getUserCarts = async (userId: number): Promise<Cart[]> => {
-  const response = await baseApi.get(`/cart/${userId}`);
-  return response.data;
-};
+export const getUserCarts = (userId: number): Promise<Cart[]> =>
+  request<Cart[]>(`/api/cart/${userId}`);
 
 // 添加商品到购物车
-export const addItemToCart = async (userId: number, shelterId: number, item: CartItem): Promise<CartItem> => {
-  const response = await baseApi.post(`/cart/${userId}/${shelterId}/items`, item);
-  return response.data;
-};
+export const addItemToCart = (userId: number, shelterId: number, item: CartItem): Promise<CartItem> =>
+  request<CartItem>(`/api/cart/${userId}/${shelterId}/items`, {
+    method: 'POST',
+    body: JSON.stringify(item),
+  });
 
 // 更新购物车商品数量
-export const updateCartItemQuantity = async (
-  userId: number, 
-  shelterId: number, 
-  productId: string, 
+export const updateCartItemQuantity = (
+  userId: number,
+  shelterId: number,
+  productId: string,
   quantity: number
-): Promise<CartItem | null> => {
-  const response = await baseApi.put(`/cart/${userId}/${shelterId}/items/${productId}?quantity=${quantity}`);
-  return response.data;
-};
+): Promise<CartItem | null> =>
+  request<CartItem | null>(`/api/cart/${userId}/${shelterId}/items/${productId}?quantity=${quantity}`, {
+    method: 'PUT',
+  });
 
 // 从购物车删除商品
-export const removeItemFromCart = async (userId: number, shelterId: number, productId: string): Promise<void> => {
-  await baseApi.delete(`/cart/${userId}/${shelterId}/items/${productId}`);
-};
+export const removeItemFromCart = (userId: number, shelterId: number, productId: string): Promise<void> =>
+  request<void>(`/api/cart/${userId}/${shelterId}/items/${productId}`, { method: 'DELETE' });
 
 // 清空购物车
-export const clearCart = async (userId: number, shelterId: number): Promise<void> => {
-  await baseApi.delete(`/cart/${userId}/${shelterId}`);
-};
+export const clearCart = (userId: number, shelterId: number): Promise<void> =>
+  request<void>(`/api/cart/${userId}/${shelterId}`, { method: 'DELETE' });
