@@ -1,48 +1,44 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Layout from '@/components/Layout';
 
 type Item = {
+  id: string;
   name: string;
   quantity: number;
+  unit: string;
   category: string;
+  img: string;
 };
 
 // デフォルトアイテム
 const defaultItems: Item[] = [
-  { name: '水', quantity: 0, category: '水・飲料' },
-  { name: '緑茶', quantity: 0, category: '水・飲料' },
-  { name: '麦茶', quantity: 0, category: '水・飲料' },
-  { name: 'アクエリアス', quantity: 0, category: '水・飲料' },
-  { name: 'ポカリスエット', quantity: 0, category: '水・飲料' },
-  { name: '牛乳', quantity: 0, category: '水・飲料' },
-  { name: '紅茶', quantity: 0, category: '水・飲料' },
-  { name: 'コーヒー', quantity: 0, category: '水・飲料' },
-  { name: 'スポーツドリンク', quantity: 0, category: '水・飲料' },
-  { name: 'ジュース', quantity: 0, category: '水・飲料' },
-  { name: 'カップラーメン', quantity: 0, category: '食料' },
-  { name: '乾パン', quantity: 0, category: '食料' },
-  { name: 'おにぎり', quantity: 0, category: '食料' },
-  { name: '缶詰（魚）', quantity: 0, category: '食料' },
-  { name: '缶詰（肉）', quantity: 0, category: '食料' },
-  { name: '包帯', quantity: 0, category: '医療・衛生' },
-  { name: '消毒液', quantity: 0, category: '医療・衛生' },
-  { name: '絆創膏', quantity: 0, category: '医療・衛生' },
-  { name: 'マスク', quantity: 0, category: '医療・衛生' },
-  { name: '毛布', quantity: 0, category: '衣類・寝具' },
-  { name: '防寒着', quantity: 0, category: '衣類・寝具' },
-  { name: 'レインコート', quantity: 0, category: '衣類・寝具' },
-  { name: '懐中電灯', quantity: 0, category: '避難用品' },
-  { name: '電池', quantity: 0, category: '避難用品' },
-  { name: 'ラジオ', quantity: 0, category: '避難用品' },
-  { name: '鍋', quantity: 0, category: '調理器具・食器' },
-  { name: 'フライパン', quantity: 0, category: '調理器具・食器' },
-  { name: 'お皿', quantity: 0, category: '調理器具・食器' },
-  { name: '軍手', quantity: 0, category: '便利品' },
-  { name: 'カッターナイフ', quantity: 0, category: '便利品' },
-  { name: 'メモ帳', quantity: 0, category: '便利品' },
-  { name: 'ペン', quantity: 0, category: '便利品' },
+  // === 食料・水 ===
+  { id: "p-water-2l",     name: "飲料水 2L×6本（1ケース）",  quantity: 0, unit: "ケース", category: "食料・水", img: "/products/p-water-2l.png" },
+  { id: "p-instant-rice", name: "サトウのごはん 200g×5食",    quantity: 0, unit: "箱",   category: "食料・水", img: "/products/p-instant-rice.png" },
+  { id: "p-canned-food",  name: "缶詰(主食) 1缶",             quantity: 0, unit: "缶",   category: "食料・水", img: "/products/p-canned-food.png" },
+
+  // === 生活用品・衛生 ===
+  { id: "p-blanket",      name: "毛布",                       quantity: 0, unit: "枚",   category: "生活用品", img: "/products/p-blanket.png" },
+  { id: "p-battery-aa",   name: "単3電池(8本)",               quantity: 0, unit: "パック", category: "生活用品", img: "/products/p-battery-aa.png" },
+  { id: "p-mask",         name: "不織布マスク(50枚)",         quantity: 0, unit: "箱",   category: "衛生", img: "/products/p-mask.png" },
+
+  // === 医薬品 ===
+  { id: "m-acetaminophen", name: "解熱鎮痛剤（アセトアミノフェン）20錠", quantity: 0, unit: "箱", category: "医薬品", img: "/products/m-acetaminophen.png" },
+  { id: "m-ibuprofen",     name: "解熱鎮痛剤（イブプロフェン）24錠",   quantity: 0, unit: "箱", category: "医薬品", img: "/products/m-ibuprofen.png" },
+  { id: "m-cold-combo",    name: "総合感冒薬（風邪薬）30錠",          quantity: 0, unit: "箱", category: "医薬品", img: "/products/m-cold-combo.png" },
+  { id: "m-antihistamine", name: "抗ヒスタミン薬（アレルギー薬）10錠", quantity: 0, unit: "箱", category: "医薬品", img: "/products/m-antihistamine.png" },
+  { id: "m-anti-diarrhea", name: "下痢止め（ロペラミド等）12錠",       quantity: 0, unit: "箱", category: "医薬品", img: "/products/m-anti-diarrhea.png" },
+  { id: "m-ors-500",       name: "経口補水液 500mL（1本）",             quantity: 0, unit: "本", category: "医薬品", img: "/products/m-ors-500.png" },
+  { id: "m-povidone",      name: "消毒液（ポビドンヨード）100mL",      quantity: 0, unit: "本", category: "医薬品", img: "/products/m-povidone.png" },
+  { id: "m-sterile-gauze", name: "滅菌ガーゼ 10枚入",                   quantity: 0, unit: "袋", category: "医薬品", img: "/products/m-sterile-gauze.png" },
+  { id: "m-bandage-roll",  name: "包帯 5cm×5m",                         quantity: 0, unit: "巻", category: "医薬品", img: "/products/m-bandage-roll.png" },
+  { id: "m-surgical-tape", name: "サージカルテープ 12mm×9m",            quantity: 0, unit: "巻", category: "医薬品", img: "/products/m-surgical-tape.png" },
+  { id: "m-bandaids",      name: "ばんそうこう（アソート20枚）",         quantity: 0, unit: "箱", category: "医薬品", img: "/products/m-bandaids.png" },
+  { id: "m-thermometer",   name: "体温計",                               quantity: 0, unit: "本", category: "医薬品", img: "/products/m-thermometer.png" },
+  { id: "m-eyedrops",      name: "目薬（人工涙液）",                      quantity: 0, unit: "本", category: "医薬品", img: "/products/m-eyedrops.png" },
+  { id: "m-cough-syrup",   name: "咳止めシロップ 120mL",                  quantity: 0, unit: "本", category: "医薬品", img: "/products/m-cough-syrup.png" },
+  { id: "m-throat-candy",  name: "のど飴",                               quantity: 0, unit: "袋", category: "医薬品", img: "/products/m-throat-candy.png" },
 ];
 
 export default function InventoryPage() {
@@ -50,7 +46,6 @@ export default function InventoryPage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
 
-  // 初期ロード
   useEffect(() => {
     const stored = localStorage.getItem('inventory');
     if (stored) {
@@ -62,14 +57,12 @@ export default function InventoryPage() {
 
   if (!items) return <p style={{ padding: '20px' }}>Loading...</p>;
 
-  // 数量を変更（＋ー）
   const changeQuantity = (index: number, delta: number) => {
     const newItems = [...items];
     newItems[index].quantity = Math.max(0, newItems[index].quantity + delta);
     setItems(newItems);
   };
 
-  // 数値入力で直接変更
   const onInputChange = (index: number, value: string) => {
     const num = parseInt(value);
     if (isNaN(num) || num < 0) return;
@@ -78,7 +71,6 @@ export default function InventoryPage() {
     setItems(newItems);
   };
 
-  // 保存ボタン
   const saveItems = () => {
     localStorage.setItem('inventory', JSON.stringify(items));
     alert('保存しました！');
@@ -91,8 +83,7 @@ export default function InventoryPage() {
   );
 
   return (
-    <Layout>
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
       <h1 style={{ fontSize: '28px', borderBottom: '2px solid #ccc', paddingBottom: '10px', marginBottom: '20px' }}>
         在庫管理
       </h1>
@@ -112,13 +103,10 @@ export default function InventoryPage() {
           style={{ padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }}
         >
           <option value="all">すべて</option>
-          <option value="水・飲料">水・飲料</option>
-          <option value="食料">食料</option>
-          <option value="医療・衛生">医療・衛生</option>
-          <option value="衣類・寝具">衣類・寝具</option>
-          <option value="避難用品">避難用品</option>
-          <option value="調理器具・食器">調理器具・食器</option>
-          <option value="便利品">便利品</option>
+          <option value="食料・水">食料・水</option>
+          <option value="生活用品">生活用品</option>
+          <option value="衛生">衛生</option>
+          <option value="医薬品">医薬品</option>
         </select>
       </div>
 
@@ -126,7 +114,7 @@ export default function InventoryPage() {
       {filteredItems.length === 0 ? (
         <p>該当する在庫がありません</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: '15px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: '15px' ,paddingBottom: '80px'}}>
           {filteredItems.map((item, index) => (
             <div
               key={index}
@@ -135,24 +123,27 @@ export default function InventoryPage() {
                 borderRadius: '8px',
                 boxShadow: '2px 2px 8px rgba(0,0,0,0.1)',
                 backgroundColor: '#f9f9f9',
+                textAlign: 'center',
               }}
             >
+              <img
+                src={item.img}
+                alt={item.name}
+                style={{ width: '100px', margin: '0 auto 10px auto', display: 'block' }}
+              />
               <h3 style={{ marginBottom: '10px' }}>{item.name}</h3>
-              <p>カテゴリー: {item.category}</p>
-              <div style={{ display: 'flex', gap: '5px', alignItems: 'center', marginTop: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px' }}>
                 <button
                   onClick={() => changeQuantity(index, 1)}
                   style={{
-                    flex: 1,
                     padding: '5px 10px',
                     borderRadius: '5px',
-                    background: '#4CAF50',
-                    color: '#fff',
+                    background: '#4caf50',
+                    color: 'white',
                     border: 'none',
-                    cursor: 'pointer',
                   }}
                 >
-                  ＋
+                  +
                 </button>
                 <input
                   type="number"
@@ -160,19 +151,18 @@ export default function InventoryPage() {
                   onChange={(e) => onInputChange(index, e.target.value)}
                   style={{ width: '50px', textAlign: 'center', borderRadius: '5px', border: '1px solid #ccc' }}
                 />
+                <span style={{ marginLeft: '5px' }}>{item.unit}</span>
                 <button
                   onClick={() => changeQuantity(index, -1)}
                   style={{
-                    flex: 1,
                     padding: '5px 10px',
                     borderRadius: '5px',
                     background: '#f44336',
-                    color: '#fff',
+                    color: 'white',
                     border: 'none',
-                    cursor: 'pointer',
                   }}
                 >
-                  －
+                  -
                 </button>
               </div>
             </div>
@@ -180,24 +170,31 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* 保存ボタン */}
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+      <div style={{ 
+        position: 'fixed',
+        bottom: '0',
+        left: '0',
+        width: '100%',
+        backgroundColor: '#fff',
+        borderTop: '1px solid #ccc',
+        padding: '10px 0',
+        textAlign: 'center',
+        boxShadow: '0 -2px 6px rgba(0,0,0,0.1)',
+       }}>
         <button
           onClick={saveItems}
           style={{
             padding: '10px 20px',
-            borderRadius: '5px',
-            background: '#2196F3',
-            color: '#fff',
+            background: 'firebrick',
+            color: 'white',
             border: 'none',
+            borderRadius: '5px',
             cursor: 'pointer',
-            fontSize: '16px',
           }}
         >
           保存
         </button>
       </div>
     </div>
-    </Layout>
   );
 }
