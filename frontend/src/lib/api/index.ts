@@ -15,3 +15,12 @@ export * from './supplies';
 
 // 健康チェック関連
 export * from './health';
+
+// 在庫管理（必要に応じて個別モジュールから直接importしてください）
+// export * from './inventory';
+
+// 避難所状況管理（必要に応じて個別モジュールから直接importしてください）
+// export * from './shelterStatus';
+
+// 支援者専用（必要に応じて個別モジュールから直接importしてください）
+// export * from './supporter';
