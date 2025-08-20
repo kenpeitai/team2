@@ -14,7 +14,7 @@ export default function Layout({
           <div className="flex items-center justify-between h-16">
             {/* ロゴとタイトル */}
             <div className="flex items-center space-x-4">
-              <Link href="/" aria-label="Home" className="inline-flex items-center">
+              <Link href="/shelter/home" aria-label="Home" className="inline-flex items-center">
                 <Image
                   src="/rakuten-logo.png"
                   alt="楽天ロゴ"
@@ -31,7 +31,7 @@ export default function Layout({
             {/* ナビゲーションメニュー */}
             <nav className="hidden md:flex items-center space-x-8">
               <Link 
-                href="/" 
+                href="/shelter/home" 
                 className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 ホーム
@@ -43,7 +43,7 @@ export default function Layout({
                 避難所一覧
               </Link>
               <Link 
-                href="/shelter_status" 
+                href="/shelter/input" 
                 className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 避難所状況
@@ -53,13 +53,13 @@ export default function Layout({
             {/* 認証リンク */}
             <div className="flex items-center space-x-4">
               <Link 
-                href="/login" 
+                href="/shelter/login" 
                 className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 ログイン
               </Link>
               <Link 
-                href="/register" 
+                href="/shelter/register" 
                 className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 新規登録
