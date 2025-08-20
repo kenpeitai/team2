@@ -222,7 +222,7 @@ export default function SupporterShoppingCartPage() {
                 onMouseOver={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
                 onMouseOut={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
               >
-                {submitting ? "処理中…" : "支援手続きへ"}
+                {submitting ? "処理中…" : "購入手続きへ"}
               </button>
 
               
