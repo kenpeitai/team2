@@ -1,14 +1,13 @@
 package com.example.demo.entity;
 
-public enum TrafficStatus {
-    NORMAL("問題なし"),
-    RESTRICTED("一部規制あり"),
-    CLOSED("通行止め"),
+public enum InfrastructureStatus {
+    AVAILABLE("利用可能"),
+    UNAVAILABLE("停止中"),
     UNKNOWN("不明");
     
     private final String displayName;
     
-    TrafficStatus(String displayName) {
+    InfrastructureStatus(String displayName) {
         this.displayName = displayName;
     }
     
