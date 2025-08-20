@@ -1,11 +1,11 @@
 package com.example.demo.entity;
 
 public enum OrderStatus {
-    PENDING("待处理"),
-    CONFIRMED("已确认"),
-    SHIPPED("已发货"),
-    DELIVERED("已送达"),
-    CANCELLED("已取消");
+    PENDING("処理待ち"),
+    CONFIRMED("確認済み"),
+    SHIPPED("発送済み"),
+    DELIVERED("配達完了"),
+    CANCELLED("キャンセル");
     
     private final String displayName;
     

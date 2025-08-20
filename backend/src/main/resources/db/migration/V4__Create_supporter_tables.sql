@@ -1,6 +1,6 @@
 -- 支援人侧テーブル作成
 
--- 购物车表（按用户×避难所）
+-- ショッピングカートテーブル（ユーザー×避難所別）
 CREATE TABLE carts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE carts (
     UNIQUE(user_id, shelter_id)
 );
 
--- 购物车明细表
+-- ショッピングカート明細テーブル
 CREATE TABLE cart_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     cart_id INTEGER NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE cart_items (
     FOREIGN KEY (cart_id) REFERENCES carts(id)
 );
 
--- 订单头表
+-- 注文ヘッダーテーブル
 CREATE TABLE orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_number VARCHAR(50) UNIQUE NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE orders (
     FOREIGN KEY (shelter_id) REFERENCES shelters(id)
 );
 
--- 订单明细表
+-- 注文明細テーブル
 CREATE TABLE order_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER NOT NULL,
@@ -65,7 +65,7 @@ CREATE TABLE order_items (
     FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 
--- 支付记录表
+-- 支払い記録テーブル
 CREATE TABLE payments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER NOT NULL,
