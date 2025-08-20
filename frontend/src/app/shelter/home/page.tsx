@@ -125,14 +125,14 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">機能メニュー</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <MenuCard
-                href="/shelter_status"
+                href="/shelter/input"
                 title="避難所状況"
                 description="避難所状況の登録・確認"
                 icon="🏠"
                 color="bg-blue-500"
               />
               <MenuCard
-                href="/supplies"
+                href="/shelter/supplies"
                 title="必要物資リスト"
                 description="必要物資の登録・確認"
                 icon="📦"
