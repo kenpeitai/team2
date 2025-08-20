@@ -1,6 +1,6 @@
 "use client";
 import Layout from "@/components/Layout";
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useReducer } from "react";
 
 // ===== Types =====
 export type Priority = "high" | "medium" | "low";
@@ -166,8 +166,67 @@ const DEFAULT_CATALOG: Product[] = [
   { id: "m-throat-candy",  name: "のど飴",                                   unit: "袋", weightGrams: 80,  recommendedPerPersonPerDay: 0.05, category: "医薬品", imageVerified: false },
 ];
 
-// ↑↑↑ NOTE: 上の `m-surgical-tape` 行に一時的に `as any` を入れてます。
-// もし ESLint などで気になる場合は、正しいキー名 `recommendedPerPersonPerDay` に直してください。
+// ===== State Management =====
+type SuppliesState = {
+  evacueeCount: number;
+  targetDays: number;
+  rows: NeedRow[];
+  saving: boolean;
+  imageStates: Record<string, {
+    src: string | null;
+    candidates: string[];
+    open: boolean;
+  }>;
+};
+
+type SuppliesAction = 
+  | { type: 'SET_EVACUEE_COUNT'; payload: number }
+  | { type: 'SET_TARGET_DAYS'; payload: number }
+  | { type: 'SET_ROWS'; payload: NeedRow[] }
+  | { type: 'UPDATE_ROW'; payload: { id: string; updates: Partial<NeedRow> } }
+  | { type: 'ADD_ROW'; payload: NeedRow }
+  | { type: 'REMOVE_ROW'; payload: string }
+  | { type: 'SET_SAVING'; payload: boolean }
+  | { type: 'SET_IMAGE_STATE'; payload: { productId: string; updates: Partial<SuppliesState['imageStates'][string]> } };
+
+const suppliesReducer = (state: SuppliesState, action: SuppliesAction): SuppliesState => {
+  switch (action.type) {
+    case 'SET_EVACUEE_COUNT':
+      return { ...state, evacueeCount: action.payload };
+    case 'SET_TARGET_DAYS':
+      return { ...state, targetDays: action.payload };
+    case 'SET_ROWS':
+      return { ...state, rows: action.payload };
+    case 'UPDATE_ROW':
+      return {
+        ...state,
+        rows: state.rows.map(row => 
+          row.id === action.payload.id 
+            ? { ...row, ...action.payload.updates }
+            : row
+        )
+      };
+    case 'ADD_ROW':
+      return { ...state, rows: [...state.rows, action.payload] };
+    case 'REMOVE_ROW':
+      return { ...state, rows: state.rows.filter(row => row.id !== action.payload) };
+    case 'SET_SAVING':
+      return { ...state, saving: action.payload };
+    case 'SET_IMAGE_STATE':
+      return {
+        ...state,
+        imageStates: {
+          ...state.imageStates,
+          [action.payload.productId]: {
+            ...state.imageStates[action.payload.productId],
+            ...action.payload.updates
+          }
+        }
+      };
+    default:
+      return state;
+  }
+};
 
 // ===== Component =====
 export default function NeedsListForm({
@@ -185,12 +244,13 @@ export default function NeedsListForm({
 }) {
   const catalog = products && products.length > 0 ? products : DEFAULT_CATALOG;
 
-  const [evacueeCount, setEvacueeCount] = useState(initialEvacueeCount);
-  const [targetDays, setTargetDays] = useState(initialTargetDays);
-  const [rows, setRows] = useState<NeedRow[]>([
-    { id: gid(), productId: catalog[0]?.id ?? "", quantity: 1, priority: "medium", notes: "" },
-  ]);
-  const [saving, setSaving] = useState(false);
+  const [state, dispatch] = useReducer(suppliesReducer, {
+    evacueeCount: initialEvacueeCount,
+    targetDays: initialTargetDays,
+    rows: [{ id: gid(), productId: catalog[0]?.id ?? "", quantity: 1, priority: "medium", notes: "" }],
+    saving: false,
+    imageStates: {}
+  });
 
   const productMap = useMemo(() => new Map(catalog.map((p) => [p.id, p])), [catalog]);
   const grouped = useMemo(() => {
@@ -204,13 +264,13 @@ export default function NeedsListForm({
   }, [catalog]);
 
   // ==== 重複選択禁止 ====
-  const selectedIds = useMemo(() => new Set(rows.map(r => r.productId).filter(Boolean)), [rows]);
+  const selectedIds = useMemo(() => new Set(state.rows.map(r => r.productId).filter(Boolean)), [state.rows]);
 
-  // 初期 & 変更時：重複があれば空き商品に差し替え（必要時のみ set）
+  // 初期 & 変更時：重複があれば空き商品に差し替え（必要時のみ dispatch）
   useEffect(() => {
     const seen = new Set<string>();
     let changed = false;
-    const nextRows = rows.map((r) => {
+    const nextRows = state.rows.map((r) => {
       if (!r.productId || seen.has(r.productId)) {
         const candidate = catalog.find(p => !seen.has(p.id));
         if (candidate) {
@@ -223,30 +283,28 @@ export default function NeedsListForm({
       }
       return r;
     });
-    if (changed) setRows(nextRows);
-  }, [catalog, rows]);
+    if (changed) dispatch({ type: 'SET_ROWS', payload: nextRows });
+  }, [catalog, state.rows]);
 
   function safeChangeProduct(rowId: string, newId: string) {
-    setRows(prev => {
-      const usedByOther = prev.some(rr => rr.id !== rowId && rr.productId === newId);
-      if (usedByOther) {
-        alert("この商品は既に他の行で選択されています。");
-        return prev;
-      }
-      return prev.map(r => r.id === rowId ? { ...r, productId: newId } : r);
-    });
+    const usedByOther = state.rows.some(rr => rr.id !== rowId && rr.productId === newId);
+    if (usedByOther) {
+      alert("この商品は既に他の行で選択されています。");
+      return;
+    }
+    dispatch({ type: 'UPDATE_ROW', payload: { id: rowId, updates: { productId: newId } } });
   }
 
   // 優先度順ソート（表示用）
   const sortedRows = useMemo(() => {
     const rank: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
-    return [...rows].sort((a, b) => rank[a.priority] - rank[b.priority]);
-  }, [rows]);
+    return [...state.rows].sort((a, b) => rank[a.priority] - rank[b.priority]);
+  }, [state.rows]);
 
   // サマリー
   const totals = useMemo(() => {
     let units = 0, weight = 0, waterCases = 0;
-    rows.forEach(r => {
+    state.rows.forEach(r => {
       const p = productMap.get(r.productId);
       if (!p) return;
       units += Number(r.quantity) || 0;
@@ -258,40 +316,40 @@ export default function NeedsListForm({
       weightKg: Math.round(weight) / 1000,
       waterCases, // UIでは使わないが payload.analytics で利用
     };
-  }, [rows, productMap]);
+  }, [state.rows, productMap]);
 
   function updateRow<T extends keyof NeedRow>(id: string, key: T, value: NeedRow[T]) {
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, [key]: value } : r)));
+    dispatch({ type: 'UPDATE_ROW', payload: { id, updates: { [key]: value } } });
   }
 
   function addRow() {
-    const used = new Set(rows.map(r => r.productId));
+    const used = new Set(state.rows.map(r => r.productId));
     const next = catalog.find(p => !used.has(p.id));
     if (!next) {
       alert("追加できる商品がありません（全商品が選択済み）");
       return;
     }
-    setRows((prev) => [
-      ...prev,
-      { id: gid(), productId: next.id, quantity: 1, priority: "medium", notes: "" },
-    ]);
+    dispatch({ type: 'ADD_ROW', payload: { id: gid(), productId: next.id, quantity: 1, priority: "medium", notes: "" } });
   }
 
   function removeRow(id: string) {
-    setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.id !== id) : prev));
+    if (state.rows.length > 1) {
+      dispatch({ type: 'REMOVE_ROW', payload: id });
+    }
   }
 
   function applyRecommendAll() {
-    setRows(prev => prev.map(r => {
+    const updatedRows = state.rows.map(r => {
       const p = productMap.get(r.productId);
-      const rec = calcRecommended(p, evacueeCount, targetDays);
+      const rec = calcRecommended(p, state.evacueeCount, state.targetDays);
       return rec != null ? { ...r, quantity: rec } : r;
-    }));
+    });
+    dispatch({ type: 'SET_ROWS', payload: updatedRows });
   }
 
   function handleSave() {
     // バリデーション
-    const cleaned = rows.map((r) => ({
+    const cleaned = state.rows.map((r) => ({
       ...r,
       quantity: toSafeNumber(r.quantity, 1, 0),
       notes: (r.notes ?? "").trim() || undefined,
@@ -364,8 +422,8 @@ export default function NeedsListForm({
     }
 
     const payload: NeedsListPayload = {
-      evacueeCount: Math.max(0, toSafeNumber(evacueeCount, 0)),
-      targetDays: Math.max(1, toSafeNumber(targetDays, 1)),
+      evacueeCount: Math.max(0, toSafeNumber(state.evacueeCount, 0)),
+      targetDays: Math.max(1, toSafeNumber(state.targetDays, 1)),
       items: detailedItems,
       analytics: {
         totals: { units: totalUnits, weightGrams: totalWeightGrams, waterCases },
@@ -379,12 +437,12 @@ export default function NeedsListForm({
       },
     };
 
-    setSaving(true);
+    dispatch({ type: 'SET_SAVING', payload: true });
     try {
       onSubmit ? onSubmit(payload) : console.log("NeedsListPayload", payload);
       alert("必要物資リストを作成しました（コンソールにも出力しています）");
     } finally {
-      setSaving(false);
+      dispatch({ type: 'SET_SAVING', payload: false });
     }
   }
 
@@ -401,8 +459,8 @@ export default function NeedsListForm({
               type="number"
               min={0}
               className="rounded-xl border px-3 py-3"
-              value={evacueeCount}
-              onChange={(e) => setEvacueeCount(toSafeNumber(e.target.value, evacueeCount, 0))}
+              value={state.evacueeCount}
+              onChange={(e) => dispatch({ type: 'SET_EVACUEE_COUNT', payload: toSafeNumber(e.target.value, state.evacueeCount, 0) })}
             />
           </label>
           <label className="flex flex-col gap-1">
@@ -411,8 +469,8 @@ export default function NeedsListForm({
               type="number"
               min={1}
               className="rounded-xl border px-3 py-3"
-              value={targetDays}
-              onChange={(e) => setTargetDays(toSafeNumber(e.target.value, targetDays, 1))}
+              value={state.targetDays}
+              onChange={(e) => dispatch({ type: 'SET_TARGET_DAYS', payload: toSafeNumber(e.target.value, state.targetDays, 1) })}
             />
           </label>
           <div className="flex items-end text-gray-600 leading-tight text-sm">
@@ -428,7 +486,7 @@ export default function NeedsListForm({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {sortedRows.map((r) => {
             const prod = productMap.get(r.productId);
-            const rec = calcRecommended(prod, evacueeCount, targetDays);
+            const rec = calcRecommended(prod, state.evacueeCount, state.targetDays);
             return (
               <article
                 key={r.id}
@@ -436,7 +494,14 @@ export default function NeedsListForm({
               >
                 {/* 画像：フルブリード＋優先度チップ */}
                 <div className="relative">
-                  <ProductHeroImage product={prod} enforceVerified={enforceVerifiedImages} />
+                  <ProductHeroImage 
+                    product={prod} 
+                    enforceVerified={enforceVerifiedImages}
+                    imageState={state.imageStates[prod?.id ?? '']}
+                    onImageStateChange={(updates) => 
+                      dispatch({ type: 'SET_IMAGE_STATE', payload: { productId: prod?.id ?? '', updates } })
+                    }
+                  />
                   <div className="absolute left-3 top-3">
                     <PriorityChip priority={r.priority} />
                   </div>
@@ -585,13 +650,13 @@ export default function NeedsListForm({
             </button>
             <button
               onClick={handleSave}
-              disabled={saving}
+              disabled={state.saving}
               className="rounded-xl px-5 py-2.5 text-white disabled:opacity-50 whitespace-nowrap"
               style={{ backgroundColor: RAKUTEN_RED }}
               onMouseOver={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
               onMouseOut={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
             >
-              {saving ? "保存中…" : "保存"}
+              {state.saving ? "保存中…" : "保存"}
             </button>
           </div>
         </div>
@@ -617,18 +682,27 @@ function PriorityChip({ priority }: { priority: Priority }) {
 }
 
 // ===== UI: Product Hero Image（クリック拡大：ライトボックス） =====
-function ProductHeroImage({ product, enforceVerified }: { product?: Product; enforceVerified?: boolean }) {
-  const [src, setSrc] = useState<string | null>(null);
-  const [candidates, setCandidates] = useState<string[]>([]);
-  const [open, setOpen] = useState(false);
-
+function ProductHeroImage({ 
+  product, 
+  enforceVerified, 
+  imageState,
+  onImageStateChange
+}: { 
+  product?: Product; 
+  enforceVerified?: boolean;
+  imageState?: { src: string | null; candidates: string[]; open: boolean };
+  onImageStateChange: (updates: Partial<{ src: string | null; candidates: string[]; open: boolean }>) => void;
+}) {
   // policy: 検証厳格なら DBの imageUrl が未検証のときは表示しない
   const allowByPolicy =
     !product ? false :
     !enforceVerified || product.imageVerified || !product.imageUrl;
 
   useEffect(() => {
-    if (!product || !allowByPolicy) { setSrc(null); setCandidates([]); return; }
+    if (!product || !allowByPolicy) { 
+      onImageStateChange({ src: null, candidates: [] }); 
+      return; 
+    }
 
     const given = product.imageUrl ? [product.imageUrl] : [];
     const id = product.id;
@@ -636,20 +710,20 @@ function ProductHeroImage({ product, enforceVerified }: { product?: Product; enf
       [".jpg", ".png", ".webp"].map((ext) => `${base}/${id}${ext}`)
     );
     const list = [...given, ...fallbacks];
-    setCandidates(list);
-    setSrc(list[0] ?? null);
-  }, [product, allowByPolicy]);
+    onImageStateChange({ candidates: list, src: list[0] ?? null });
+  }, [product, allowByPolicy, onImageStateChange]);
 
   const onError = () => {
-    setCandidates((prev) => {
-      const next = prev.slice(1);
-      setSrc(next[0] ?? null);
-      return next;
-    });
+    const currentCandidates = imageState?.candidates ?? [];
+    const next = currentCandidates.slice(1);
+    onImageStateChange({ candidates: next, src: next[0] ?? null });
   };
 
+  const currentSrc = imageState?.src;
+  const currentOpen = imageState?.open ?? false;
+
   // 画像なし時はグラデ背景プレースホルダ
-  if (!product || !allowByPolicy || !src) {
+  if (!product || !allowByPolicy || !currentSrc) {
     return (
       <div className="w-full h-56 sm:h-64 lg:h-72 rounded-t-3xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
         <CategoryIcon category={product?.category ?? "生活用品"} size="xl" />
@@ -661,20 +735,20 @@ function ProductHeroImage({ product, enforceVerified }: { product?: Product; enf
     <>
       <div className="w-full h-56 sm:h-64 lg:h-72 rounded-t-3xl overflow-hidden">
         <img
-          src={src}
+          src={currentSrc}
           alt={product.name}
           className="h-full w-full object-contain cursor-zoom-in"
           onError={onError}
-          onClick={() => setOpen(true)}
+          onClick={() => onImageStateChange({ open: true })}
         />
       </div>
-      {open && (
+      {currentOpen && (
         <div
           className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center"
-          onClick={() => setOpen(false)}
+          onClick={() => onImageStateChange({ open: false })}
         >
           <img
-            src={src}
+            src={currentSrc}
             alt={product.name}
             className="max-h-[90vh] max-w-[90vw] object-contain cursor-zoom-out"
           />
