@@ -7,10 +7,12 @@ import StatCard from './components/StatCard';
 import SupportTable from './components/SupportTable';
 import RecentActivities from './components/RecentActivities';
 import Layout from '@/components/Layout';
+import { useShelter } from '@/hooks/useShelter';
 
 export default function Home() {
   const params = useParams();
   const shelterId = params.id as string;
+  const { shelter, loading, error } = useShelter();
 
   const supportData = [
     { supporter: '田中建設株式会社', support: '避難所のテント設営', date: '2024-01-15' },
@@ -21,9 +23,11 @@ export default function Home() {
   ];
 
   const evacuationData = {
-    totalEvacuees: 156,
-    injuredPeople: 23,
-    lastUpdated: '2024-01-15 14:30',
+    totalEvacuees: shelter?.evacueeCount ?? 0,
+    injuredPeople: shelter?.injuredCount ?? 0,
+    lastUpdated: shelter?.updatedAt
+      ? new Date(shelter.updatedAt).toLocaleString('ja-JP', { hour12: false })
+      : '-'
   };
 
   const recentActivities = [
@@ -32,15 +36,34 @@ export default function Home() {
     { message: '在庫管理が更新されました', time: '6時間前', color: 'bg-orange-500' },
   ];
 
+  if (loading) {
+    return (
+      <Layout>
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h1 className="text-2xl font-bold text-gray-900">避難所情報を読み込み中...</h1>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h1 className="text-2xl font-bold text-red-600">エラー</h1>
+          <p className="text-gray-600 mt-2">{error}</p>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
         {/* ページタイトル */}
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-gray-900">災害支援システム</h1>
-          <p className="text-gray-600 mt-2">
-            避難所ID: {shelterId} の状況と支援情報を管理します
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{shelter?.shelterName ?? '災害支援システム'}</h1>
+          <p className="text-gray-600 mt-2">{shelter?.shelterAddress ? `住所: ${shelter.shelterAddress}` : `避難所ID: ${shelterId} の状況と支援情報を管理します`}</p>
         </div>
 
         {/* メインコンテンツ */}
@@ -126,9 +149,7 @@ export default function Home() {
                 </Link>
               </div>
 
-              <p className="mt-3 text-xs text-gray-500">
-                ※ 誤タップ防止のためカード全体クリックは無効、アクションのみクリック可。
-              </p>
+              <p className="mt-3 text-xs text-gray-500">※ 誤タップ防止のためカード全体クリックは無効、アクションのみクリック可。</p>
             </div>
           </section>
 
