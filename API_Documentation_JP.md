@@ -5,14 +5,76 @@
 
 **ベースURL**: `http://localhost:8080`
 
-**注意**: 現在のシステムでは避難所のみがログイン可能です。一般ユーザーの機能は実装されていません。
+**注意**: 現在のシステムでは以下の2つのユーザータイプが存在します：
+- **避難所**: 避難所専用のログインAPIを使用
+- **支援者**: 一般ユーザーログインAPIを使用
 
 **更新日**: 2024年8月20日
 **バージョン**: 2.0
 
 ## 認証関連 API
 
-### 1. 避難所登録
+### 1. 支援者登録（一般ユーザー登録）
+**エンドポイント**: `POST /api/auth/register`
+
+**リクエストボディ**:
+```json
+{
+  "username": "supporter001",
+  "email": "supporter@example.com",
+  "password": "password123",
+  "fullName": "支援者 太郎"
+}
+```
+
+**レスポンス**:
+```json
+{
+  "message": "登録が完了しました",
+  "description": "ユーザー登録が正常に完了しました",
+  "user": {
+    "id": 1,
+    "username": "supporter001",
+    "email": "supporter@example.com",
+    "fullName": "支援者 太郎",
+    "role": "USER",
+    "isActive": true,
+    "createdAt": "2024-01-01T10:00:00",
+    "updatedAt": "2024-01-01T10:00:00"
+  }
+}
+```
+
+### 2. 支援者ログイン（一般ユーザーログイン）
+**エンドポイント**: `POST /api/auth/login`
+
+**リクエストボディ**:
+```json
+{
+  "email": "supporter@example.com",
+  "password": "password123"
+}
+```
+
+**レスポンス**:
+```json
+{
+  "token": "dummy-token-1",
+  "message": "ログインが完了しました",
+  "user": {
+    "id": 1,
+    "username": "supporter001",
+    "email": "supporter@example.com",
+    "fullName": "支援者 太郎",
+    "role": "USER",
+    "isActive": true,
+    "createdAt": "2024-01-01T10:00:00",
+    "updatedAt": "2024-01-01T10:00:00"
+  }
+}
+```
+
+### 3. 避難所登録
 **エンドポイント**: `POST /api/auth/register-shelter`
 
 **リクエストボディ**:
@@ -41,7 +103,7 @@
 }
 ```
 
-### 2. 避難所ログイン
+### 4. 避難所ログイン
 **エンドポイント**: `POST /api/auth/login-shelter`
 
 **リクエストボディ**:
@@ -60,7 +122,7 @@
 }
 ```
 
-### 3. ログアウト
+### 5. ログアウト
 **エンドポイント**: `POST /api/auth/logout`
 
 **レスポンス**:
@@ -261,24 +323,40 @@
 }
 ```
 
-## ユーザー管理 API（参考用）
+## 支援者管理 API
 
-**注意**: 現在のシステムでは一般ユーザーの機能は実装されていませんが、以下のAPIは技術的に利用可能です。
-
-### 1. 全ユーザー取得
+### 1. 全支援者取得
 **エンドポイント**: `GET /api/users`
 
-### 2. ユーザー情報取得
+**レスポンス**:
+```json
+[
+  {
+    "id": 1,
+    "username": "supporter001",
+    "email": "supporter@example.com",
+    "fullName": "支援者 太郎",
+    "role": "USER",
+    "isActive": true,
+    "createdAt": "2024-01-01T10:00:00",
+    "updatedAt": "2024-01-01T10:00:00"
+  }
+]
+```
+
+### 2. 支援者情報取得
 **エンドポイント**: `GET /api/users/{id}`
 
-### 3. ユーザー情報更新
+### 3. 支援者情報更新
 **エンドポイント**: `PUT /api/users/{id}`
 
-### 4. ユーザー検索
-**エンドポイント**: `GET /api/users/search?keyword=テスト`
+### 4. 支援者検索
+**エンドポイント**: `GET /api/users/search?keyword=支援者`
 
-### 5. ユーザー削除
+### 5. 支援者削除
 **エンドポイント**: `DELETE /api/users/{id}`
+
+
 
 ## システム状態確認 API
 
@@ -365,7 +443,41 @@
 
 ### フロントエンド統合例
 
-#### 1. 避難所ログイン後の必要物資リスト作成フロー
+#### 1. 支援者ログイン後の機能利用フロー
+```typescript
+// 1. 支援者ログイン
+const loginSupporter = async (email: string, password: string): Promise<AuthResponse> => {
+  const response = await fetch('http://localhost:8080/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  
+  if (response.ok) {
+    const data: AuthResponse = await response.json();
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('userId', data.user?.id?.toString() || '');
+    return data;
+  }
+  throw new Error('ログインに失敗しました');
+};
+
+// 2. 支援者登録
+const registerSupporter = async (userData: any): Promise<AuthResponse> => {
+  const response = await fetch('http://localhost:8080/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData)
+  });
+  
+  if (response.ok) {
+    return await response.json();
+  }
+  throw new Error('登録に失敗しました');
+};
+```
+
+#### 2. 避難所ログイン後の必要物資リスト作成フロー
 ```typescript
 // 型定義
 interface LoginRequest {
@@ -726,7 +838,9 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 
 ## 注意事項
 
-1. **システム機能**: 現在のシステムでは避難所のみがログイン・登録可能です。一般ユーザーの機能は実装されていません。
+1. **システム機能**: 現在のシステムでは以下の2つのユーザータイプが存在します：
+   - **支援者**: 一般ユーザーAPIを使用（登録・ログイン・管理）
+   - **避難所**: 避難所専用APIを使用（登録・ログイン・管理）
 
 2. **CORS設定**: バックエンドは `@CrossOrigin(origins = "*")` で設定されているため、フロントエンドからのアクセスが可能です。
 
@@ -745,9 +859,18 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 ## API 一覧
 
 ### 認証関連
+- `POST /api/auth/register` - 支援者登録
+- `POST /api/auth/login` - 支援者ログイン
 - `POST /api/auth/register-shelter` - 避難所登録
 - `POST /api/auth/login-shelter` - 避難所ログイン
 - `POST /api/auth/logout` - ログアウト
+
+### 支援者管理
+- `GET /api/users` - 全支援者取得
+- `GET /api/users/{id}` - 支援者情報取得
+- `PUT /api/users/{id}` - 支援者情報更新
+- `GET /api/users/search` - 支援者検索
+- `DELETE /api/users/{id}` - 支援者削除
 
 ### 避難所管理
 - `GET /api/shelters` - 全避難所取得
