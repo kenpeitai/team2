@@ -1,8 +1,10 @@
 
 FROM gradle:8.9.0-jdk21-alpine AS build
 WORKDIR /workspace
+
+# 复制源代码和配置文件
 COPY . .
-RUN ./gradlew clean bootJar --no-daemon
+RUN gradle clean bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
