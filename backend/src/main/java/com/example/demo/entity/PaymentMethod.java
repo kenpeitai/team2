@@ -1,10 +1,10 @@
 package com.example.demo.entity;
 
 public enum PaymentMethod {
-    CASH("现金"),
-    BANK_TRANSFER("银行转账"),
-    CREDIT_CARD("信用卡"),
-    DIGITAL_WALLET("电子钱包");
+    CASH("現金"),
+    BANK_TRANSFER("銀行振込"),
+    CREDIT_CARD("クレジットカード"),
+    DIGITAL_WALLET("電子マネー");
     
     private final String displayName;
     

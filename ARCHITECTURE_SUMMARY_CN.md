@@ -10,8 +10,11 @@
 - **ProductRepository** - 产品数据访问
 - **NeedsListRepository** - 需求清单数据访问
 - **NeedsListItemRepository** - 需求清单项目数据访问
+- **CartRepository** - 购物车数据访问
+- **CartItemRepository** - 购物车项目数据访问
 - **OrderRepository** - 订单数据访问
 - **OrderItemRepository** - 订单项目数据访问
+- **PaymentRepository** - 支付数据访问
 
 #### 2. Service 层（业务逻辑层）
 - **UserService** - 用户业务逻辑
@@ -29,10 +32,18 @@
   - 需求清单管理
   - 项目添加和管理
   - 计算功能（总重量、总单位数）
+- **CartService** - 购物车业务逻辑
+  - 购物车管理
+  - 购物车项目添加、更新、删除
+  - 购物车计算功能（总金额、总数量）
 - **OrderService** - 订单业务逻辑
   - 订单创建和状态管理
   - 订单项目管理
   - 计算功能（总金额、总数量）
+- **PaymentService** - 支付业务逻辑
+  - 支付处理
+  - 支付状态管理
+  - 交易记录管理
 
 #### 3. Controller 层（API控制层）
 - **UserController** - 用户API
@@ -40,25 +51,42 @@
 - **AuthController** - 认证API
 - **SupplyController** - 供应管理API
 - **ProductController** - 产品API
+- **CartController** - 购物车API
+- **OrderController** - 订单API
+- **PaymentController** - 支付API
 - **HealthController** - 健康检查API
 - **DatabaseHealthController** - 数据库健康检查API
 
-### ❌ 缺少的层
+### ✅ 新增的支援人侧功能
 
-#### 1. 缺少的 Repository
+#### 1. 新增的 Entity（数据模型）
+- **Cart** - 购物车实体
+- **CartItem** - 购物车项目实体
+- **Order** - 订单实体
+- **OrderItem** - 订单项目实体
+- **Payment** - 支付实体
+- **OrderStatus** - 订单状态枚举
+- **PaymentMethod** - 支付方式枚举
+- **PaymentStatus** - 支付状态枚举
+
+#### 2. 新增的 Repository
 - **CartRepository** - 购物车数据访问
 - **CartItemRepository** - 购物车项目数据访问
 - **PaymentRepository** - 支付数据访问
 
-#### 2. 缺少的 Service
+#### 3. 新增的 Service
 - **CartService** - 购物车业务逻辑
 - **PaymentService** - 支付业务逻辑
 
-#### 3. 缺少的 Controller
-- **NeedsListController** - 需求清单API
-- **OrderController** - 订单API
+#### 4. 新增的 Controller
 - **CartController** - 购物车API
+- **OrderController** - 订单API
 - **PaymentController** - 支付API
+
+### ❌ 仍缺少的层
+
+#### 1. 缺少的 Controller
+- **NeedsListController** - 需求清单API（可考虑集成到SupplyController中）
 
 ## 架构设计原则
 
@@ -91,24 +119,28 @@ Entity (数据模型层)
 ## 下一步建议
 
 ### 1. 高优先级 - 核心功能完善
-1. **创建 NeedsListController**
+1. **完善 NeedsListController**
    - 需求清单的CRUD API
    - 项目管理API
    - 统计功能API
+   - 可考虑集成到现有的SupplyController中
 
-2. **创建 OrderController**
+2. **完善 OrderController**
    - 订单管理API
    - 订单状态更新API
    - 订单项目管理API
+   - 订单历史查询API
 
-### 2. 中优先级 - 辅助功能
-1. **创建 CartService 和 CartController**
-   - 购物车功能
-   - 购物车项目管理
+### 2. 中优先级 - 功能优化
+1. **完善 CartService 和 CartController**
+   - 购物车功能优化
+   - 购物车项目管理优化
+   - 购物车合并功能
 
-2. **创建 PaymentService 和 PaymentController**
-   - 支付处理
-   - 支付状态管理
+2. **完善 PaymentService 和 PaymentController**
+   - 支付处理优化
+   - 支付状态管理优化
+   - 支付回调处理
 
 ### 3. 低优先级 - 优化和扩展
 1. **添加缓存层**
@@ -150,8 +182,29 @@ Entity (数据模型层)
 - **框架**: Spring Boot 3.x
 - **ORM**: Spring Data JPA
 - **数据库**: SQLite (开发) / PostgreSQL (生产)
+- **数据库迁移**: Flyway
 - **API文档**: Swagger/OpenAPI 3
 - **构建工具**: Gradle
 - **容器化**: Docker
+- **前端**: Next.js (React)
+- **语言**: Java 21, TypeScript
 
-这个架构设计遵循了Spring Boot的最佳实践，具有良好的可维护性和可扩展性。
+## 项目状态总结
+
+### ✅ 已完成功能
+1. **基础架构** - 完整的分层架构设计
+2. **用户管理** - 支援者和避难所用户管理
+3. **避难所管理** - 避难所信息和状态管理
+4. **产品管理** - 产品目录和库存管理
+5. **需求清单** - 避难所需求清单管理
+6. **支援人侧功能** - 购物车、订单、支付系统
+
+### 📊 统计信息
+- **总API数量**: 45个
+- **数据库表**: 11个
+- **Controller层**: 9个
+- **Service层**: 7个
+- **Repository层**: 9个
+- **Entity层**: 13个（包括枚举）
+
+这个架构设计遵循了Spring Boot的最佳实践，具有良好的可维护性和可扩展性。支援人侧功能的添加使系统功能更加完整，支持完整的电商流程。

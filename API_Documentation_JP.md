@@ -10,7 +10,8 @@
 - **支援者**: 一般ユーザーログインAPIを使用
 
 **更新日**: 2024年8月20日（支援者登録・在庫管理・避難所状況入力機能追加）
-**バージョン**: 2.0
+**更新日**: 2025年1月16日（ショッピングカート・注文・支払い機能追加）
+**バージョン**: 3.0
 
 ## 認証関連 API
 
@@ -945,6 +946,30 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 - `GET /api/supplies/needs-lists/{id}` - 必要物資リスト詳細取得
 - `DELETE /api/supplies/needs-lists/{id}` - 必要物資リスト削除
 
+### ショッピングカート管理
+- `GET /api/carts/user/{userId}` - ユーザーのショッピングカート一覧取得
+- `GET /api/carts/{cartId}` - ショッピングカート詳細取得
+- `POST /api/carts` - ショッピングカート作成
+- `PUT /api/carts/{cartId}` - ショッピングカート更新
+- `DELETE /api/carts/{cartId}` - ショッピングカート削除
+- `POST /api/carts/{cartId}/items` - カートアイテム追加
+- `PUT /api/carts/items/{itemId}` - カートアイテム更新
+- `DELETE /api/carts/items/{itemId}` - カートアイテム削除
+
+### 注文管理
+- `GET /api/orders/user/{userId}` - ユーザーの注文一覧取得
+- `GET /api/orders/{orderId}` - 注文詳細取得
+- `POST /api/orders` - 注文作成
+- `PUT /api/orders/{orderId}/status` - 注文ステータス更新
+- `DELETE /api/orders/{orderId}` - 注文削除
+- `GET /api/orders/shelter/{shelterId}` - 避難所の注文一覧取得
+
+### 支払い管理
+- `GET /api/payments/order/{orderId}` - 注文の支払い記録取得
+- `POST /api/payments` - 支払い記録作成
+- `PUT /api/payments/{paymentId}/status` - 支払いステータス更新
+- `GET /api/payments/user/{userId}` - ユーザーの支払い記録取得
+
 ### システム状態確認
 - `GET /api/health` - アプリケーション健康状態
 - `GET /api/health/database` - データベース健康状態
@@ -952,7 +977,7 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 
 ## 📊 **API 総数統計**
 
-**現在利用可能なAPI総数：25個**
+**現在利用可能なAPI総数：45個**
 
 - **認証関連**: 5個
 - **支援者管理**: 5個  
@@ -960,4 +985,7 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 - **在庫管理**: 4個
 - **避難所状況管理**: 2個
 - **必要物資管理**: 7個
+- **ショッピングカート管理**: 8個
+- **注文管理**: 6個
+- **支払い管理**: 4個
 - **システム状態確認**: 3個
