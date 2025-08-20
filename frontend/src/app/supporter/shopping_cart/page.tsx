@@ -62,15 +62,6 @@ export default function SupporterShoppingCartPage() {
   };
 
   // 操作
-  const addItem = (item: CartItem) => {
-    updateCart(prev => {
-      const items = [...prev.items];
-      const i = items.findIndex(x => x.productId === item.productId);
-      if (i >= 0) items[i] = { ...items[i], quantity: items[i].quantity + item.quantity };
-      else items.push({ ...item });
-      return { ...prev, items };
-    });
-  };
   const updateQty = (id: string, qty: number) => {
     updateCart(prev => {
       const items = prev.items
@@ -86,17 +77,6 @@ export default function SupporterShoppingCartPage() {
     if (confirm("カートを空にしますか？")) {
       updateCart(() => ({ updatedAtISO: new Date().toISOString(), items: [] }));
     }
-  };
-
-  // デモ投入（動作確認用）
-  const addDemo = () => {
-    const demo: CartItem[] = [
-      { productId: "p-water-2l",     productName: "飲料水 2L×6本（1ケース）", unit: "ケース", quantity: 2, unitPriceYen: 1380 },
-      { productId: "p-instant-rice", productName: "サトウのごはん 200g×5食",   unit: "箱",    quantity: 4, unitPriceYen: 598  },
-      { productId: "p-mask",         productName: "不織布マスク(50枚)",        unit: "箱",    quantity: 3, unitPriceYen: 398  },
-    ];
-    demo.forEach(addItem);
-    alert("デモ商品をカートに追加しました。");
   };
 
   // チェックアウト（モック：バックエンドは別チーム）
@@ -127,17 +107,8 @@ export default function SupporterShoppingCartPage() {
           {loading ? "読み込み中…" : <>最終更新：<b>{new Date(cart.updatedAtISO).toLocaleString()}</b></>}
         </p>
 
-        {/* アクション */}
+        {/* アクション（デモ追加ボタンは削除） */}
         <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            onClick={addDemo}
-            className="rounded-xl px-4 py-2 text-white"
-            style={{ backgroundColor: "#111827" }}
-            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#0b1220")}
-            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#111827")}
-          >
-            デモ商品を追加
-          </button>
           <button onClick={clearAll} className="rounded-xl px-4 py-2 border hover:bg-gray-50">
             カートを空にする
           </button>
@@ -202,15 +173,15 @@ export default function SupporterShoppingCartPage() {
             </div>
           </div>
 
-          {/* 右：サマリ（ログインUIは不要） */}
+          {/* 右：サマリ */}
           <aside className="lg:col-span-1">
             <div className="rounded-2xl border p-4 space-y-4">
               <div>
                 <div className="text-sm text-gray-500">合計数量</div>
-                <div className="text-xl font-bold">{totals.totalUnits.toLocaleString()} 単位</div>
+                <div className="text-xl font-bold">{totals.totalUnits.toLocaleString()} 点</div>
               </div>
               <div>
-                <div className="text-sm text-gray-500">小計（価格設定あり）</div>
+                <div className="text-sm text-gray-500">小計</div>
                 <div className="text-2xl font-extrabold">{fmtJPY(totals.subtotal)}</div>
               </div>
 
@@ -222,7 +193,7 @@ export default function SupporterShoppingCartPage() {
                 onMouseOver={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
                 onMouseOut={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
               >
-                {submitting ? "処理中…" : "購入手続きへ"}
+                {submitting ? "処理中…" : "注文手続きへ"}
               </button>
 
               
@@ -234,7 +205,7 @@ export default function SupporterShoppingCartPage() {
   );
 }
 
-/* ====== 画像表示（NeedsList の ProductHeroImage と同じ候補生成＆onError 逐次切替） ====== */
+/* ====== 画像表示（申請画面と同じ方式：候補URLを順にフォールバック） ====== */
 function CartImage({
   productId,
   imageUrl,
@@ -248,7 +219,6 @@ function CartImage({
   const [candidates, setCandidates] = useState<string[]>([]);
 
   useEffect(() => {
-    // 参考実装と同様：imageUrl があればそれを先頭に、無ければ /products と /images を拡張子違いで並べる
     const given = imageUrl ? [imageUrl] : [];
     const fallbacks = ["/products", "/images"].flatMap((base) =>
       [".jpg", ".png", ".webp"].map((ext) => `${base}/${productId}${ext}`)
@@ -267,7 +237,6 @@ function CartImage({
   };
 
   if (!src) {
-    // 参考コードはカテゴリ別アイコンを出していたが、カートではカテゴリ情報が無いのでプレースホルダ表示
     return (
       <div className="h-full w-full grid place-items-center bg-gradient-to-br from-gray-100 to-gray-200 text-xs text-gray-500">
         No Image
