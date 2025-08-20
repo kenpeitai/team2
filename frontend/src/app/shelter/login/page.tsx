@@ -1,10 +1,12 @@
 "use client";
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { loginUser } from '@/lib/api';
 
 export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
+  const router = useRouter();
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -13,8 +15,16 @@ export default function LoginPage() {
     const password = form.get('password');
     const body = { email: typeof email === 'string' ? email : '', password: typeof password === 'string' ? password : '' };
     const res = await loginUser(body);
-    if (res.token) localStorage.setItem('token', res.token);
-    setMessage(res.message ?? 'ログインしました');
+    if (res.token) {
+      localStorage.setItem('token', res.token);
+      setMessage('ログインしました。リダイレクト中...');
+      // ログイン成功時にシェルターのホーム画面に遷移
+      setTimeout(() => {
+        router.push('/shelter/home');
+      }, 1000);
+    } else {
+      setMessage(res.message ?? 'ログインに失敗しました');
+    }
   }
 
   return (
