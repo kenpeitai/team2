@@ -366,9 +366,58 @@
 ### フロントエンド統合例
 
 #### 1. 避難所ログイン後の必要物資リスト作成フロー
-```javascript
+```typescript
+// 型定義
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+interface AuthResponse {
+  token: string;
+  message: string;
+  shelterId?: number;
+}
+
+interface Product {
+  id: number;
+  productId: string;
+  name: string;
+  unit: string;
+  weightGrams: number;
+  category: string;
+  isActive: boolean;
+}
+
+interface NeedsListDto {
+  shelterId: number;
+  evacueeCount: number;
+  targetDays: number;
+  totalUnits?: number;
+  totalWeightGrams?: number;
+  waterCases?: number;
+  items?: NeedsListItemDto[];
+}
+
+interface NeedsListItemDto {
+  productId: string;
+  productName: string;
+  unit: string;
+  category: string;
+  quantity: number;
+  priority: 'high' | 'medium' | 'low';
+  notes?: string;
+  perUnitWeightGrams?: number;
+  totalWeightGrams?: number;
+  droneEligible?: boolean;
+  droneEligibleWholeOrder?: boolean;
+  dronePerUnitEligible?: boolean;
+  droneUnitsPerFlight?: number;
+  droneFlightsRequired?: number;
+}
+
 // 1. 避難所ログイン
-const loginShelter = async (email, password) => {
+const loginShelter = async (email: string, password: string): Promise<AuthResponse> => {
   const response = await fetch('http://localhost:8080/api/auth/login-shelter', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -376,23 +425,27 @@ const loginShelter = async (email, password) => {
   });
   
   if (response.ok) {
-    const data = await response.json();
+    const data: AuthResponse = await response.json();
     localStorage.setItem('token', data.token);
-    localStorage.setItem('shelterId', data.shelterId);
+    if (data.shelterId) {
+      localStorage.setItem('shelterId', data.shelterId.toString());
+    }
     return data;
   }
+  throw new Error('ログインに失敗しました');
 };
 
 // 2. 商品カタログ取得
-const loadProductCatalog = async () => {
+const loadProductCatalog = async (): Promise<Product[]> => {
   const response = await fetch('http://localhost:8080/api/supplies/products');
   if (response.ok) {
     return await response.json();
   }
+  throw new Error('商品カタログの取得に失敗しました');
 };
 
 // 3. 必要物資リスト作成
-const createNeedsList = async (needsListData) => {
+const createNeedsList = async (needsListData: NeedsListDto): Promise<NeedsListDto> => {
   const token = localStorage.getItem('token');
   const response = await fetch('http://localhost:8080/api/supplies/needs-lists', {
     method: 'POST',
@@ -406,24 +459,64 @@ const createNeedsList = async (needsListData) => {
   if (response.ok) {
     return await response.json();
   }
+  throw new Error('必要物資リストの作成に失敗しました');
 };
 
 // 4. 避難所の必要物資リスト履歴取得
-const loadNeedsListHistory = async () => {
+const loadNeedsListHistory = async (): Promise<NeedsListDto[]> => {
   const shelterId = localStorage.getItem('shelterId');
+  if (!shelterId) {
+    throw new Error('避難所IDが設定されていません');
+  }
+  
   const response = await fetch(`http://localhost:8080/api/supplies/needs-lists/shelter/${shelterId}`);
   if (response.ok) {
     return await response.json();
   }
+  throw new Error('必要物資リスト履歴の取得に失敗しました');
 };
 ```
 
 #### 2. 必要物資リストの完全な作成例
-```javascript
+```typescript
 // フロントエンドのNeedsListPayloadをバックエンドに送信
-const submitNeedsList = async (frontendPayload) => {
-  const backendPayload = {
-    shelterId: parseInt(localStorage.getItem('shelterId')),
+interface FrontendNeedsListPayload {
+  evacueeCount: number;
+  targetDays: number;
+  items: Array<{
+    id: string;
+    productId: string;
+    productName: string;
+    unit: string;
+    category: string;
+    quantity: number;
+    priority: 'high' | 'medium' | 'low';
+    notes?: string;
+    perUnitWeightGrams: number;
+    totalWeightGrams: number;
+    droneEligible: boolean;
+    droneEligibleWholeOrder: boolean;
+    dronePerUnitEligible: boolean;
+    droneUnitsPerFlight: number | null;
+    droneFlightsRequired: number | null;
+  }>;
+  analytics: {
+    totals: {
+      units: number;
+      weightGrams: number;
+      waterCases: number;
+    };
+  };
+}
+
+const submitNeedsList = async (frontendPayload: FrontendNeedsListPayload): Promise<NeedsListDto> => {
+  const shelterId = localStorage.getItem('shelterId');
+  if (!shelterId) {
+    throw new Error('避難所IDが設定されていません');
+  }
+
+  const backendPayload: NeedsListDto = {
+    shelterId: parseInt(shelterId),
     evacueeCount: frontendPayload.evacueeCount,
     targetDays: frontendPayload.targetDays,
     totalUnits: frontendPayload.analytics.totals.units,
@@ -451,11 +544,13 @@ const submitNeedsList = async (frontendPayload) => {
 };
 ```
 
-### JavaScript (fetch) での使用例
+### TypeScript (fetch) での使用例
 
-```javascript
+```typescript
+// 基本的なAPI呼び出し例
+
 // 避難所登録
-const registerShelter = async (shelterData) => {
+const registerShelter = async (shelterData: any): Promise<any> => {
   try {
     const response = await fetch('http://localhost:8080/api/auth/register-shelter', {
       method: 'POST',
@@ -481,7 +576,7 @@ const registerShelter = async (shelterData) => {
 };
 
 // 避難所ログイン
-const loginShelter = async (email, password) => {
+const loginShelter = async (email: string, password: string): Promise<any> => {
   try {
     const response = await fetch('http://localhost:8080/api/auth/login-shelter', {
       method: 'POST',
@@ -494,7 +589,6 @@ const loginShelter = async (email, password) => {
     if (response.ok) {
       const data = await response.json();
       console.log('避難所ログイン成功:', data);
-      // トークンを保存
       localStorage.setItem('token', data.token);
       return data;
     } else {
@@ -509,7 +603,7 @@ const loginShelter = async (email, password) => {
 };
 
 // 避難所一覧取得
-const getShelters = async () => {
+const getShelters = async (): Promise<any[]> => {
   try {
     const response = await fetch('http://localhost:8080/api/shelters');
     
@@ -528,7 +622,7 @@ const getShelters = async () => {
 };
 
 // 商品一覧取得
-const getProducts = async () => {
+const getProducts = async (): Promise<Product[]> => {
   try {
     const response = await fetch('http://localhost:8080/api/supplies/products');
     
@@ -547,7 +641,7 @@ const getProducts = async () => {
 };
 
 // 必要物資リスト作成
-const createNeedsList = async (needsListData) => {
+const createNeedsList = async (needsListData: NeedsListDto): Promise<NeedsListDto> => {
   try {
     const response = await fetch('http://localhost:8080/api/supplies/needs-lists', {
       method: 'POST',
@@ -573,7 +667,7 @@ const createNeedsList = async (needsListData) => {
 };
 
 // 避難所の必要物資リスト取得
-const getNeedsListsByShelter = async (shelterId) => {
+const getNeedsListsByShelter = async (shelterId: number): Promise<NeedsListDto[]> => {
   try {
     const response = await fetch(`http://localhost:8080/api/supplies/needs-lists/shelter/${shelterId}`);
     
@@ -592,7 +686,7 @@ const getNeedsListsByShelter = async (shelterId) => {
 };
 
 // 必要物資リスト詳細取得
-const getNeedsListById = async (id) => {
+const getNeedsListById = async (id: number): Promise<NeedsListDto> => {
   try {
     const response = await fetch(`http://localhost:8080/api/supplies/needs-lists/${id}`);
     
@@ -611,7 +705,7 @@ const getNeedsListById = async (id) => {
 };
 
 // 商品検索
-const searchProducts = async (keyword) => {
+const searchProducts = async (keyword: string): Promise<Product[]> => {
   try {
     const response = await fetch(`http://localhost:8080/api/supplies/products/search?keyword=${encodeURIComponent(keyword)}`);
     
