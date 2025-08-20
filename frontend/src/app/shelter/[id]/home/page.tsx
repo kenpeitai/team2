@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import MenuCard from '@/components/MenuCard';
@@ -8,11 +9,30 @@ import SupportTable from './components/SupportTable';
 import RecentActivities from './components/RecentActivities';
 import Layout from '@/components/Layout';
 import { useShelter } from '@/hooks/useShelter';
+import { getShelterStatus } from '@/lib/api/shelterStatus';
+import type { ShelterStatusDto } from '@/types/api';
 
 export default function Home() {
   const params = useParams();
   const shelterId = params.id as string;
-  const { shelter, loading, error } = useShelter();
+  const { shelter } = useShelter();
+  const [status, setStatus] = useState<ShelterStatusDto | null>(null);
+
+  useEffect(() => {
+    const idNum = Number(shelterId);
+    if (!idNum || Number.isNaN(idNum)) {
+      return;
+    }
+    const fetchStatus = async () => {
+      try {
+        const data = await getShelterStatus(idNum);
+        setStatus(data);
+      } catch (e) {
+        console.error('避難所状況の取得に失敗しました:', e);
+      }
+    };
+    fetchStatus();
+  }, [shelterId]);
 
   const supportData = [
     { supporter: '田中建設株式会社', support: '避難所のテント設営', date: '2024-01-15' },
@@ -22,40 +42,11 @@ export default function Home() {
     { supporter: '地域消防署', support: '安全確認・巡回', date: '2024-01-13' },
   ];
 
-  const evacuationData = {
-    totalEvacuees: shelter?.evacueeCount ?? 0,
-    injuredPeople: shelter?.injuredCount ?? 0,
-    lastUpdated: shelter?.updatedAt
-      ? new Date(shelter.updatedAt).toLocaleString('ja-JP', { hour12: false })
-      : '-'
-  };
-
   const recentActivities = [
     { message: '避難所状況が更新されました', time: '2時間前', color: 'bg-green-500' },
     { message: '必要物資リストが更新されました', time: '4時間前', color: 'bg-blue-500' },
     { message: '在庫管理が更新されました', time: '6時間前', color: 'bg-orange-500' },
   ];
-
-  if (loading) {
-    return (
-      <Layout>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-gray-900">避難所情報を読み込み中...</h1>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (error) {
-    return (
-      <Layout>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-red-600">エラー</h1>
-          <p className="text-gray-600 mt-2">{error}</p>
-        </div>
-      </Layout>
-    );
-  }
 
   return (
     <Layout>
@@ -74,21 +65,21 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <StatCard
                 title="総避難者数"
-                value={evacuationData.totalEvacuees}
+                value={status?.evacueeCount ?? 0}
                 icon="👥"
                 bgColor="bg-red-100"
                 textColor="text-red-600"
               />
               <StatCard
                 title="怪我人"
-                value={evacuationData.injuredPeople}
+                value={status?.injuredCount ?? 0}
                 icon="🏥"
                 bgColor="bg-orange-100"
                 textColor="text-orange-600"
               />
             </div>
             <div className="mt-4 text-right">
-              <p className="text-sm text-gray-500">最終更新: {evacuationData.lastUpdated}</p>
+              <p className="text-sm text-gray-500">最終更新: {status?.updatedAt ? new Date(status.updatedAt).toLocaleString('ja-JP', { hour12: false }) : '-'}</p>
             </div>
           </div>
 
