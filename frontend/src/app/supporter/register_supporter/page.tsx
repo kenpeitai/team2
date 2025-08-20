@@ -102,53 +102,7 @@ export default function RegisterPage() {
               </div>
             </section>
 
-            {/* クレジットカード情報 */}
-            <section className="space-y-4">
-              <span className="block text-sm font-medium">クレジットカード情報</span>
-              <div>
-                <label htmlFor="cardNumber" className="sr-only">
-                  カード番号
-                </label>
-                <input
-                  id="cardNumber"
-                  name="cardNumber"
-                  type="text"
-                  inputMode="numeric"
-                  required
-                  className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30"
-                  placeholder="カード番号"
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="cardExpiry" className="sr-only">
-                    有効期限 (MM/YY)
-                  </label>
-                  <input
-                    id="cardExpiry"
-                    name="cardExpiry"
-                    type="text"
-                    required
-                    className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30"
-                    placeholder="有効期限 (MM/YY)"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="cardCvc" className="sr-only">
-                    CVC
-                  </label>
-                  <input
-                    id="cardCvc"
-                    name="cardCvc"
-                    type="text"
-                    inputMode="numeric"
-                    required
-                    className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30"
-                    placeholder="CVC"
-                  />
-                </div>
-              </div>
-            </section>
+          
 
             <div className="pt-2">
               <button
