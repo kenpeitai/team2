@@ -1,5 +1,6 @@
 "use client";
-import React, { useMemo, useReducer, useEffect } from "react";
+import Layout from "@/components/Layout";
+import React, { useMemo, useState, useEffect } from "react";
 
 // ===== Types =====
 export type Priority = "high" | "medium" | "low";
@@ -446,6 +447,7 @@ export default function NeedsListForm({
   }
 
   return (
+    <Layout>
     <div className="min-h-screen bg-white overflow-x-hidden pb-24">{/* pbで固定バー分の余白 */}
       {/* ヒーロー */}
       <div className="mx-auto max-w-screen-xl px-4 pt-8 pb-4">
@@ -660,6 +662,7 @@ export default function NeedsListForm({
         </div>
       </div>
     </div>
+    </Layout>
   );
 }
 
