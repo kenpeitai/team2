@@ -26,6 +26,22 @@ export default function RegisterPage() {
               />
             </section>
 
+            {/* 電話番号 (追加) */}
+            <section>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium mb-1">
+                電話番号
+              </label>
+              <input
+                id="phoneNumber"
+                name="phoneNumber"
+                type="tel"
+                inputMode="tel"
+                required
+                className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30"
+                placeholder="例：090-1234-5678"
+              />
+            </section>
+
             {/* メールアドレス */}
             <section className="space-y-4">
               <div>
