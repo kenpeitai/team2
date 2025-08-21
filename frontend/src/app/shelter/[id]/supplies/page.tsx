@@ -10,26 +10,61 @@ import { RakutenProductManager } from "@/components/RakutenProductManager";
 import { DRONE_MAX_PAYLOAD_G, WATER_L_PER_PERSON_PER_DAY } from "./constants";
 import { Product, NeedRow, NeedsListPayload, Priority } from "./types";
 
-// ===== Component =====
+// ===== 型定義 =====
+
+interface NeedsListFormProps {
+  products?: Product[];
+  initialEvacueeCount?: number;
+  initialTargetDays?: number;
+  onSubmit?: (payload: NeedsListPayload) => void;
+  enforceVerifiedImages?: boolean;
+}
+
+// ===== メインコンポーネント =====
+
+/**
+ * 避難所物資リスト作成フォーム
+ * 楽天市場商品データを使用して物資の需要リストを作成
+ */
 export default function NeedsListForm({
   products,
   initialEvacueeCount = 100,
   initialTargetDays = 3,
   onSubmit,
   enforceVerifiedImages = false,
-}: {
-  products?: Product[];
-  initialEvacueeCount?: number;
-  initialTargetDays?: number;
-  onSubmit?: (payload: NeedsListPayload) => void;
-  enforceVerifiedImages?: boolean;
-}) {
+}: NeedsListFormProps) {
+  // ===== 状態管理 =====
   const [currentProducts, setCurrentProducts] = useState<Product[]>([]);
   const [databaseProducts, setDatabaseProducts] = useState<Product[]>([]); // データベース保存用
   const [isLoading, setIsLoading] = useState(false);
   
+  // ===== データ処理 =====
+  
+  /**
+   * 楽天市場商品データの準備完了時のハンドラー
+   */
+  const handleProductsReady = useCallback((products: Product[]) => {
+    setCurrentProducts(products);
+  }, []);
+  
+  /**
+   * データベース保存用商品データの準備完了時のハンドラー
+   */
+  const handleDatabaseProductsReady = useCallback((products: Product[]) => {
+    setDatabaseProducts(products);
+  }, []);
+  
+  /**
+   * ローディング状態の変更ハンドラー
+   */
+  const handleLoadingChange = useCallback((loading: boolean) => {
+    setIsLoading(loading);
+  }, []);
+  
   // 楽天市場商品データまたはpropsから渡された商品データを使用
-  const catalog = products && products.length > 0 ? products : currentProducts;
+  const catalog = currentProducts.length > 0 ? currentProducts : (products || []);
+
+  // ===== カスタムフック =====
   
   const { state, dispatch } = useSuppliesState({
     initialEvacueeCount,
@@ -40,13 +75,21 @@ export default function NeedsListForm({
   const { productMap, grouped, selectedIds } = useProductCatalog(catalog, state.rows);
   const { validateAndCreatePayload } = useNeedsListValidation(productMap, DRONE_MAX_PAYLOAD_G);
 
-  // 優先度順ソート（表示用）
+  // ===== 計算処理 =====
+  
+  /**
+   * 優先度順ソート（表示用）
+   * high → medium → low の順でソート
+   */
   const sortedRows = useMemo(() => {
     const rank: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
     return [...state.rows].sort((a, b) => rank[a.priority] - rank[b.priority]);
   }, [state.rows]);
 
-  // サマリー計算
+  /**
+   * サマリー計算
+   * 総数量、総重量、水のケース数を計算
+   */
   const totals = useMemo(() => {
     let units = 0, weight = 0, waterCases = 0;
     state.rows.forEach((r: NeedRow) => {
@@ -63,7 +106,12 @@ export default function NeedsListForm({
     };
   }, [state.rows, productMap]);
 
-  // イベントハンドラー
+  // ===== イベントハンドラー =====
+  
+  /**
+   * 商品変更ハンドラー
+   * 重複チェックを行ってから商品を変更
+   */
   const handleProductChange = useCallback((rowId: string, newId: string) => {
     const usedByOther = state.rows.some((rr: NeedRow) => rr.id !== rowId && rr.productId === newId);
     if (usedByOther) {
@@ -73,6 +121,10 @@ export default function NeedsListForm({
     dispatch({ type: 'UPDATE_ROW', payload: { id: rowId, updates: { productId: newId } } });
   }, [state.rows, dispatch]);
 
+  /**
+   * 行追加ハンドラー
+   * 未使用の商品を自動選択して新しい行を追加
+   */
   const handleAddRow = useCallback(() => {
     const used = new Set(state.rows.map((r: NeedRow) => r.productId));
     const next = catalog.find((p: Product) => !used.has(p.id));
@@ -89,6 +141,10 @@ export default function NeedsListForm({
     }});
   }, [state.rows, catalog, dispatch]);
 
+  /**
+   * 行削除ハンドラー
+   * 最低1行は残すように制限
+   */
   const handleRemoveRow = useCallback((id: string) => {
     if (state.rows.length > 1) {
       dispatch({ type: 'REMOVE_ROW', payload: id });
@@ -102,7 +158,7 @@ export default function NeedsListForm({
     dispatch({ type: 'SET_SAVING', payload: true });
     try {
       onSubmit ? onSubmit(payload) : console.log("NeedsListPayload", payload);
-      alert("必要物資リストを作成しました（コンソールにも出力しています）");
+      alert("必要物資リストを作成しました");
     } finally {
       dispatch({ type: 'SET_SAVING', payload: false });
     }
@@ -122,9 +178,9 @@ export default function NeedsListForm({
         {/* 楽天市場商品データ管理 */}
         <section className="mx-auto max-w-7xl px-4 py-6">
           <RakutenProductManager
-            onProductsReady={setCurrentProducts}
-            onDatabaseProductsReady={setDatabaseProducts}
-            onLoadingChange={setIsLoading}
+            onProductsReady={handleProductsReady}
+            onDatabaseProductsReady={handleDatabaseProductsReady}
+            onLoadingChange={handleLoadingChange}
           />
         </section>
 

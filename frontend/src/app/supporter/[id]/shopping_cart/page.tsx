@@ -85,7 +85,6 @@ export default function SupporterShoppingCartPage() {
     setSubmitting(true);
     try {
       const orderId = "ORD-" + Math.random().toString(36).slice(2, 8).toUpperCase();
-      console.log("checkout payload (mock)", cart);
       alert(`支援手続きに進みます（モック）。注文番号: ${orderId}`);
     } finally {
       setSubmitting(false);

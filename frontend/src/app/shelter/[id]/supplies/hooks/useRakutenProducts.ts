@@ -3,41 +3,59 @@ import { getCheapestItemByKeyword } from '@/lib/api/rakuten';
 import { RAKUTEN_PRODUCT_CATALOG, RakutenProductDefinition } from '../rakutenCatalog';
 import { Product } from '../types';
 
-// 楽天市場から取得した商品データの型
+// ===== 型定義 =====
+
+/**
+ * 楽天市場から取得した商品データの型
+ * 基本商品情報 + 楽天市場の詳細情報を保持
+ */
 export interface RakutenProductData extends Product {
   // 元の商品定義の基本情報（データベース保存用）
   baseProductId: string; // 元の商品ID（例: m-throat-candy）
   baseName: string;      // 元の商品名（例: のど飴）
   
+  // 楽天市場から取得した商品情報
   rakutenItem?: {
-    name: string;
-    price: number;
-    url: string;
-    image?: string;
-    shop: string;
-    rating?: number;
-    reviews?: number;
-    itemCode?: string;
+    name: string;        // 楽天市場の商品名
+    price: number;       // 価格
+    url: string;         // 商品URL
+    image?: string;      // 商品画像URL
+    shop: string;        // ショップ名
+    rating?: number;     // 評価
+    reviews?: number;    // レビュー数
+    itemCode?: string;   // 楽天市場商品コード
   };
+  
+  // 検索状態管理
   searchStatus: 'idle' | 'loading' | 'success' | 'error';
-  lastSearched?: string;
-  rakutenId?: string; // 楽天市場商品のID
+  lastSearched?: string; // 最後に検索したキーワード
+  rakutenId?: string;    // 楽天市場商品のID
 }
 
-// 楽天市場商品データ管理フック
-export function useRakutenProducts() {
+// ===== 定数 =====
+
+const API_DELAY_MS = parseInt(process.env.NEXT_PUBLIC_RAKUTEN_API_DELAY || '1500'); // API呼び出し間隔（ミリ秒）
+const MAX_RETRIES = 3; // 最大リトライ回数
+const CACHE_DURATION = 30 * 60 * 1000; // 30分間キャッシュ
+
+// ===== メインフック =====
+
+/**
+ * 楽天市場商品データ管理フック
+ * 商品カタログの初期化、楽天市場API検索、キャッシュ管理を担当
+ */
+export function useRakutenProducts(onProductsReady?: (products: Product[]) => void) {
+  // ===== 状態管理 =====
   const [products, setProducts] = useState<Map<string, RakutenProductData>>(new Map());
   const [isInitialized, setIsInitialized] = useState(false);
-  
-  // 楽天市場API制限設定
-  const API_DELAY_MS = parseInt(process.env.NEXT_PUBLIC_RAKUTEN_API_DELAY || '2000'); // API呼び出し間隔（ミリ秒）
-  const MAX_RETRIES = 3; // 最大リトライ回数
-  
-  // キャッシュ機能
   const [searchCache, setSearchCache] = useState<Map<string, { data: any; timestamp: number }>>(new Map());
-  const CACHE_DURATION = 30 * 60 * 1000; // 30分間キャッシュ
 
-  // 初期化：楽天市場商品カタログから基本データを作成
+  // ===== 初期化処理 =====
+  
+  /**
+   * 商品カタログの初期化
+   * 楽天市場商品カタログから基本データを作成
+   */
   useEffect(() => {
     const initialProducts = new Map<string, RakutenProductData>();
     
@@ -61,7 +79,28 @@ export function useRakutenProducts() {
     setIsInitialized(true);
   }, []);
 
-  // 特定の商品を楽天市場で検索
+  // ===== ユーティリティ関数 =====
+  
+  /**
+   * 楽天市場商品のIDを生成
+   * @param baseId 基本商品ID
+   * @param itemCode 楽天市場商品コード
+   * @returns 楽天市場商品ID
+   */
+  const generateRakutenProductId = useCallback((baseId: string, itemCode?: string): string => {
+    if (itemCode) {
+      return `rakuten-${baseId}-${itemCode}`;
+    }
+    return `rakuten-${baseId}-${Date.now()}`;
+  }, []);
+
+  // ===== 検索処理 =====
+  
+  /**
+   * 特定の商品を楽天市場で検索（キャッシュ機能付き）
+   * @param productId 商品ID
+   * @param keyword 検索キーワード（省略時は商品定義から自動取得）
+   */
   const searchProduct = useCallback(async (productId: string, keyword?: string) => {
     const product = products.get(productId);
     if (!product) return;
@@ -72,9 +111,33 @@ export function useRakutenProducts() {
     // 検索キーワードを決定
     const searchKeyword = keyword || definition.searchKeywords[0];
     
+    // キャッシュチェック
+    const cacheKey = `${productId}:${searchKeyword}`;
+    const cached = searchCache.get(cacheKey);
+    const now = Date.now();
+    
+    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+      return new Promise<void>((resolve) => {
+        setProducts(prev => {
+          const newProducts = new Map(prev);
+          const rakutenId = generateRakutenProductId(productId, cached.data?.itemCode);
+          const updatedProduct: RakutenProductData = {
+            ...product,
+            searchStatus: cached.data ? 'success' : 'error',
+            lastSearched: searchKeyword,
+            rakutenItem: cached.data || undefined,
+            rakutenId: cached.data ? rakutenId : undefined
+          };
+          newProducts.set(productId, updatedProduct);
+          resolve();
+          return newProducts;
+        });
+      });
+    }
+    
     // 既に同じキーワードで検索済みの場合はスキップ
     if (product.lastSearched === searchKeyword && product.searchStatus === 'success') {
-      return;
+      return Promise.resolve();
     }
 
     // 検索状態を更新
@@ -89,89 +152,89 @@ export function useRakutenProducts() {
       // 楽天市場APIで検索
       const rakutenItem = await getCheapestItemByKeyword(searchKeyword);
       
-      setProducts(prev => {
-        const newProducts = new Map(prev);
-        const rakutenId = generateRakutenProductId(productId, rakutenItem?.itemCode);
-        const updatedProduct: RakutenProductData = {
-          ...product,
-          searchStatus: rakutenItem ? 'success' : 'error',
-          lastSearched: searchKeyword,
-          rakutenItem: rakutenItem || undefined,
-          rakutenId: rakutenItem ? rakutenId : undefined
-        };
-        newProducts.set(productId, updatedProduct);
-        
-        // デバッグ用：楽天市場データの取得状況をログ出力
-        if (rakutenItem) {
-          console.log(`楽天市場データ取得成功 (${productId}):`, {
-            name: rakutenItem.name,
-            price: rakutenItem.price,
-            shop: rakutenItem.shop
-          });
-        }
-        
-        return newProducts;
+      // キャッシュに保存
+      setSearchCache(prev => {
+        const newCache = new Map(prev);
+        newCache.set(cacheKey, { data: rakutenItem, timestamp: now });
+        return newCache;
+      });
+      
+      return new Promise<void>((resolve) => {
+        setProducts(prev => {
+          const newProducts = new Map(prev);
+          const rakutenId = generateRakutenProductId(productId, rakutenItem?.itemCode);
+          const updatedProduct: RakutenProductData = {
+            ...product,
+            searchStatus: rakutenItem ? 'success' : 'error',
+            lastSearched: searchKeyword,
+            rakutenItem: rakutenItem || undefined,
+            rakutenId: rakutenItem ? rakutenId : undefined
+          };
+          newProducts.set(productId, updatedProduct);
+          
+          // 状態更新後にresolve
+          setTimeout(() => resolve(), 0);
+          return newProducts;
+        });
       });
     } catch (error) {
-      console.error(`楽天市場検索エラー (${productId}):`, error);
-      
-      setProducts(prev => {
-        const newProducts = new Map(prev);
-        const updatedProduct = { ...product, searchStatus: 'error' as const, lastSearched: searchKeyword };
-        newProducts.set(productId, updatedProduct);
-        return newProducts;
+      return new Promise<void>((resolve) => {
+        setProducts(prev => {
+          const newProducts = new Map(prev);
+          const updatedProduct = { ...product, searchStatus: 'error' as const, lastSearched: searchKeyword };
+          newProducts.set(productId, updatedProduct);
+          
+          // 状態更新後にresolve
+          setTimeout(() => resolve(), 0);
+          return newProducts;
+        });
       });
     }
-  }, [products]);
+  }, [products, searchCache, CACHE_DURATION, generateRakutenProductId]);
 
-  // 複数の商品を並列検索（バッチ処理で高速化）
+  /**
+   * 複数の商品を順次検索（レート制限対応）
+   * @param productIds 検索する商品IDの配列
+   */
   const searchMultipleProducts = useCallback(async (productIds: string[]) => {
-    const BATCH_SIZE = 3; // 同時に処理する商品数
-    const batches = [];
-    
-    // 商品IDをバッチに分割
-    for (let i = 0; i < productIds.length; i += BATCH_SIZE) {
-      batches.push(productIds.slice(i, i + BATCH_SIZE));
-    }
-    
-    console.log(`楽天市場API並列検索開始: ${productIds.length}商品を${batches.length}バッチで処理`);
-    
-    // バッチごとに並列処理
-    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-      const batch = batches[batchIndex];
-      console.log(`バッチ ${batchIndex + 1}/${batches.length} 処理中: ${batch.join(', ')}`);
+    // 商品を1つずつ順次処理（レート制限対応）
+    for (let i = 0; i < productIds.length; i++) {
+      const productId = productIds[i];
+      await searchProduct(productId);
       
-      // バッチ内の商品を並列検索
-      const promises = batch.map(productId => searchProduct(productId));
-      await Promise.all(promises);
-      
-      // バッチ間の待機時間（API制限対応）
-      if (batchIndex < batches.length - 1) {
-        console.log(`バッチ間待機: ${API_DELAY_MS}ms待機中...`);
+      // 商品間の待機時間（API制限対応）
+      if (i < productIds.length - 1) {
         await new Promise(resolve => setTimeout(resolve, API_DELAY_MS));
       }
     }
-    
-    console.log('楽天市場API並列検索完了');
   }, [searchProduct]);
 
-  // 全商品を検索
+  /**
+   * 全商品を検索（優先度付き）
+   * 医薬品 → 食料 → 生活用品 → 衛生の順で検索
+   */
   const searchAllProducts = useCallback(async () => {
-    const allProductIds = RAKUTEN_PRODUCT_CATALOG.map(p => p.id);
+    // 優先度順に商品を並べ替え（医薬品 → 食料 → 生活用品 → 衛生）
+    const priorityOrder = ['医薬品', '食料', '生活用品', '衛生'];
+    const sortedProducts = [...RAKUTEN_PRODUCT_CATALOG].sort((a, b) => {
+      const aIndex = priorityOrder.indexOf(a.category);
+      const bIndex = priorityOrder.indexOf(b.category);
+      return aIndex - bIndex;
+    });
+    
+    const allProductIds = sortedProducts.map(p => p.id);
     await searchMultipleProducts(allProductIds);
-  }, [searchMultipleProducts]);
+    
+    // 検索完了後に状態更新の完了を待つ
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }, [searchMultipleProducts, products]);
 
-  // 楽天市場商品のIDを生成する関数
-  const generateRakutenProductId = useCallback((baseId: string, itemCode?: string): string => {
-    if (itemCode) {
-      // 楽天市場の商品コードがある場合は、それを使用してIDを生成
-      return `rakuten-${baseId}-${itemCode}`;
-    }
-    // 商品コードがない場合は、タイムスタンプベースのIDを生成
-    return `rakuten-${baseId}-${Date.now()}`;
-  }, []);
-
-  // データベース保存用の商品データを取得（元の商品定義のプロパティを保持）
+  // ===== データ取得関数 =====
+  
+  /**
+   * データベース保存用の商品データを取得
+   * 元の商品定義のプロパティを保持
+   */
   const getProductsForDatabase = useCallback((): Product[] => {
     return Array.from(products.values()).map(product => {
       // 楽天市場データがある場合でも、元の商品定義のプロパティを保持
@@ -209,24 +272,19 @@ export function useRakutenProducts() {
     });
   }, [products]);
 
-  // 表示用の商品データを取得（楽天市場商品IDを使用）
+  /**
+   * 表示用の商品データを取得（楽天市場商品IDを使用）
+   * 楽天市場データがある場合は楽天市場の商品名をメインとして使用
+   */
   const getProductsAsArray = useCallback((): Product[] => {
-    console.log('getProductsAsArray called, products count:', products.size);
-    return Array.from(products.values()).map(product => {
+    const productsArray = Array.from(products.values());
+    const rakutenProducts = productsArray.filter(p => p.rakutenItem);
+    const basicProducts = productsArray.filter(p => !p.rakutenItem);
+    
+    return productsArray.map(product => {
       // 楽天市場データがある場合は、楽天市場商品IDを使用
       if (product.rakutenItem) {
-        console.log('楽天市場データあり:', product.id, product.rakutenItem.name);
         const rakutenId = generateRakutenProductId(product.id, product.rakutenItem.itemCode);
-        
-        // デバッグログ
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Processing Rakuten item:', {
-            productId: product.id,
-            rakutenItemName: product.rakutenItem.name,
-            baseName: product.baseName,
-            generatedId: rakutenId
-          });
-        }
         
         return {
           id: product.baseProductId, // 元の商品IDを保持（例: p-water-2l）
@@ -264,7 +322,9 @@ export function useRakutenProducts() {
     });
   }, [products, generateRakutenProductId]);
 
-  // カテゴリ別にグループ化
+  /**
+   * カテゴリ別にグループ化
+   */
   const getProductsByCategory = useCallback(() => {
     const grouped = new Map();
     products.forEach(product => {
@@ -282,7 +342,9 @@ export function useRakutenProducts() {
     return grouped;
   }, [products]);
 
-  // 検索状態の統計
+  /**
+   * 検索状態の統計を取得
+   */
   const getSearchStats = useCallback(() => {
     let idle = 0, loading = 0, success = 0, error = 0;
     products.forEach(product => {
@@ -296,6 +358,7 @@ export function useRakutenProducts() {
     return { idle, loading, success, error };
   }, [products]);
 
+  // ===== 戻り値 =====
   return {
     products,
     isInitialized,

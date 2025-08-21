@@ -129,15 +129,10 @@ export function ProductCard({
                 <p className="text-sm text-gray-800 leading-relaxed font-medium">
                   {product?.rakutenActualProductName || product?.name || "商品名が設定されていません"}
                 </p>
-                {/* デバッグ情報 */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="text-xs text-gray-400 mt-1">
-                    <div>Product ID: {product?.id}</div>
-                    <div>Row Product ID: {row.productId}</div>
-                    <div>楽天商品名: {product?.rakutenActualProductName || 'なし'}</div>
-                    <div>検索キーワード: {product?.searchKeyword || 'なし'}</div>
-                    <div>楽天データあり: {product?.rakutenActualProductName ? 'はい' : 'いいえ'}</div>
-                  </div>
+                {product?.rakutenActualProductName && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    楽天商品名: {product.rakutenActualProductName}
+                  </p>
                 )}
 
               </div>
