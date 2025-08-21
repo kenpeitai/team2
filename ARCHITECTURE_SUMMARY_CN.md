@@ -57,7 +57,7 @@
 - **HealthController** - 健康检查API
 - **DatabaseHealthController** - 数据库健康检查API
 
-### ✅ 新增的支援人侧功能
+### ✅ 新增的支援人侧功能（完全实现）
 
 #### 1. 新增的 Entity（数据模型）
 - **Cart** - 购物车实体
@@ -69,24 +69,47 @@
 - **PaymentMethod** - 支付方式枚举
 - **PaymentStatus** - 支付状态枚举
 
-#### 2. 新增的 Repository
+#### 2. 新增的 DTO（数据传输对象）
+- **CartDto** - 购物车DTO
+- **CartItemDto** - 购物车项目DTO
+- **OrderDto** - 订单DTO
+- **OrderItemDto** - 订单项目DTO
+- **PaymentDto** - 支付DTO
+
+#### 3. 新增的 Repository
 - **CartRepository** - 购物车数据访问
 - **CartItemRepository** - 购物车项目数据访问
 - **PaymentRepository** - 支付数据访问
 
-#### 3. 新增的 Service
+#### 4. 新增的 Service
 - **CartService** - 购物车业务逻辑
+  - 用户别购物车管理
+  - 避难所别购物车管理
+  - 商品添加・更新・删除功能
+  - 购物车计算功能
 - **PaymentService** - 支付业务逻辑
+  - 支付记录创建・管理
+  - 支付处理・状态更新
+  - 交易ID生成
+  - 支付完成确认功能
 
-#### 4. 新增的 Controller
-- **CartController** - 购物车API
-- **OrderController** - 订单API
-- **PaymentController** - 支付API
+#### 5. 新增的 Controller
+- **CartController** - 购物车API（6个端点）
+- **OrderController** - 订单API（8个端点）
+- **PaymentController** - 支付API（10个端点）
+
+#### 6. 新增的前端API服务
+- **cart.ts** - 购物车API调用服务
+- **orders.ts** - 订单API调用服务
+- **payments.ts** - 支付API调用服务
 
 ### ❌ 仍缺少的层
 
 #### 1. 缺少的 Controller
 - **NeedsListController** - 需求清单API（可考虑集成到SupplyController中）
+
+#### 2. 缺少的 Service
+- **OrderService** - 订单业务逻辑（OrderController中直接实现的部分需要分离）
 
 ## 架构设计原则
 
@@ -125,22 +148,25 @@ Entity (数据模型层)
    - 统计功能API
    - 可考虑集成到现有的SupplyController中
 
-2. **完善 OrderController**
-   - 订单管理API
-   - 订单状态更新API
-   - 订单项目管理API
-   - 订单历史查询API
+2. **完善 OrderService**
+   - 从OrderController分离业务逻辑
+   - 订单管理业务逻辑
+   - 订单状态更新业务逻辑
+   - 订单项目管理业务逻辑
+   - 订单历史查询业务逻辑
 
 ### 2. 中优先级 - 功能优化
-1. **完善 CartService 和 CartController**
+1. **优化 CartService 和 CartController**
    - 购物车功能优化
    - 购物车项目管理优化
    - 购物车合并功能
+   - 性能改进
 
-2. **完善 PaymentService 和 PaymentController**
+2. **优化 PaymentService 和 PaymentController**
    - 支付处理优化
    - 支付状态管理优化
    - 支付回调处理
+   - 安全性强化
 
 ### 3. 低优先级 - 优化和扩展
 1. **添加缓存层**
@@ -200,11 +226,13 @@ Entity (数据模型层)
 6. **支援人侧功能** - 购物车、订单、支付系统
 
 ### 📊 统计信息
-- **总API数量**: 45个
-- **数据库表**: 11个
-- **Controller层**: 9个
-- **Service层**: 7个
-- **Repository层**: 9个
-- **Entity层**: 13个（包括枚举）
+- **总API数量**: 70个
+- **数据库表**: 12个
+- **Controller层**: 12个
+- **Service层**: 8个
+- **Repository层**: 12个
+- **Entity层**: 18个（包括枚举）
+- **DTO层**: 8个
+- **前端API服务**: 8个
 
 这个架构设计遵循了Spring Boot的最佳实践，具有良好的可维护性和可扩展性。支援人侧功能的添加使系统功能更加完整，支持完整的电商流程。

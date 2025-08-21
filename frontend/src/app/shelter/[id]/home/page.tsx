@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import MenuCard from '@/components/MenuCard';
@@ -7,10 +8,27 @@ import StatCard from './components/StatCard';
 import SupportTable from './components/SupportTable';
 import RecentActivities from './components/RecentActivities';
 import Layout from '@/components/Layout';
+import { useShelter } from '@/hooks/useShelter';
+import { getShelterStatus } from '@/lib/api/shelterStatus';
+import type { ShelterStatusDto } from '@/types/api';
 
 export default function Home() {
   const params = useParams();
   const shelterId = params.id as string;
+  const { shelter } = useShelter();
+  const [status, setStatus] = useState<ShelterStatusDto | null>(null);
+
+  useEffect(() => {
+    const idNum = Number(shelterId);
+    if (!idNum || Number.isNaN(idNum)) {
+      return;
+    }
+    const fetchStatus = async () => {
+        const data = await getShelterStatus(idNum);
+        setStatus(data);
+    };
+    fetchStatus();
+  }, [shelterId]);
 
   const supportData = [
     { supporter: '田中建設株式会社', support: '避難所のテント設営', date: '2024-01-15' },
@@ -19,12 +37,6 @@ export default function Home() {
     { supporter: '運輸会社B', support: '物資の輸送支援', date: '2024-01-14' },
     { supporter: '地域消防署', support: '安全確認・巡回', date: '2024-01-13' },
   ];
-
-  const evacuationData = {
-    totalEvacuees: 156,
-    injuredPeople: 23,
-    lastUpdated: '2024-01-15 14:30',
-  };
 
   const recentActivities = [
     { message: '避難所状況が更新されました', time: '2時間前', color: 'bg-green-500' },
@@ -37,10 +49,8 @@ export default function Home() {
       <div className="space-y-6">
         {/* ページタイトル */}
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-gray-900">災害支援システム</h1>
-          <p className="text-gray-600 mt-2">
-            避難所ID: {shelterId} の状況と支援情報を管理します
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{shelter?.shelterName ?? '災害支援システム'}</h1>
+          <p className="text-gray-600 mt-2">{shelter?.shelterAddress ? `住所: ${shelter.shelterAddress}` : `避難所ID: ${shelterId} の状況と支援情報を管理します`}</p>
         </div>
 
         {/* メインコンテンツ */}
@@ -51,21 +61,21 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <StatCard
                 title="総避難者数"
-                value={evacuationData.totalEvacuees}
+                value={status?.evacueeCount ?? 0}
                 icon="👥"
                 bgColor="bg-red-100"
                 textColor="text-red-600"
               />
               <StatCard
                 title="怪我人"
-                value={evacuationData.injuredPeople}
+                value={status?.injuredCount ?? 0}
                 icon="🏥"
                 bgColor="bg-orange-100"
                 textColor="text-orange-600"
               />
             </div>
             <div className="mt-4 text-right">
-              <p className="text-sm text-gray-500">最終更新: {evacuationData.lastUpdated}</p>
+              <p className="text-sm text-gray-500">最終更新: {status?.updatedAt ? new Date(status.updatedAt).toLocaleString('ja-JP', { hour12: false }) : '-'}</p>
             </div>
           </div>
 
@@ -126,9 +136,7 @@ export default function Home() {
                 </Link>
               </div>
 
-              <p className="mt-3 text-xs text-gray-500">
-                ※ 誤タップ防止のためカード全体クリックは無効、アクションのみクリック可。
-              </p>
+              <p className="mt-3 text-xs text-gray-500">※ 誤タップ防止のためカード全体クリックは無効、アクションのみクリック可。</p>
             </div>
           </section>
 
@@ -137,9 +145,9 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">在庫・その他メニュー</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <MenuCard
-                href={`/shelter/${shelterId}/shelter_status`}
+                href={status ? `/shelter/${shelterId}/shelter_status` : `/shelter/${shelterId}/shelter-input`}
                 title="避難所状況"
-                description="避難所状況の登録・更新"
+                description={status ? "避難所状況の登録・更新" : "避難所状況の新規登録"}
                 icon="🏠"
                 color="bg-blue-500"
               />

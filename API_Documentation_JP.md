@@ -11,7 +11,8 @@
 
 **更新日**: 2024年8月20日（支援者専用API・在庫管理・避難所状況管理機能追加）
 **更新日**: 2025年1月16日（ショッピングカート・注文・支払い機能追加）
-**バージョン**: 3.0
+**更新日**: 2025年1月17日（ショッピングカート・注文・支払いAPI完全実装）
+**バージョン**: 4.0
 
 ## 認証関連 API
 
@@ -436,6 +437,102 @@
 }
 ```
 
+### 8. 支援者登録
+**エンドポイント**: `POST /api/supporter/register`
+
+**リクエストボディ**:
+```json
+{
+  "username": "supporter001",
+  "email": "supporter@example.com",
+  "password": "password123",
+  "fullName": "支援者 太郎",
+  "phoneNumber": "090-1234-5678",
+  "cardNumber": "1234567890123456",
+  "cardExpiry": "12/25",
+  "cardCvc": "123"
+}
+```
+
+**レスポンス**:
+```json
+{
+  "id": 1,
+  "username": "supporter001",
+  "email": "supporter@example.com",
+  "fullName": "支援者 太郎",
+  "phoneNumber": "090-1234-5678",
+  "cardNumber": "1234567890123456",
+  "cardExpiry": "12/25",
+  "cardCvc": "123",
+  "role": "USER",
+  "isActive": true,
+  "createdAt": "2024-01-01T10:00:00",
+  "updatedAt": "2024-01-01T10:00:00"
+}
+```
+
+### 9. 支援可能なニーズリスト取得
+**エンドポイント**: `GET /api/supporter/needs-lists`
+
+**レスポンス**:
+```json
+[
+  {
+    "id": 1,
+    "shelterName": "緑区徳重地区会館",
+    "evacueeCount": 85,
+    "targetDays": 5,
+    "totalItems": 7,
+    "priority": "high"
+  },
+  {
+    "id": 2,
+    "shelterName": "名古屋市立大学病院",
+    "evacueeCount": 120,
+    "targetDays": 3,
+    "totalItems": 12,
+    "priority": "medium"
+  }
+]
+```
+
+### 10. 避難所別ニーズリスト取得
+**エンドポイント**: `GET /api/supporter/needs-lists/{shelterId}`
+
+**レスポンス**:
+```json
+{
+  "shelterName": "緑区徳重地区会館",
+  "evacueeCount": 85,
+  "targetDays": 5,
+  "items": [
+    {
+      "id": "1",
+      "productId": "p-water-2l",
+      "productName": "飲料水 2L×6本（1ケース）",
+      "unit": "ケース",
+      "quantity": 43,
+      "priority": "high",
+      "category": "食料",
+      "notes": "生命維持に不可欠",
+      "estimatedPrice": 1000
+    },
+    {
+      "id": "2",
+      "productId": "p-instant-rice",
+      "productName": "サトウのごはん 200g×5食",
+      "unit": "箱",
+      "quantity": 85,
+      "priority": "high",
+      "category": "食料",
+      "notes": "主食として重要",
+      "estimatedPrice": 600
+    }
+  ]
+}
+```
+
 ## 支援者管理 API（管理者用）
 **エンドポイント**: `GET /api/users`
 
@@ -470,6 +567,221 @@
 
 ### 5. 支援者削除
 **エンドポイント**: `DELETE /api/users/{id}`
+
+## ショッピングカート管理 API
+
+### 1. ユーザーの特定避難所カート取得
+**エンドポイント**: `GET /api/cart/{userId}/{shelterId}`
+
+**レスポンス**:
+```json
+{
+  "id": 1,
+  "userId": 1,
+  "shelterId": 1,
+  "isActive": true,
+  "createdAt": "2024-01-01T10:00:00",
+  "updatedAt": "2024-01-01T10:00:00",
+  "items": [
+    {
+      "id": 1,
+      "cartId": 1,
+      "productId": "p-water-2l",
+      "productName": "飲料水 2L×6本（1ケース）",
+      "unit": "ケース",
+      "category": "食料",
+      "quantity": 2,
+      "pricePerUnit": 1000.0,
+      "totalPrice": 2000.0,
+      "notes": "緊急",
+      "createdAt": "2024-01-01T10:00:00",
+      "updatedAt": "2024-01-01T10:00:00"
+    }
+  ]
+}
+```
+
+### 2. ユーザーの全カート取得
+**エンドポイント**: `GET /api/cart/{userId}`
+
+**レスポンス**:
+```json
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "shelterId": 1,
+    "isActive": true,
+    "createdAt": "2024-01-01T10:00:00",
+    "updatedAt": "2024-01-01T10:00:00",
+    "items": []
+  }
+]
+```
+
+### 3. カートに商品追加
+**エンドポイント**: `POST /api/cart/{userId}/{shelterId}/items`
+
+**リクエストボディ**:
+```json
+{
+  "productId": "p-water-2l",
+  "productName": "飲料水 2L×6本（1ケース）",
+  "unit": "ケース",
+  "category": "食料",
+  "quantity": 2,
+  "pricePerUnit": 1000.0,
+  "notes": "緊急"
+}
+```
+
+### 4. カート商品数量更新
+**エンドポイント**: `PUT /api/cart/{userId}/{shelterId}/items/{productId}?quantity=3`
+
+### 5. カートから商品削除
+**エンドポイント**: `DELETE /api/cart/{userId}/{shelterId}/items/{productId}`
+
+### 6. カートを空にする
+**エンドポイント**: `DELETE /api/cart/{userId}/{shelterId}`
+
+## 注文管理 API
+
+### 1. 注文作成
+**エンドポイント**: `POST /api/orders`
+
+**リクエストボディ**:
+```json
+{
+  "userId": 1,
+  "shelterId": 1,
+  "totalAmount": 5000.0,
+  "shippingAddress": "東京都渋谷区...",
+  "contactPhone": "090-1234-5678",
+  "contactEmail": "user@example.com",
+  "notes": "緊急配送希望",
+  "items": [
+    {
+      "productId": "p-water-2l",
+      "productName": "飲料水 2L×6本（1ケース）",
+      "unit": "ケース",
+      "category": "食料",
+      "quantity": 2,
+      "pricePerUnit": 1000.0,
+      "totalPrice": 2000.0
+    }
+  ]
+}
+```
+
+**レスポンス**:
+```json
+{
+  "id": 1,
+  "orderNumber": "ORD-20240101-001",
+  "userId": 1,
+  "shelterId": 1,
+  "orderStatus": "PENDING",
+  "totalAmount": 5000.0,
+  "shippingAddress": "東京都渋谷区...",
+  "contactPhone": "090-1234-5678",
+  "contactEmail": "user@example.com",
+  "estimatedDeliveryDate": "2024-01-03",
+  "notes": "緊急配送希望",
+  "createdAt": "2024-01-01T10:00:00",
+  "updatedAt": "2024-01-01T10:00:00",
+  "items": []
+}
+```
+
+### 2. 注文詳細取得
+**エンドポイント**: `GET /api/orders/{orderId}`
+
+### 3. ユーザーの注文一覧取得
+**エンドポイント**: `GET /api/orders/user/{userId}`
+
+### 4. 注文ステータス更新
+**エンドポイント**: `PUT /api/orders/{orderId}/status?status=SHIPPED`
+
+### 5. 注文アイテム取得
+**エンドポイント**: `GET /api/orders/{orderId}/items`
+
+### 6. 注文アイテム追加
+**エンドポイント**: `POST /api/orders/{orderId}/items`
+
+### 7. 全注文取得
+**エンドポイント**: `GET /api/orders`
+
+### 8. 状態別注文取得
+**エンドポイント**: `GET /api/orders/status/{status}`
+
+## 支払い管理 API
+
+### 1. 支払い記録作成
+**エンドポイント**: `POST /api/payments`
+
+**リクエストボディ**:
+```json
+{
+  "orderId": 1,
+  "paymentMethod": "CREDIT_CARD",
+  "amount": 5000.0,
+  "notes": "クレジットカード支払い"
+}
+```
+
+**レスポンス**:
+```json
+{
+  "id": 1,
+  "orderId": 1,
+  "paymentMethod": "CREDIT_CARD",
+  "paymentStatus": "PENDING",
+  "amount": 5000.0,
+  "transactionId": "TXN-A1B2C3D4",
+  "paymentDate": "2024-01-01T10:00:00",
+  "receiptUrl": null,
+  "notes": "クレジットカード支払い",
+  "createdAt": "2024-01-01T10:00:00",
+  "updatedAt": "2024-01-01T10:00:00"
+}
+```
+
+### 2. 支払い処理
+**エンドポイント**: `POST /api/payments/{paymentId}/process`
+
+### 3. 支払い状態更新
+**エンドポイント**: `PUT /api/payments/{paymentId}/status?status=COMPLETED`
+
+### 4. 支払い記録取得
+**エンドポイント**: `GET /api/payments/{paymentId}`
+
+### 5. 注文別支払い記録取得
+**エンドポイント**: `GET /api/payments/order/{orderId}`
+
+### 6. ユーザー別支払い記録取得
+**エンドポイント**: `GET /api/payments/user/{userId}`
+
+### 7. 状態別支払い記録取得
+**エンドポイント**: `GET /api/payments/status/{status}`
+
+### 8. 全支払い記録取得
+**エンドポイント**: `GET /api/payments`
+
+### 9. 注文総支払い金額取得
+**エンドポイント**: `GET /api/payments/order/{orderId}/total`
+
+**レスポンス**:
+```json
+5000.0
+```
+
+### 10. 注文完全支払い確認
+**エンドポイント**: `GET /api/payments/order/{orderId}/fully-paid`
+
+**レスポンス**:
+```json
+true
+```
 
 ## 避難所状況管理 API
 
@@ -1119,6 +1431,9 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 - `GET /api/supporter/statistics/{userId}` - 支援者統計情報取得
 - `GET /api/supporter/notifications/{userId}` - 通知設定取得
 - `PUT /api/supporter/notifications/{userId}` - 通知設定更新
+- `POST /api/supporter/register` - 支援者登録
+- `GET /api/supporter/needs-lists` - 支援可能なニーズリスト取得
+- `GET /api/supporter/needs-lists/{shelterId}` - 避難所別ニーズリスト取得
 
 ### 支援者管理（管理者用）
 - `GET /api/users` - 全支援者取得
@@ -1153,28 +1468,34 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 - `DELETE /api/supplies/needs-lists/{id}` - 必要物資リスト削除
 
 ### ショッピングカート管理
-- `GET /api/carts/user/{userId}` - ユーザーのショッピングカート一覧取得
-- `GET /api/carts/{cartId}` - ショッピングカート詳細取得
-- `POST /api/carts` - ショッピングカート作成
-- `PUT /api/carts/{cartId}` - ショッピングカート更新
-- `DELETE /api/carts/{cartId}` - ショッピングカート削除
-- `POST /api/carts/{cartId}/items` - カートアイテム追加
-- `PUT /api/carts/items/{itemId}` - カートアイテム更新
-- `DELETE /api/carts/items/{itemId}` - カートアイテム削除
+- `GET /api/cart/{userId}/{shelterId}` - ユーザーの特定避難所カート取得
+- `GET /api/cart/{userId}` - ユーザーの全カート取得
+- `POST /api/cart/{userId}/{shelterId}/items` - カートに商品追加
+- `PUT /api/cart/{userId}/{shelterId}/items/{productId}` - カート商品数量更新
+- `DELETE /api/cart/{userId}/{shelterId}/items/{productId}` - カートから商品削除
+- `DELETE /api/cart/{userId}/{shelterId}` - カートを空にする
 
 ### 注文管理
-- `GET /api/orders/user/{userId}` - ユーザーの注文一覧取得
-- `GET /api/orders/{orderId}` - 注文詳細取得
 - `POST /api/orders` - 注文作成
+- `GET /api/orders/{orderId}` - 注文詳細取得
+- `GET /api/orders/user/{userId}` - ユーザーの注文一覧取得
 - `PUT /api/orders/{orderId}/status` - 注文ステータス更新
-- `DELETE /api/orders/{orderId}` - 注文削除
-- `GET /api/orders/shelter/{shelterId}` - 避難所の注文一覧取得
+- `GET /api/orders/{orderId}/items` - 注文アイテム取得
+- `POST /api/orders/{orderId}/items` - 注文アイテム追加
+- `GET /api/orders` - 全注文取得
+- `GET /api/orders/status/{status}` - 状態別注文取得
 
 ### 支払い管理
-- `GET /api/payments/order/{orderId}` - 注文の支払い記録取得
 - `POST /api/payments` - 支払い記録作成
-- `PUT /api/payments/{paymentId}/status` - 支払いステータス更新
-- `GET /api/payments/user/{userId}` - ユーザーの支払い記録取得
+- `POST /api/payments/{paymentId}/process` - 支払い処理
+- `PUT /api/payments/{paymentId}/status` - 支払い状態更新
+- `GET /api/payments/{paymentId}` - 支払い記録取得
+- `GET /api/payments/order/{orderId}` - 注文別支払い記録取得
+- `GET /api/payments/user/{userId}` - ユーザー別支払い記録取得
+- `GET /api/payments/status/{status}` - 状態別支払い記録取得
+- `GET /api/payments` - 全支払い記録取得
+- `GET /api/payments/order/{orderId}/total` - 注文総支払い金額取得
+- `GET /api/payments/order/{orderId}/fully-paid` - 注文完全支払い確認
 
 ### システム状態確認
 - `GET /api/health` - アプリケーション健康状態
@@ -1183,16 +1504,16 @@ const searchProducts = async (keyword: string): Promise<Product[]> => {
 
 ## 📊 **API 総数統計**
 
-**現在利用可能なAPI総数：48個**
+**現在利用可能なAPI総数：70個**
 
 - **認証関連**: 5個
-- **支援者専用**: 7個 ⭐ **新機能**
+- **支援者専用**: 10個 ⭐ **新機能**
 - **支援者管理（管理者用）**: 5個
 - **避難所管理**: 4個
 - **在庫管理**: 4個 ⭐ **新機能**
 - **避難所状況管理**: 4個 ⭐ **新機能**
 - **必要物資管理**: 7個
-- **ショッピングカート管理**: 8個
-- **注文管理**: 6個
-- **支払い管理**: 4個
+- **ショッピングカート管理**: 6個 ⭐ **完全実装**
+- **注文管理**: 8個 ⭐ **完全実装**
+- **支払い管理**: 10個 ⭐ **完全実装**
 - **システム状態確認**: 3個

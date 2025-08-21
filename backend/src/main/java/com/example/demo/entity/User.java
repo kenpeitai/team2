@@ -12,11 +12,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @NotBlank(message = "ユーザー名は必須です")
-    @Size(min = 3, max = 50, message = "ユーザー名は3文字以上50文字以内で入力してください")
-    @Column(name = "username", nullable = false, unique = true)
-    private String username;
-    
     @NotBlank(message = "メールアドレスは必須です")
     @Email(message = "メールアドレスの形式が正しくありません")
     @Column(name = "email", nullable = false, unique = true)
@@ -56,23 +51,17 @@ public class User {
     private Boolean isActive = true;
     
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
     
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private LocalDateTime updatedAt = LocalDateTime.now();
     
     // コンストラクタ
-    public User() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
+    public User() {}
     
     // Getter and Setter methods
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
     
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
@@ -106,9 +95,4 @@ public class User {
     
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-    
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 }
