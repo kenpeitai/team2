@@ -42,6 +42,10 @@ export const getNeedsListsByShelter = (shelterId: number) =>
 export const getNeedsListById = (id: number) =>
   request<NeedsListDto>(`/api/supplies/needs-lists/${id}`);
 
+// 避難所の最新の必要物資リスト取得（支援者用）
+export const getLatestNeedsListByShelter = (shelterId: number) =>
+  request<NeedsListDto>(`/api/supplies/needs-lists/shelter/${shelterId}/latest`);
+
 // 必要物資リスト削除
 export const deleteNeedsList = (id: number) =>
   request<void>(`/api/supplies/needs-lists/${id}`, {

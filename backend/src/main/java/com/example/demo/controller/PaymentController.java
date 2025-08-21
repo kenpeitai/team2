@@ -24,9 +24,13 @@ public class PaymentController {
     @Operation(summary = "支払い記録作成", description = "新しい支払い記録を作成します")
     public ResponseEntity<PaymentDto> createPayment(@RequestBody PaymentDto paymentDto) {
         try {
+            System.out.println("收到支付创建请求: " + paymentDto);
             PaymentDto createdPayment = paymentService.createPayment(paymentDto);
+            System.out.println("支付记录创建成功: " + createdPayment);
             return ResponseEntity.ok(createdPayment);
         } catch (Exception e) {
+            System.err.println("支付记录创建错误: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
     }

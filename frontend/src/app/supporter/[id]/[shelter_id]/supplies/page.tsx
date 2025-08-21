@@ -2,15 +2,21 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useParams } from 'next/navigation';
 import SupporterLayout from '@/components/SupporterLayout';
+<<<<<<< HEAD
+import { addItemToCart, getCart } from '@/lib/api/cart';
+import { getLatestNeedsListByShelter } from '@/lib/api/supplies';
+import type { NeedsListDto, NeedsListItemDto } from '@/types/api';
+=======
 import BackButton from '@/components/BackButton';
 import { addItemToCart } from '@/lib/api/cart';
+>>>>>>> origin/main
 
 // ===== Rakutenブランドカラー定義 =====
 const RAKUTEN_RED = "#BF0000";
 const RAKUTEN_RED_HOVER = "#A80000";
 
 // ===== 型定義 =====
-export type Priority = "high" | "medium" | "low";
+export type Priority = "HIGH" | "MEDIUM" | "LOW";
 export type Category = "医薬品" | "衛生" | "食料" | "生活用品";
 
 export interface CartItem {
@@ -23,6 +29,7 @@ export interface CartItem {
   imageUrl?: string;
 }
 
+// 前端显示用的数据结构
 export interface NeedsListPayload {
   shelterName: string;
   evacueeCount: number;
@@ -41,150 +48,91 @@ export interface NeedsListPayload {
   }>;
 }
 
-// ===== モックデータ =====
-const shelterDataMap: Record<string, NeedsListPayload> = {
-  "1": {
-    shelterName: "中央避難所",
-    evacueeCount: 150,
-    targetDays: 3,
-    items: [
-      {
-        id: "1",
-        productId: "p-water-2l",
-        productName: "飲料水 2L×6本（1ケース）",
-        unit: "ケース",
-        quantity: 43,
-        priority: "high" as Priority,
-        category: "食料" as Category,
-        notes: "生命維持に不可欠",
-        imageUrl: "https://images.unsplash.com/photo-1556812235-a13b64175933?w=300&h=200&fit=crop",
-        estimatedPrice: 1000
-      },
-      {
-        id: "2",
-        productId: "p-instant-rice",
-        productName: "サトウのごはん 200g×5食",
-        unit: "箱",
-        quantity: 85,
-        priority: "high" as Priority,
-        category: "食料" as Category,
-        notes: "主食として重要",
-        imageUrl: "https://images.unsplash.com/photo-1625944239923-199539420757?w=300&h=200&fit=crop",
-        estimatedPrice: 600
-      },
-      {
-        id: "3",
-        productId: "m-bandaids",
-        productName: "ばんそうこう（アソート20枚）",
-        unit: "箱",
-        quantity: 9,
-        priority: "high" as Priority,
-        category: "医薬品" as Category,
-        notes: "怪我の手当に",
-        imageUrl: "https://images.unsplash.com/photo-1599427382433-03e08b1a2a1d?w=300&h=200&fit=crop",
-        estimatedPrice: 400
-      }
-    ]
-  },
-  "2": {
-    shelterName: "北区避難所",
-    evacueeCount: 80,
-    targetDays: 5,
-    items: [
-      {
-        id: "1",
-        productId: "p-water-2l",
-        productName: "飲料水 2L×6本（1ケース）",
-        unit: "ケース",
-        quantity: 75,
-        priority: "high" as Priority,
-        category: "食料" as Category,
-        notes: "生命維持に不可欠",
-        imageUrl: "https://images.unsplash.com/photo-1556812235-a13b64175933?w=300&h=200&fit=crop",
-        estimatedPrice: 1000
-      },
-      {
-        id: "2",
-        productId: "p-blanket",
-        productName: "毛布",
-        unit: "枚",
-        quantity: 150,
-        priority: "high" as Priority,
-        category: "生活用品" as Category,
-        notes: "夜間の冷え込み対策",
-        imageUrl: "https://images.unsplash.com/photo-1580301762319-24b4f3568c07?w=300&h=200&fit=crop",
-        estimatedPrice: 1500
-      },
-      {
-        id: "3",
-        productId: "m-bandaids",
-        productName: "ばんそうこう（アソート20枚）",
-        unit: "箱",
-        quantity: 15,
-        priority: "medium" as Priority,
-        category: "医薬品" as Category,
-        notes: "怪我の手当に",
-        imageUrl: "https://images.unsplash.com/photo-1599427382433-03e08b1a2a1d?w=300&h=200&fit=crop",
-        estimatedPrice: 400
-      }
-    ]
-  },
-  "3": {
-    shelterName: "南区避難所",
-    evacueeCount: 120,
-    targetDays: 4,
-    items: [
-      {
-        id: "1",
-        productId: "p-mask",
-        productName: "不織布マスク(50枚)",
-        unit: "箱",
-        quantity: 20,
-        priority: "high" as Priority,
-        category: "衛生" as Category,
-        notes: "感染症対策に",
-        imageUrl: "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=300&h=200&fit=crop",
-        estimatedPrice: 400
-      },
-      {
-        id: "2",
-        productId: "m-ors-500",
-        productName: "経口補水液 500mL（1本）",
-        unit: "本",
-        quantity: 156,
-        priority: "medium" as Priority,
-        category: "医薬品" as Category,
-        notes: "脱水症状の際に",
-        imageUrl: "https://images.unsplash.com/photo-1604176422213-92e420a67118?w=300&h=200&fit=crop",
-        estimatedPrice: 200
-      }
-    ]
+// ===== データ変換関数 =====
+const convertNeedsListDtoToPayload = (needsListDto: NeedsListDto, shelterName: string): NeedsListPayload => {
+  return {
+    shelterName: shelterName,
+    evacueeCount: needsListDto.evacueeCount || 0,
+    targetDays: needsListDto.targetDays || 0,
+    items: (needsListDto.items || []).map((item: NeedsListItemDto) => ({
+      id: item.id?.toString() || '',
+      productId: item.productId,
+      productName: item.productName,
+      unit: item.unit,
+      quantity: item.quantity,
+      priority: item.priority as Priority,
+      category: convertCategoryToJapanese(item.category),
+      notes: item.notes,
+      imageUrl: getProductImageUrl(item.productId),
+      estimatedPrice: calculateEstimatedPrice(item.productId, item.quantity)
+    }))
+  };
+};
+
+// カテゴリを日本語に変換
+const convertCategoryToJapanese = (category: string): Category => {
+  switch (category) {
+    case "FOOD": return "食料";
+    case "MEDICINE": return "医薬品";
+    case "HYGIENE": return "衛生";
+    case "LIVING_SUPPLIES": return "生活用品";
+    default: return "食料";
   }
 };
 
-// 默认数据（当避难所ID不存在时）
-const DEFAULT_SHELTER_DATA: NeedsListPayload = {
-  shelterName: "避難所",
-  evacueeCount: 50,
-  targetDays: 3,
-  items: [
-    {
-      id: "1",
-      productId: "p-water-2l",
-      productName: "飲料水 2L×6本（1ケース）",
-      unit: "ケース",
-      quantity: 25,
-      priority: "high" as Priority,
-      category: "食料" as Category,
-      notes: "生命維持に不可欠",
-      imageUrl: "https://images.unsplash.com/photo-1556812235-a13b64175933?w=300&h=200&fit=crop",
-      estimatedPrice: 1000
-    }
-  ]
+// 商品画像URLを取得
+const getProductImageUrl = (productId: string): string => {
+  // 商品IDに基づいて画像URLを返す
+  const imageMap: Record<string, string> = {
+    'p-water-2l': 'https://images.unsplash.com/photo-1556812235-a13b64175933?w=300&h=200&fit=crop',
+    'p-instant-rice': 'https://images.unsplash.com/photo-1625944239923-199539420757?w=300&h=200&fit=crop',
+    'p-canned-food': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&h=200&fit=crop',
+    'p-bread': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&h=200&fit=crop',
+    'p-cup-noodle': 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=200&fit=crop',
+    'p-blanket': 'https://images.unsplash.com/photo-1580301762319-24b4f3568c07?w=300&h=200&fit=crop',
+    'p-battery-aa': 'https://images.unsplash.com/photo-1609592806596-b43bada2f2d2?w=300&h=200&fit=crop',
+    'p-flashlight': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop',
+    'p-radio': 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=300&h=200&fit=crop',
+    'p-sleeping-bag': 'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?w=300&h=200&fit=crop',
+    'p-mask': 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=300&h=200&fit=crop',
+    'p-toilet-paper': 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=300&h=200&fit=crop',
+    'p-wet-tissue': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop',
+    'p-soap': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop',
+    'p-toothbrush': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop',
+    'm-acetaminophen': 'https://images.unsplash.com/photo-1599427382433-03e08b1a2a1d?w=300&h=200&fit=crop',
+    'm-ibuprofen': 'https://images.unsplash.com/photo-1599427382433-03e08b1a2a1d?w=300&h=200&fit=crop',
+    'm-cold-combo': 'https://images.unsplash.com/photo-1599427382433-03e08b1a2a1d?w=300&h=200&fit=crop',
+    'm-antihistamine': 'https://images.unsplash.com/photo-1599427382433-03e08b1a2a1d?w=300&h=200&fit=crop',
+    'm-anti-diarrhea': 'https://images.unsplash.com/photo-1599427382433-03e08b1a2a1d?w=300&h=200&fit=crop'
+  };
+  return imageMap[productId] || 'https://images.unsplash.com/photo-1556812235-a13b64175933?w=300&h=200&fit=crop';
 };
 
-const getShelterData = (shelterId: string): NeedsListPayload => {
-  return shelterDataMap[shelterId] || DEFAULT_SHELTER_DATA;
+// 推定価格を計算
+const calculateEstimatedPrice = (productId: string, quantity: number): number => {
+  const priceMap: Record<string, number> = {
+    'p-water-2l': 1000,
+    'p-instant-rice': 600,
+    'p-canned-food': 300,
+    'p-bread': 200,
+    'p-cup-noodle': 150,
+    'p-blanket': 1500,
+    'p-battery-aa': 500,
+    'p-flashlight': 800,
+    'p-radio': 2000,
+    'p-sleeping-bag': 3000,
+    'p-mask': 400,
+    'p-toilet-paper': 300,
+    'p-wet-tissue': 200,
+    'p-soap': 100,
+    'p-toothbrush': 150,
+    'm-acetaminophen': 400,
+    'm-ibuprofen': 450,
+    'm-cold-combo': 500,
+    'm-antihistamine': 350,
+    'm-anti-diarrhea': 300
+  };
+  return priceMap[productId] || 500;
 };
 
 // 将日文category转换为英文
@@ -211,28 +159,41 @@ export default function SupporterDonationPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // データ読み込みシミュレーション
+  // データ読み込み関数
+  const loadShelterData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // APIから避難所の最新の必要物資リストを取得
+      const needsListDto = await getLatestNeedsListByShelter(parseInt(shelterId));
+      
+      // 避難所名を取得（仮の実装、後で避難所APIから取得するように改善）
+      const shelterNames: Record<string, string> = {
+        "1": "中央避難所",
+        "2": "北区避難所", 
+        "3": "南区避難所"
+      };
+      const shelterName = shelterNames[shelterId] || "避難所";
+      
+      // DTOをフロントエンド用のデータ構造に変換
+      const shelterData = convertNeedsListDtoToPayload(needsListDto, shelterName);
+      setNeedsList(shelterData);
+    } catch (err) {
+      setError("避難所情報の取得に失敗しました。");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // データ読み込み
   useEffect(() => {
-    const loadShelterData = async () => {
-      try {
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        // 根据避难所ID获取对应的数据
-        const shelterData = getShelterData(shelterId);
-        setNeedsList(shelterData);
-      } catch (err) {
-        setError("避難所情報の取得に失敗しました。");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     loadShelterData();
   }, [shelterId]);
 
   const sortedItems = useMemo(() => {
     if (!needsList) return [];
-    const rank: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
+    const rank: Record<Priority, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
     return [...needsList.items].sort((a, b) => rank[a.priority] - rank[b.priority]);
   }, [needsList]);
 
@@ -377,6 +338,13 @@ export default function SupporterDonationPage() {
               <div className="text-right">
                 <div className="text-sm text-gray-500">支援者ID: {supporterId}</div>
                 <div className="text-sm text-gray-500">避難所ID: {shelterId}</div>
+                <button
+                  onClick={loadShelterData}
+                  disabled={isLoading}
+                  className="mt-2 px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? '更新中...' : '🔄 更新'}
+                </button>
               </div>
             </div>
           </div>
@@ -537,9 +505,9 @@ export default function SupporterDonationPage() {
 
 function PriorityChip({ priority }: { priority: Priority }) {
   const map: Record<Priority, { label: string; cls: string }> = {
-    high:   { label: "高", cls: "bg-red-100 text-red-700 ring-red-300 ring-1" },
-    medium: { label: "中", cls: "bg-amber-100 text-amber-700 ring-amber-300 ring-1" },
-    low:    { label: "低", cls: "bg-emerald-100 text-emerald-700 ring-emerald-300 ring-1" },
+    HIGH:   { label: "高", cls: "bg-red-100 text-red-700 ring-red-300 ring-1" },
+    MEDIUM: { label: "中", cls: "bg-amber-100 text-amber-700 ring-amber-300 ring-1" },
+    LOW:    { label: "低", cls: "bg-emerald-100 text-emerald-700 ring-emerald-300 ring-1" },
   };
   const v = map[priority];
   return (

@@ -138,12 +138,11 @@ public class UserController {
     @GetMapping("/search/advanced")
     @Operation(summary = "複合検索", description = "複数の条件でユーザーを検索します")
     public ResponseEntity<List<User>> searchUsersAdvanced(
-            @RequestParam(required = false) String username,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) UserRole role,
             @RequestParam(required = false) Boolean isActive) {
         try {
-            List<User> users = userService.searchUsersAdvanced(username, email, role, isActive);
+            List<User> users = userService.searchUsersAdvanced(email, role, isActive);
             return ResponseEntity.ok(users);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();

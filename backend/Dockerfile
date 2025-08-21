@@ -11,6 +11,6 @@ WORKDIR /app
 COPY --from=build /workspace/build/libs/*-SNAPSHOT.jar /app/app.jar
 VOLUME ["/data"]
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+ENTRYPOINT ["java","-jar","/app/app.jar","--spring.profiles.active=docker"]
 
 
