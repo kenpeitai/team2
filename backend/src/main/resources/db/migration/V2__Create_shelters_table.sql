@@ -19,6 +19,38 @@ CREATE TABLE shelters (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- username関連のインデックスを削除
+DROP INDEX IF EXISTS idx_users_username;
+
+-- ユーザーテーブルからusernameフィールドを削除（SQLiteでは制約を削除してからカラムを削除）
+-- 新しいテーブルを作成してデータを移行
+CREATE TABLE users_new (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'USER',
+    is_active BOOLEAN NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- データを移行
+INSERT INTO users_new (id, email, password, full_name, role, is_active, created_at, updated_at)
+SELECT id, email, password, full_name, role, is_active, created_at, updated_at FROM users;
+
+-- 古いテーブルを削除
+DROP TABLE users;
+
+-- 新しいテーブルをリネーム
+ALTER TABLE users_new RENAME TO users;
+
+-- インデックスを再作成（V1で既に作成されているものは除外）
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active);
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
+
 -- インデックス作成
 CREATE INDEX idx_shelters_name ON shelters(shelter_name);
 CREATE INDEX idx_shelters_address ON shelters(shelter_address);

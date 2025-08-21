@@ -23,7 +23,7 @@ public class SupporterService {
     private ShelterRepository shelterRepository;
 
     public SupporterStatsDto getSupporterStats(Long supporterId) {
-        // 从数据库获取真实的统计数据
+        // データベースから実際の統計データを取得
         long ongoingCount = orderRepository.countByUserIdAndStatusIn(
             supporterId, 
             List.of("PENDING", "PAID", "PROCESSING")
@@ -34,7 +34,7 @@ public class SupporterService {
             "COMPLETED"
         );
         
-        // 计算总金额（从已完成的订单）
+        // 総金額を計算（完了した注文から）
         Double totalAmount = orderRepository.sumTotalAmountByUserIdAndStatus(
             supporterId, 
             "COMPLETED"
@@ -62,14 +62,32 @@ public class SupporterService {
             var shelter = shelterRepository.findById(order.getShelterId()).orElse(null);
             String shelterName = shelter != null ? shelter.getShelterName() : "不明な避難所";
             
+            // 将订单状态映射为前端期望的状态值
+            String mappedStatus = mapOrderStatusToActiveSupportStatus(order.getStatus());
+            
             return new ActiveSupportDto(
                 shelterName,
                 "支援物資", // 可以从订单项中获取更详细的信息
-                order.getStatus()
+                mappedStatus
             );
         }
         
         return null;
+    }
+    
+    private String mapOrderStatusToActiveSupportStatus(String orderStatus) {
+        switch (orderStatus) {
+            case "PENDING":
+                return "purchased";
+            case "PAID":
+                return "delivery_drone";
+            case "PROCESSING":
+                return "delivered";
+            case "COMPLETED":
+                return "received";
+            default:
+                return "purchased";
+        }
     }
 
     public List<NotificationDto> getNotifications(Long supporterId) {

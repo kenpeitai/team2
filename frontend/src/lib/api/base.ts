@@ -27,14 +27,14 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   
   // 如果响应体为空或没有内容类型，直接返回
   if (contentLength === '0' || !contentType || contentType.includes('text/plain')) {
-    return {} as T;
+    return null as T;
   }
   
-  // 尝试解析JSON，如果失败则返回空对象
+  // 尝试解析JSON，如果失败则返回null
   try {
     return (await res.json()) as T;
   } catch (error) {
     console.warn('Failed to parse JSON response:', error);
-    return {} as T;
+    return null as T;
   }
 }
