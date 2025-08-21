@@ -1,6 +1,7 @@
 "use client";
 import Layout from "@/components/Layout";
 import React, { useMemo, useState, useEffect, useReducer } from "react";
+import Image from "next/image";
 
 // ===== Types =====
 export type Priority = "high" | "medium" | "low";
@@ -137,33 +138,34 @@ function dronePlanForItem(p: Product | undefined, quantity: number) {
 }
 
 // ===== Default Catalog =====
+// 画像は public/products/{id}.png に置く前提。imageUrl を直指定、imageVerified は true。
 const DEFAULT_CATALOG: Product[] = [
   // === 食料・水 ===
-  { id: "p-water-2l",     name: "飲料水 2L×6本（1ケース）", unit: "ケース", weightGrams: 12000, category: "食料", imageVerified: false },
-  { id: "p-instant-rice", name: "サトウのごはん 200g×5食",   unit: "箱",    weightGrams: 1000,  recommendedPerPersonPerDay: 0.2, category: "食料", imageVerified: false },
-  { id: "p-canned-food",  name: "缶詰(主食) 1缶",            unit: "缶",    weightGrams: 350,   recommendedPerPersonPerDay: 1,   category: "食料", imageVerified: false },
+  { id: "p-water-2l",     name: "飲料水 2L×6本（1ケース）", unit: "ケース", weightGrams: 12000, category: "食料", imageUrl: "/products/p-water-2l.png", imageVerified: true },
+  { id: "p-instant-rice", name: "サトウのごはん 200g×5食",   unit: "箱",    weightGrams: 1000,  recommendedPerPersonPerDay: 0.2, category: "食料", imageUrl: "/products/p-instant-rice.png", imageVerified: true },
+  { id: "p-canned-food",  name: "缶詰(主食) 1缶",            unit: "缶",    weightGrams: 350,   recommendedPerPersonPerDay: 1,   category: "食料", imageUrl: "/products/p-canned-food.png", imageVerified: true },
 
   // === 生活用品・衛生 ===
-  { id: "p-blanket",      name: "毛布",                      unit: "枚",    weightGrams: 800,   category: "生活用品", imageVerified: false },
-  { id: "p-battery-aa",   name: "単3電池(8本)",              unit: "パック", weightGrams: 180,  category: "生活用品", imageVerified: false },
-  { id: "p-mask",         name: "不織布マスク(50枚)",        unit: "箱",    weightGrams: 200,   recommendedPerPersonPerDay: 0.5, category: "衛生", imageVerified: false },
+  { id: "p-blanket",      name: "毛布",                      unit: "枚",    weightGrams: 800,   category: "生活用品", imageUrl: "/products/p-blanket.png", imageVerified: true },
+  { id: "p-battery-aa",   name: "単3電池(8本)",              unit: "パック", weightGrams: 180,  category: "生活用品", imageUrl: "/products/p-battery-aa.png", imageVerified: true },
+  { id: "p-mask",         name: "不織布マスク(50枚)",        unit: "箱",    weightGrams: 200,   recommendedPerPersonPerDay: 0.5, category: "衛生", imageUrl: "/products/p-mask.png", imageVerified: true },
 
   // === 医薬品 ===
-  { id: "m-acetaminophen", name: "解熱鎮痛剤（アセトアミノフェン）20錠", unit: "箱", weightGrams: 25,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageVerified: false },
-  { id: "m-ibuprofen",     name: "解熱鎮痛剤（イブプロフェン）24錠",     unit: "箱", weightGrams: 28,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageVerified: false },
-  { id: "m-cold-combo",    name: "総合感冒薬（風邪薬）30錠",             unit: "箱", weightGrams: 40,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageVerified: false },
-  { id: "m-antihistamine", name: "抗ヒスタミン薬（アレルギー薬）10錠",   unit: "箱", weightGrams: 20,  recommendedPerPersonPerDay: 0.01, category: "医薬品", imageVerified: false },
-  { id: "m-anti-diarrhea", name: "下痢止め（ロペラミド等）12錠",         unit: "箱", weightGrams: 18,  recommendedPerPersonPerDay: 0.01, category: "医薬品", imageVerified: false },
-  { id: "m-ors-500",       name: "経口補水液 500mL（1本）",               unit: "本", weightGrams: 500, recommendedPerPersonPerDay: 0.5, category: "医薬品", imageVerified: false },
-  { id: "m-povidone",      name: "消毒液（ポビドンヨード）100mL",        unit: "本", weightGrams: 120, recommendedPerPersonPerDay: 0.01, category: "医薬品", imageVerified: false },
-  { id: "m-sterile-gauze", name: "滅菌ガーゼ 10枚入",                     unit: "袋", weightGrams: 50,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageVerified: false },
-  { id: "m-bandage-roll",  name: "包帯 5cm×5m",                           unit: "巻", weightGrams: 30,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageVerified: false },
-  { id: "m-surgical-tape", name: "サージカルテープ 12mm×9m",              unit: "巻", weightGrams: 25,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageVerified: false },
-  { id: "m-bandaids",      name: "ばんそうこう（アソート20枚）",           unit: "箱", weightGrams: 80,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageVerified: false },
-  { id: "m-thermometer",   name: "体温計",                                   unit: "本", weightGrams: 50,  recommendedPerPersonPerDay: 0.005, category: "医薬品", imageVerified: false },
-  { id: "m-eyedrops",      name: "目薬（人工涙液）",                        unit: "本", weightGrams: 20,  recommendedPerPersonPerDay: 0.01, category: "医薬品", imageVerified: false },
-  { id: "m-cough-syrup",   name: "咳止めシロップ 120mL",                    unit: "本", weightGrams: 160, recommendedPerPersonPerDay: 0.02, category: "医薬品", imageVerified: false },
-  { id: "m-throat-candy",  name: "のど飴",                                   unit: "袋", weightGrams: 80,  recommendedPerPersonPerDay: 0.05, category: "医薬品", imageVerified: false },
+  { id: "m-acetaminophen", name: "解熱鎮痛剤（アセトアミノフェン）20錠", unit: "箱", weightGrams: 25,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageUrl: "/products/m-acetaminophen.png", imageVerified: true },
+  { id: "m-ibuprofen",     name: "解熱鎮痛剤（イブプロフェン）24錠",     unit: "箱", weightGrams: 28,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageUrl: "/products/m-ibuprofen.png", imageVerified: true },
+  { id: "m-cold-combo",    name: "総合感冒薬（風邪薬）30錠",             unit: "箱", weightGrams: 40,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageUrl: "/products/m-cold-combo.png", imageVerified: true },
+  { id: "m-antihistamine", name: "抗ヒスタミン薬（アレルギー薬）10錠",   unit: "箱", weightGrams: 20,  recommendedPerPersonPerDay: 0.01, category: "医薬品", imageUrl: "/products/m-antihistamine.png", imageVerified: true },
+  { id: "m-anti-diarrhea", name: "下痢止め（ロペラミド等）12錠",         unit: "箱", weightGrams: 18,  recommendedPerPersonPerDay: 0.01, category: "医薬品", imageUrl: "/products/m-anti-diarrhea.png", imageVerified: true },
+  { id: "m-ors-500",       name: "経口補水液 500mL（1本）",               unit: "本", weightGrams: 500, recommendedPerPersonPerDay: 0.5, category: "医薬品", imageUrl: "/products/m-ors-500.png", imageVerified: true },
+  { id: "m-povidone",      name: "消毒液（ポビドンヨード）100mL",        unit: "本", weightGrams: 120, recommendedPerPersonPerDay: 0.01, category: "医薬品", imageUrl: "/products/m-povidone.png", imageVerified: true },
+  { id: "m-sterile-gauze", name: "滅菌ガーゼ 10枚入",                     unit: "袋", weightGrams: 50,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageUrl: "/products/m-sterile-gauze.png", imageVerified: true },
+  { id: "m-bandage-roll",  name: "包帯 5cm×5m",                           unit: "巻", weightGrams: 30,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageUrl: "/products/m-bandage-roll.png", imageVerified: true },
+  { id: "m-surgical-tape", name: "サージカルテープ 12mm×9m",              unit: "巻", weightGrams: 25,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageUrl: "/products/m-surgical-tape.png", imageVerified: true },
+  { id: "m-bandaids",      name: "ばんそうこう（アソート20枚）",           unit: "箱", weightGrams: 80,  recommendedPerPersonPerDay: 0.02, category: "医薬品", imageUrl: "/products/m-bandaids.png", imageVerified: true },
+  { id: "m-thermometer",   name: "体温計",                                   unit: "本", weightGrams: 50,  recommendedPerPersonPerDay: 0.005, category: "医薬品", imageUrl: "/products/m-thermometer.png", imageVerified: true },
+  { id: "m-eyedrops",      name: "目薬（人工涙液）",                        unit: "本", weightGrams: 20,  recommendedPerPersonPerDay: 0.01, category: "医薬品", imageUrl: "/products/m-eyedrops.png", imageVerified: true },
+  { id: "m-cough-syrup",   name: "咳止めシロップ 120mL",                    unit: "本", weightGrams: 160, recommendedPerPersonPerDay: 0.02, category: "医薬品", imageUrl: "/products/m-cough-syrup.png", imageVerified: true },
+  { id: "m-throat-candy",  name: "のど飴",                                   unit: "袋", weightGrams: 80,  recommendedPerPersonPerDay: 0.05, category: "医薬品", imageUrl: "/products/m-throat-candy.png", imageVerified: true },
 ];
 
 // ===== State Management =====
@@ -244,10 +246,11 @@ export default function NeedsListForm({
 }) {
   const catalog = products && products.length > 0 ? products : DEFAULT_CATALOG;
 
+  // 初期IDに乱数を使わない（SSR/CSRの Hydration 差異回避）
   const [state, dispatch] = useReducer(suppliesReducer, {
     evacueeCount: initialEvacueeCount,
     targetDays: initialTargetDays,
-    rows: [{ id: gid(), productId: catalog[0]?.id ?? "", quantity: 1, priority: "medium", notes: "" }],
+    rows: [{ id: "row-0", productId: catalog[0]?.id ?? "", quantity: 1, priority: "medium", notes: "" }],
     saving: false,
     imageStates: {}
   });
@@ -695,8 +698,8 @@ function ProductHeroImage({
 }) {
   // policy: 検証厳格なら DBの imageUrl が未検証のときは表示しない
   const allowByPolicy =
-    !product ? false :
-    !enforceVerified || product.imageVerified || !product.imageUrl;
+    !!product &&
+    (!enforceVerified || product.imageVerified || !product.imageUrl);
 
   useEffect(() => {
     if (!product || !allowByPolicy) { 
@@ -704,14 +707,14 @@ function ProductHeroImage({
       return; 
     }
 
+    // 画像は public/products/{id}.{png,webp,jpg}
     const given = product.imageUrl ? [product.imageUrl] : [];
     const id = product.id;
-    const fallbacks = ["/products", "/images"].flatMap((base) =>
-      [".jpg", ".png", ".webp"].map((ext) => `${base}/${id}${ext}`)
-    );
+    const fallbacks = [".png", ".webp", ".jpg"].map((ext) => `/products/${id}${ext}`);
     const list = [...given, ...fallbacks];
     onImageStateChange({ candidates: list, src: list[0] ?? null });
-  }, [product, allowByPolicy, onImageStateChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id, allowByPolicy]); // productの他プロパティ変化で無限に走らないようにidに限定
 
   const onError = () => {
     const currentCandidates = imageState?.candidates ?? [];
@@ -719,7 +722,7 @@ function ProductHeroImage({
     onImageStateChange({ candidates: next, src: next[0] ?? null });
   };
 
-  const currentSrc = imageState?.src;
+  const currentSrc = imageState?.src ?? null;
   const currentOpen = imageState?.open ?? false;
 
   // 画像なし時はグラデ背景プレースホルダ
@@ -733,13 +736,15 @@ function ProductHeroImage({
 
   return (
     <>
-      <div className="w-full h-56 sm:h-64 lg:h-72 rounded-t-3xl overflow-hidden">
-        <img
+      <div className="relative w-full h-56 sm:h-64 lg:h-72 rounded-t-3xl overflow-hidden">
+        <Image
           src={currentSrc}
           alt={product.name}
-          className="h-full w-full object-contain cursor-zoom-in"
-          onError={onError}
-          onClick={() => onImageStateChange({ open: true })}
+          fill
+          sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
+          className="object-contain cursor-zoom-in"
+          onError={onError as any}
+          priority
         />
       </div>
       {currentOpen && (
@@ -747,11 +752,16 @@ function ProductHeroImage({
           className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center"
           onClick={() => onImageStateChange({ open: false })}
         >
-          <img
-            src={currentSrc}
-            alt={product.name}
-            className="max-h-[90vh] max-w-[90vw] object-contain cursor-zoom-out"
-          />
+          <div className="relative w-[90vw] h-[90vh]">
+            <Image
+              src={currentSrc}
+              alt={product.name}
+              fill
+              sizes="90vw"
+              className="object-contain cursor-zoom-out"
+              priority
+            />
+          </div>
         </div>
       )}
     </>
