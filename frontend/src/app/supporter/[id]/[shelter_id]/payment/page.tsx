@@ -89,7 +89,34 @@ export default function PaymentPage() {
   // ===== onContinue Function =====
   const onContinue = () => {
     if (method === "card") {
-      let payload: any = { method };
+      // 获取URL参数中的ID
+      const pathSegments = window.location.pathname.split('/');
+      const supporterId = pathSegments[2]; // /supporter/[id]/[shelter_id]/payment
+      const shelterId = pathSegments[3];
+      
+      // 生成订单号
+      const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // 从localStorage获取购物车信息来计算总金额
+      const cartData = localStorage.getItem("cart");
+      let totalAmount = 0;
+      if (cartData) {
+        try {
+          const cart = JSON.parse(cartData);
+          totalAmount = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+        } catch (error) {
+          console.error("购物车数据解析失败:", error);
+        }
+      }
+      
+      let payload: any = { 
+        method,
+        orderId,
+        totalAmount,
+        supporterId,
+        shelterId,
+        timestamp: new Date().toISOString()
+      };
       
       if (selectedSavedId) {
         // 使用保存的卡
@@ -126,11 +153,11 @@ export default function PaymentPage() {
         }
       }
       
-      // 保存支付信息
-      localStorage.setItem("checkout.payment", JSON.stringify(payload));
+      // 保存支付信息到paymentData（与order_conplete页面保持一致）
+      localStorage.setItem("paymentData", JSON.stringify(payload));
       
       // 跳转到订单确认页面
-      router.push(`/supporter/${router.query?.id || '1'}/${router.query?.shelter_id || '1'}/order_confirm`);
+      router.push(`/supporter/${supporterId}/${shelterId}/order_confirm`);
     }
   };
 
