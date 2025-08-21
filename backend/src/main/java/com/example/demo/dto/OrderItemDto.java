@@ -72,4 +72,22 @@ public class OrderItemDto {
     
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    
+    @Override
+    public String toString() {
+        return "OrderItemDto{" +
+                "id=" + id +
+                ", orderId=" + orderId +
+                ", productId='" + productId + '\'' +
+                ", productName='" + productName + '\'' +
+                ", unit='" + unit + '\'' +
+                ", category='" + category + '\'' +
+                ", quantity=" + quantity +
+                ", pricePerUnit=" + pricePerUnit +
+                ", totalPrice=" + totalPrice +
+                ", notes='" + notes + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
+    }
 }

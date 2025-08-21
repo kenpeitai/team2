@@ -8,20 +8,20 @@ export interface OrderItem {
   unit: string;
   category: string;
   quantity: number;
-  pricePerUnit: number;
-  totalPrice: number;
-  notes?: string;
+  pricePerUnit?: number;
+  totalPrice?: number;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface Order {
   id?: number;
-  orderNumber?: string;
   userId: number;
   shelterId: number;
-  orderStatus?: string;
-  totalAmount: number;
+  orderNumber?: string;
+  status?: string;
+  paymentStatus?: string;
+  totalAmount?: number;
   shippingAddress?: string;
   contactPhone?: string;
   contactEmail?: string;
@@ -34,23 +34,26 @@ export interface Order {
 }
 
 // 创建订单
-export const createOrder = (order: Order): Promise<Order> =>
-  request<Order>('/api/orders', {
+export const createOrder = (userId: number, shelterId: number, orderData: Partial<Order>): Promise<Order> =>
+  request<Order>(`/api/orders/${userId}/${shelterId}`, {
     method: 'POST',
-    body: JSON.stringify(order),
+    body: JSON.stringify(orderData),
   });
 
-// 获取订单详情
-export const getOrderById = (orderId: number): Promise<Order> =>
-  request<Order>(`/api/orders/${orderId}`);
-
 // 获取用户的订单列表
-export const getOrdersByUser = (userId: number): Promise<Order[]> =>
-  request<Order[]>(`/api/orders/user/${userId}`);
+export const getUserOrders = (userId: number): Promise<Order[]> =>
+  request<Order[]>(`/api/orders/${userId}`);
+
+// 获取特定订单详情
+export const getOrder = (userId: number, orderId: number): Promise<Order> =>
+  request<Order>(`/api/orders/${userId}/${orderId}`);
 
 // 更新订单状态
-export const updateOrderStatus = (orderId: number, status: string): Promise<Order> =>
-  request<Order>(`/api/orders/${orderId}/status?status=${status}`, { method: 'PUT' });
+export const updateOrderStatus = (userId: number, orderId: number, status: string): Promise<Order> =>
+  request<Order>(`/api/orders/${userId}/${orderId}/status`, {
+    method: 'PUT',
+    body: JSON.stringify({ status }),
+  });
 
 // 获取订单项目
 export const getOrderItems = (orderId: number): Promise<OrderItem[]> =>

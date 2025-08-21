@@ -34,7 +34,8 @@ CREATE TABLE orders (
     order_number VARCHAR(50) UNIQUE NOT NULL,
     user_id INTEGER NOT NULL,
     shelter_id INTEGER NOT NULL,
-    order_status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED
+    payment_status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, COMPLETED, FAILED, REFUNDED
     total_amount REAL NOT NULL,
     shipping_address TEXT,
     contact_phone VARCHAR(20),
@@ -93,7 +94,8 @@ CREATE INDEX idx_cart_items_product_id ON cart_items(product_id);
 CREATE INDEX idx_orders_order_number ON orders(order_number);
 CREATE INDEX idx_orders_user_id ON orders(user_id);
 CREATE INDEX idx_orders_shelter_id ON orders(shelter_id);
-CREATE INDEX idx_orders_order_status ON orders(order_status);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_orders_payment_status ON orders(payment_status);
 CREATE INDEX idx_orders_created_at ON orders(created_at);
 
 CREATE INDEX idx_order_items_order_id ON order_items(order_id);
