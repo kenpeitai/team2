@@ -150,37 +150,7 @@ export default function PaymentPage() {
     return e;
   }, [method, selectedSavedId, holder, number, expiry, cvc, brand]);
 
-  function onContinue() {
-    if (method === "card" && !selectedSavedId && Object.keys(errors).length) return;
 
-    let payload: any = { method } as any;
-
-    if (method === "card") {
-      if (selectedSavedId) {
-        payload.savedCardId = selectedSavedId;
-      } else {
-        const digits = number.replace(/\D/g, "");
-        const newCard: SavedCard = {
-          id: `card_${Date.now()}`,
-          brand,
-          last4: digits.slice(-4),
-          holder: holder.trim(),
-          exp: expiry,
-        };
-        if (saveCard) {
-          const next = [newCard, ...savedCards].slice(0, 5);
-          localStorage.setItem("savedCards", JSON.stringify(next));
-          setSavedCards(next);
-          payload.savedCardId = newCard.id;
-        } else {
-          payload.oneTimeCard = newCard;
-        }
-      }
-    }
-
-    localStorage.setItem("checkout.payment", JSON.stringify(payload));
-    router.push("/checkout/review");
-  }
 
   // Simple step indicator
   const Step = ({ n, label, active }: { n: number; label: string; active: boolean }) => (
