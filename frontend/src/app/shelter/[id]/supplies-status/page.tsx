@@ -44,23 +44,14 @@ export default function SuppliesStatusPage() {
 
     getNeedsListsByShelter(shelterId)
       .then((lists) => {
-        if (!lists || lists.length === 0) {
-          setData(null);
-          return null;
-        }
         const latest = [...lists].sort((a, b) => {
           const au = a.updatedAt || a.createdAt || "";
           const bu = b.updatedAt || b.createdAt || "";
           return bu.localeCompare(au);
         })[0];
-        if (!latest?.id) {
-          setData(null);
-          return null;
-        }
-        return getNeedsListById(latest.id);
+        return getNeedsListById(latest?.id ?? 0);
       })
       .then((detail) => {
-        if (!detail) return;
         const items = (detail.items || []).map((it) => ({
           id: String(it.id ?? `${it.productId}-${Math.random().toString(36).slice(2)}`),
           productId: it.productId,
@@ -363,22 +354,19 @@ export default function SuppliesStatusPage() {
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               onClick={fetchNeedsFromApi}
-              className="rounded-xl px-4 py-2 border hover:bg-gray-50"
+              className="btn border border-gray-300 bg-white text-gray-700 hover:bg-gradient-to-r hover:from-red-600 hover:to-red-700 hover:text-white hover:border-red-600"
             >
               再読み込み
             </button>
             <button
               onClick={downloadCSV}
-              className="rounded-xl px-4 py-2 text-white"
-              style={{ backgroundColor: RAKUTEN_RED }}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
+              className="btn border border-gray-300 bg-white text-gray-700 hover:bg-gradient-to-r hover:from-red-600 hover:to-red-700 hover:text-white hover:border-red-600"
             >
               品目別CSVをダウンロード
             </button>
             <button
               onClick={downloadRawJSON}
-              className="rounded-xl px-4 py-2 border hover:bg-gray-50"
+              className="btn border border-gray-300 bg-white text-gray-700 hover:bg-gradient-to-r hover:from-red-600 hover:to-red-700 hover:text-white hover:border-red-600"
             >
               元の詳細JSONをダウンロード
             </button>
