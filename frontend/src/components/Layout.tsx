@@ -28,27 +28,7 @@ export default function Layout({
               </h1>
             </div>
 
-            {/* ナビゲーションメニュー */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link 
-                href="/shelter/home" 
-                className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                ホーム
-              </Link>
-              <Link 
-                href="/shelter" 
-                className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                避難所一覧
-              </Link>
-              <Link 
-                href="/shelter/input" 
-                className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                避難所状況
-              </Link>
-            </nav>
+          
 
             {/* 認証リンク */}
             <div className="flex items-center space-x-4">
