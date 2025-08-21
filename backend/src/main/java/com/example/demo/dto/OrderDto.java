@@ -9,7 +9,8 @@ public class OrderDto {
     private String orderNumber;
     private Long userId;
     private Long shelterId;
-    private String orderStatus;
+    private String status;
+    private String paymentStatus;
     private Double totalAmount;
     private String shippingAddress;
     private String contactPhone;
@@ -25,14 +26,15 @@ public class OrderDto {
     public OrderDto() {}
     
     public OrderDto(Long id, String orderNumber, Long userId, Long shelterId, 
-                   String orderStatus, Double totalAmount, String shippingAddress, 
+                   String status, String paymentStatus, Double totalAmount, String shippingAddress, 
                    String contactPhone, String contactEmail, LocalDate estimatedDeliveryDate, 
                    LocalDate actualDeliveryDate, String notes, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.orderNumber = orderNumber;
         this.userId = userId;
         this.shelterId = shelterId;
-        this.orderStatus = orderStatus;
+        this.status = status;
+        this.paymentStatus = paymentStatus;
         this.totalAmount = totalAmount;
         this.shippingAddress = shippingAddress;
         this.contactPhone = contactPhone;
@@ -57,8 +59,11 @@ public class OrderDto {
     public Long getShelterId() { return shelterId; }
     public void setShelterId(Long shelterId) { this.shelterId = shelterId; }
     
-    public String getOrderStatus() { return orderStatus; }
-    public void setOrderStatus(String orderStatus) { this.orderStatus = orderStatus; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
     
     public Double getTotalAmount() { return totalAmount; }
     public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }
@@ -89,4 +94,26 @@ public class OrderDto {
     
     public List<OrderItemDto> getItems() { return items; }
     public void setItems(List<OrderItemDto> items) { this.items = items; }
+    
+    @Override
+    public String toString() {
+        return "OrderDto{" +
+                "id=" + id +
+                ", orderNumber='" + orderNumber + '\'' +
+                ", userId=" + userId +
+                ", shelterId=" + shelterId +
+                ", status='" + status + '\'' +
+                ", paymentStatus='" + paymentStatus + '\'' +
+                ", totalAmount=" + totalAmount +
+                ", shippingAddress='" + shippingAddress + '\'' +
+                ", contactPhone='" + contactPhone + '\'' +
+                ", contactEmail='" + contactEmail + '\'' +
+                ", estimatedDeliveryDate=" + estimatedDeliveryDate +
+                ", actualDeliveryDate=" + actualDeliveryDate +
+                ", notes='" + notes + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", items=" + items +
+                '}';
+    }
 }

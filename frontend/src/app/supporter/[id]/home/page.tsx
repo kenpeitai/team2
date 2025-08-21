@@ -80,9 +80,9 @@ export default function SupporterHomePage() {
   };
 
   const sheltersList: Shelter[] = [
-    { id: 1, name: '中区役所避難所', address: '愛知県名古屋市中区栄四丁目1番8号', imageUrl: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=160&fit=crop', evacueeCount: 95, urgentNeeds: ['飲料水', '医薬品'], lastUpdated: '2時間前' },
-    { id: 2, name: '中村スポーツセンター', address: '愛知県名古屋市中村区中村町字待屋43番地の1', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=160&fit=crop', evacueeCount: 150, urgentNeeds: ['食料品', '毛布'], lastUpdated: '30分前' },
-    { id: 3, name: '東生涯学習センター', address: '愛知県名古屋市東区葵一丁目3番21号', imageUrl: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400&h=160&fit=crop', evacueeCount: 78, urgentNeeds: ['衛生用品'], lastUpdated: '1時間前' },
+    { id: 1, name: '中央避難所', address: '東京都渋谷区渋谷1-1-1', imageUrl: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=160&fit=crop', evacueeCount: 150, urgentNeeds: ['飲料水', '医薬品'], lastUpdated: '2時間前' },
+    { id: 2, name: '北区避難所', address: '東京都北区北1-1-1', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=160&fit=crop', evacueeCount: 80, urgentNeeds: ['食料品', '毛布'], lastUpdated: '30分前' },
+    { id: 3, name: '南区避難所', address: '東京都南区南1-1-1', imageUrl: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400&h=160&fit=crop', evacueeCount: 120, urgentNeeds: ['衛生用品'], lastUpdated: '1時間前' },
   ];
   const activeSupport: ActiveSupport = { supportedShelterName: '中村スポーツセンター', itemName: '医薬品セット', status: 'delivery_drone' };
   const recentNotifications: Notification[] = [{ message: '中村スポーツセンターから感謝の通知が届きました', time: '1日前', color: 'bg-green-500' }];

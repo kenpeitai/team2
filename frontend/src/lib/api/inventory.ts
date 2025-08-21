@@ -32,7 +32,7 @@ export const searchInventory = (
   if (params.keyword) q.set('keyword', params.keyword);
   if (params.category) q.set('category', params.category);
   const query = q.toString();
-  return request<InventoryDto[]>(`/api/inventory/${shelterId}/search${query ? `?${query}` : ''}`);
+  return request<InventoryDto[]>(`/api/inventory/${shelterId}/search?${query}`);
 };
 
 

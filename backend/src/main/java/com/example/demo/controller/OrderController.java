@@ -21,15 +21,54 @@ public class OrderController {
     private OrderService orderService;
 
     // 创建订单
-    @PostMapping
+    @PostMapping("/{userId}/{shelterId}")
     @Operation(summary = "注文作成", description = "新しい注文を作成します")
-    public ResponseEntity<OrderDto> createOrder(@RequestBody OrderDto orderDto) {
+    public ResponseEntity<OrderDto> createOrder(
+            @PathVariable Long userId,
+            @PathVariable Long shelterId,
+            @RequestBody String requestBody) {
         try {
-            // 这里需要将OrderDto转换为Order实体
-            // 由于OrderService期望的是Order实体，我们需要进行转换
+            System.out.println("收到订单创建请求 - userId: " + userId + ", shelterId: " + shelterId);
+            System.out.println("原始请求体: " + requestBody);
+            
+            // 手动解析JSON
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            OrderDto orderDto = mapper.readValue(requestBody, OrderDto.class);
+            
+            System.out.println("解析后的订单数据: " + orderDto);
+            
+            // 设置用户ID和避难所ID
+            orderDto.setUserId(userId);
+            orderDto.setShelterId(shelterId);
+            
+            // 生成订单号
+            String orderNumber = "ORD-" + System.currentTimeMillis();
+            orderDto.setOrderNumber(orderNumber);
+            
+            // 设置默认状态
+            if (orderDto.getStatus() == null) {
+                orderDto.setStatus("PENDING");
+            }
+            if (orderDto.getPaymentStatus() == null) {
+                orderDto.setPaymentStatus("PENDING");
+            }
+            
+            // 设置ID（模拟）
+            orderDto.setId(System.currentTimeMillis());
+            
+            // 确保items字段不为null
+            if (orderDto.getItems() == null) {
+                orderDto.setItems(java.util.Collections.emptyList());
+            }
+            
+            System.out.println("返回订单数据: " + orderDto);
+            
+            // 这里需要将OrderDto转换为Order实体并保存到数据库
             // 为了简化，这里返回一个模拟响应
-            return ResponseEntity.ok(orderDto);
+            return ResponseEntity.ok().body(orderDto);
         } catch (Exception e) {
+            System.err.println("订单创建错误: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
     }
@@ -44,7 +83,7 @@ public class OrderController {
             OrderDto orderDto = new OrderDto();
             orderDto.setId(orderId);
             orderDto.setOrderNumber("ORD-" + orderId);
-            orderDto.setOrderStatus("PENDING");
+            orderDto.setStatus("PENDING");
             return ResponseEntity.ok(orderDto);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -75,7 +114,7 @@ public class OrderController {
             // 为了简化，这里返回一个模拟响应
             OrderDto orderDto = new OrderDto();
             orderDto.setId(orderId);
-            orderDto.setOrderStatus(status);
+            orderDto.setStatus(status);
             return ResponseEntity.ok(orderDto);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();

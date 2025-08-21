@@ -181,16 +181,26 @@ public class CartService {
     
     // 获取或创建购物车
     private Cart getOrCreateCart(Long userId, Long shelterId) {
-        return cartRepository.findByUserIdAndShelterId(userId, shelterId)
-            .orElseGet(() -> {
-                Cart newCart = new Cart();
-                newCart.setUserId(userId);
-                newCart.setShelterId(shelterId);
-                newCart.setIsActive(true);
-                newCart.setCreatedAt(LocalDateTime.now());
-                newCart.setUpdatedAt(LocalDateTime.now());
-                return cartRepository.save(newCart);
-            });
+        // 先尝试查找现有购物车
+        Optional<Cart> existingCart = cartRepository.findByUserIdAndShelterId(userId, shelterId);
+        if (existingCart.isPresent()) {
+            return existingCart.get();
+        }
+        
+        // 如果不存在，创建新购物车
+        try {
+            Cart newCart = new Cart();
+            newCart.setUserId(userId);
+            newCart.setShelterId(shelterId);
+            newCart.setIsActive(true);
+            newCart.setCreatedAt(LocalDateTime.now());
+            newCart.setUpdatedAt(LocalDateTime.now());
+            return cartRepository.save(newCart);
+        } catch (Exception e) {
+            // 如果创建失败（可能是并发创建），再次尝试查找
+            return cartRepository.findByUserIdAndShelterId(userId, shelterId)
+                .orElseThrow(() -> new RuntimeException("Failed to create or find cart for user " + userId + " and shelter " + shelterId));
+        }
     }
     
     // 转换为CartDto

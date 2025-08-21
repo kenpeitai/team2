@@ -43,8 +43,8 @@ export interface NeedsListPayload {
 // ===== モックデータ =====
 const shelterDataMap: Record<string, NeedsListPayload> = {
   "1": {
-    shelterName: "中区役所避難所",
-    evacueeCount: 95,
+    shelterName: "中央避難所",
+    evacueeCount: 150,
     targetDays: 3,
     items: [
       {
@@ -86,8 +86,8 @@ const shelterDataMap: Record<string, NeedsListPayload> = {
     ]
   },
   "2": {
-    shelterName: "中村スポーツセンター",
-    evacueeCount: 150,
+    shelterName: "北区避難所",
+    evacueeCount: 80,
     targetDays: 5,
     items: [
       {
@@ -129,8 +129,8 @@ const shelterDataMap: Record<string, NeedsListPayload> = {
     ]
   },
   "3": {
-    shelterName: "東生涯学習センター",
-    evacueeCount: 78,
+    shelterName: "南区避難所",
+    evacueeCount: 120,
     targetDays: 4,
     items: [
       {
@@ -272,6 +272,10 @@ export default function SupporterDonationPage() {
       return;
     }
 
+    if (isSubmitting) {
+      return; // 防止重复提交
+    }
+
     console.log("开始处理购物车...");
     console.log("购物车大小:", cart.size);
     console.log("supporterId:", supporterId);
@@ -283,7 +287,8 @@ export default function SupporterDonationPage() {
       const cartItems = Array.from(cart.values());
       console.log("准备添加到购物车的商品:", cartItems);
       
-      const promises = cartItems.map(item => {
+      // 使用for循环而不是Promise.all，避免并发问题
+      for (const item of cartItems) {
         const needsItem = needsList?.items.find(needsItem => needsItem.id === item.id);
         const cartItemData = {
           productId: item.productId,
@@ -291,16 +296,15 @@ export default function SupporterDonationPage() {
           unit: item.unit,
           category: getCategoryInEnglish(needsItem?.category) || "OTHER",
           quantity: item.quantity,
-          pricePerUnit: needsItem?.estimatedPrice,
-          totalPrice: (needsItem?.estimatedPrice || 0) * item.quantity
+          pricePerUnit: needsItem?.estimatedPrice || 0,
+          totalPrice: (needsItem?.estimatedPrice || 0) * item.quantity,
+          notes: needsItem?.notes || ""
         };
         console.log("发送到API的数据:", cartItemData);
-        console.log("API URL:", `http://host.docker.internal:8080/api/cart/${supporterId}/${shelterId}/items`);
-        return addItemToCart(parseInt(supporterId), parseInt(shelterId), cartItemData);
-      });
+        console.log("API URL:", `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/api/cart/${supporterId}/${shelterId}/items`);
+        await addItemToCart(parseInt(supporterId), parseInt(shelterId), cartItemData);
+      }
       
-      console.log("开始执行API调用...");
-      await Promise.all(promises);
       console.log("所有商品已成功添加到购物车");
       
       // 跳转到购物车页面
