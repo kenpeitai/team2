@@ -1,8 +1,16 @@
 'use client';
-import { useState } from 'react';
-import SupporterLayout from '@/components/SupporterLayout'; // 支援者用Layoutコンポーネントをインポート
+import { useState, useEffect } from 'react';
+import SupporterLayout from '@/components/SupporterLayout';
 
 // ===== 型定義 =====
+// APIから返ってくる生の避難所データ
+interface ShelterFromApi {
+  id: number;
+  shelterName: string;
+  shelterAddress: string;
+  evacueeCount?: number;
+}
+// ページ表示用の型
 interface Shelter {
   id: number;
   name: string;
@@ -28,6 +36,22 @@ interface Notification {
   color: string;
 }
 
+// ===== APIクライアント関数 (本来は別ファイルに記述) =====
+async function getShelters(): Promise<ShelterFromApi[]> {
+  const response = await fetch('http://localhost:8080/api/shelters');
+  if (!response.ok) throw new Error('避難所情報の取得に失敗しました。');
+  return response.json();
+}
+async function getSupporterData(supporterId: string) {
+    console.log(`Fetching data for supporter ${supporterId}...`);
+    return {
+        stats: { ongoing: 1, completed: 4, totalAmount: '¥18,200' },
+        activeSupport: { supportedShelterName: '中央避難所', itemName: '医薬品セット', status: 'delivery_drone' },
+        notifications: [{ message: '中央避難所から感謝の通知が届きました', time: '1日前', color: 'bg-green-500' }]
+    };
+}
+
+
 // ===== ページ内UIコンポーネント =====
 const StatCard = ({ title, value, icon, bgColor, textColor }: { title: string; value: string | number; icon: string; bgColor: string; textColor: string; }) => (
   <div className={`p-6 rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md ${bgColor}`}>
@@ -41,18 +65,26 @@ const StatCard = ({ title, value, icon, bgColor, textColor }: { title: string; v
   </div>
 );
 
-const ShelterCard = ({ shelter, onSelect, isSelected }: { shelter: Shelter; onSelect: () => void; isSelected: boolean; }) => (
-  <div onClick={onSelect} className={`rounded-xl shadow-sm border overflow-hidden cursor-pointer transition-all duration-200 transform hover:scale-105 flex flex-col ${isSelected ? 'ring-4 ring-blue-400 border-blue-300 shadow-lg' : 'hover:shadow-lg border-gray-200'}`}>
+const ShelterCard = ({ shelter, onSupportClick }: { shelter: Shelter; onSupportClick: () => void; }) => (
+  <div className="rounded-xl shadow-sm border overflow-hidden transition-all duration-200 hover:shadow-lg flex flex-col bg-white">
     <div className="relative">
-      <img src={shelter.imageUrl} alt={shelter.name} className="w-full h-40 object-cover" onError={(e) => { e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w.org/2000/svg' width='400' height='160' viewBox='0 0 400 160'%3E%3Crect width='400' height='160' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-family='sans-serif' font-size='14' fill='%239ca3af'%3E避難所画像%3C/text%3E%3C/svg%3E"; }} />
+      <img src={shelter.imageUrl} alt={shelter.name} className="w-full h-40 object-cover" onError={(e) => { e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='160' viewBox='0 0 400 160'%3E%3Crect width='400' height='160' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-family='sans-serif' font-size='14' fill='%239ca3af'%3E避難所画像%3C/text%3E%3C/svg%3E"; }} />
       {shelter.evacueeCount && (<div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1"><span className="text-xs font-semibold text-gray-700">👥 {shelter.evacueeCount}人</span></div>)}
     </div>
-    <div className="p-4 bg-white flex flex-col flex-grow">
+    <div className="p-4 flex flex-col flex-grow">
       <h3 className="font-bold text-lg text-gray-800 mb-2">{shelter.name}</h3>
       <p className="text-sm text-gray-600 mb-3 line-clamp-2 flex-grow">{shelter.address}</p>
       {shelter.urgentNeeds && (<div className="mb-3"><p className="text-xs font-medium text-red-600 mb-1">緊急に必要:</p><div className="flex flex-wrap gap-1">{shelter.urgentNeeds.slice(0, 2).map((need, index) => (<span key={index} className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">{need}</span>))}</div></div>)}
       {shelter.lastUpdated && (<p className="text-xs text-gray-500">📅 更新: {shelter.lastUpdated}</p>)}
-      <div className="mt-4 pt-3 border-t border-gray-100"><button className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-2 px-4 rounded-lg transition-colors duration-200">支援内容を確認</button></div>
+      <div className="mt-4 pt-3 border-t border-gray-100">
+        <button 
+          onClick={onSupportClick}
+          // ★ 修正点: ボタンのクラスを楽天カラーに変更
+          className="w-full bg-[#BF0000] hover:bg-[#990000] text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+        >
+          支援する
+        </button>
+      </div>
     </div>
   </div>
 );
@@ -66,27 +98,62 @@ const ProgressStep = ({ icon, label, isActive, isCompleted }: { icon: string; la
 
 // ===== メインコンポーネント =====
 export default function SupporterHomePage() {
-  const [selectedShelterId, setSelectedShelterId] = useState<number | null>(null);
+  const [sheltersList, setSheltersList] = useState<Shelter[]>([]);
+  const [stats, setStats] = useState<SupportStats>({ ongoing: 0, completed: 0, totalAmount: '¥0' });
+  const [activeSupport, setActiveSupport] = useState<ActiveSupport | null>(null);
+  const [recentNotifications, setRecentNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 跳转到物资页面的函数
-  const handleViewSupplies = () => {
-    if (selectedShelterId) {
-      // 获取当前URL中的supporter ID
-      const currentPath = window.location.pathname;
-      const supporterId = currentPath.split('/')[2]; // /supporter/[id]/home -> [id]
-      // 跳转到特定避难所的物资页面
-      window.location.href = `/supporter/${supporterId}/${selectedShelterId}/supplies`;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const supporterId = window.location.pathname.split('/')[2];
+        if (!supporterId) throw new Error("支援者IDがURLから取得できません。");
+
+        const apiShelters = await getShelters();
+        const formattedShelters = apiShelters.map((shelter, index) => ({
+          id: shelter.id,
+          name: shelter.shelterName,
+          address: shelter.shelterAddress,
+          evacueeCount: shelter.evacueeCount,
+          imageUrl: `https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400&h=160&fit=crop&q=80&${index}`,
+          urgentNeeds: ['衛生用品', '毛布'],
+          lastUpdated: '1時間前'
+        }));
+        setSheltersList(formattedShelters);
+
+        const supporterData = await getSupporterData(supporterId);
+        setStats(supporterData.stats);
+        // 型安全にstatusを変換
+        const validStatuses = ['purchased', 'delivery_drone', 'delivered', 'received'] as const;
+        const activeSupport = supporterData.activeSupport;
+        if (activeSupport && validStatuses.includes(activeSupport.status as typeof validStatuses[number])) {
+          setActiveSupport({
+            ...activeSupport,
+            status: activeSupport.status as 'purchased' | 'delivery_drone' | 'delivered' | 'received'
+          });
+        } else {
+          setActiveSupport(null);
+        }
+        setRecentNotifications(supporterData.notifications);
+
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "データの取得中にエラーが発生しました。");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleSupportNavigation = (shelterId: number) => {
+    const supporterId = window.location.pathname.split('/')[2];
+    if (supporterId && shelterId) {
+      window.location.href = `/supporter/${supporterId}/${shelterId}/supplies`;
     }
   };
 
-  const sheltersList: Shelter[] = [
-    { id: 1, name: '中央避難所', address: '東京都渋谷区渋谷1-1-1', imageUrl: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=160&fit=crop', evacueeCount: 150, urgentNeeds: ['飲料水', '医薬品'], lastUpdated: '2時間前' },
-    { id: 2, name: '北区避難所', address: '東京都北区北1-1-1', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=160&fit=crop', evacueeCount: 80, urgentNeeds: ['食料品', '毛布'], lastUpdated: '30分前' },
-    { id: 3, name: '南区避難所', address: '東京都南区南1-1-1', imageUrl: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400&h=160&fit=crop', evacueeCount: 120, urgentNeeds: ['衛生用品'], lastUpdated: '1時間前' },
-  ];
-  const activeSupport: ActiveSupport = { supportedShelterName: '中村スポーツセンター', itemName: '医薬品セット', status: 'delivery_drone' };
-  const recentNotifications: Notification[] = [{ message: '中村スポーツセンターから感謝の通知が届きました', time: '1日前', color: 'bg-green-500' }];
-  const stats: SupportStats = { ongoing: 1, completed: 4, totalAmount: '¥18,200' };
   const getProgressSteps = (status: string) => {
     return [
       { icon: '✅', label: '購入完了', isCompleted: true, isActive: status === 'purchased' },
@@ -95,6 +162,14 @@ export default function SupporterHomePage() {
       { icon: '🙌', label: '受取完了', isCompleted: status === 'received', isActive: status === 'received' }
     ];
   };
+
+  if (isLoading) {
+    return <SupporterLayout><div className="min-h-screen flex items-center justify-center">読み込み中...</div></SupporterLayout>;
+  }
+
+  if (error) {
+    return <SupporterLayout><div className="min-h-screen flex items-center justify-center text-red-500">エラー: {error}</div></SupporterLayout>;
+  }
 
   return (
     <SupporterLayout>
@@ -121,37 +196,28 @@ export default function SupporterHomePage() {
             </div>
           </section>
 
-          <section className="bg-white rounded-xl shadow-sm border p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">🔄 進行中の支援状況</h2>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-              <p className="text-lg mb-2">現在、<span className="font-bold text-blue-800">{activeSupport.supportedShelterName}</span>へ <span className="font-bold text-blue-800">{activeSupport.itemName}</span>を支援中です。</p>
-              <p className="text-sm text-blue-600">配送状況をリアルタイムで追跡できます</p>
-            </div>
-            <div className="flex justify-between items-center max-w-2xl mx-auto">
-              {getProgressSteps(activeSupport.status).map((step, index) => (
-                <ProgressStep key={index} icon={step.icon} label={step.label} isActive={step.isActive} isCompleted={step.isCompleted} />
-              ))}
-            </div>
-          </section>
+          {activeSupport && (
+            <section className="bg-white rounded-xl shadow-sm border p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">🔄 進行中の支援状況</h2>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                <p className="text-lg mb-2">現在、<span className="font-bold text-blue-800">{activeSupport.supportedShelterName}</span>へ <span className="font-bold text-blue-800">{activeSupport.itemName}</span>を支援中です。</p>
+                <p className="text-sm text-blue-600">配送状況をリアルタイムで追跡できます</p>
+              </div>
+              <div className="flex justify-between items-center max-w-2xl mx-auto">
+                {getProgressSteps(activeSupport.status).map((step, index) => (
+                  <ProgressStep key={index} icon={step.icon} label={step.label} isActive={step.isActive} isCompleted={step.isCompleted} />
+                ))}
+              </div>
+            </section>
+          )}
 
           <section>
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">🏢 新たな支援先を探す</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {sheltersList.map((shelter) => (
-                <ShelterCard key={shelter.id} shelter={shelter} onSelect={() => setSelectedShelterId(shelter.id)} isSelected={selectedShelterId === shelter.id} />
+                <ShelterCard key={shelter.id} shelter={shelter} onSupportClick={() => handleSupportNavigation(shelter.id)} />
               ))}
             </div>
-            {selectedShelterId && (
-              <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between">
-                <p className="text-blue-800 font-medium">📋 選択された避難所: <span className="font-bold">{sheltersList.find(s => s.id === selectedShelterId)?.name}</span></p>
-                <button 
-                  onClick={handleViewSupplies}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
-                >
-                  この避難所の支援リストを見る →
-                </button>
-              </div>
-            )}
           </section>
 
           {recentNotifications.length > 0 && (

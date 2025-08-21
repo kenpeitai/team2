@@ -1,6 +1,106 @@
-import Layout from '@/components/Layout';
+"use client";
 
-export default function RegisterPage() {
+import { useReducer } from 'react';
+import { useRouter } from 'next/navigation';
+import Layout from '@/components/Layout';
+// API関数と型定義を外部ファイルからインポートする想定
+import { registerUser } from '@/lib/api'; 
+import type { ApiError, UserDto } from '@/types/api';
+
+// ===== 状態管理の型定義 (RegisterPageの構造に統一) =====
+type RegisterState = {
+  loading: boolean;
+  message: string | null;
+  errors: Record<string, string> | null;
+};
+
+type RegisterAction = 
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_MESSAGE'; payload: string | null }
+  | { type: 'SET_ERRORS'; payload: Record<string, string> | null }
+  | { type: 'RESET' };
+
+// ===== State管理のためのReducer (RegisterPageの構造に統一) =====
+const registerReducer = (state: RegisterState, action: RegisterAction): RegisterState => {
+  switch (action.type) {
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
+    case 'SET_MESSAGE':
+      return { ...state, message: action.payload, errors: null };
+    case 'SET_ERRORS':
+      return { ...state, errors: action.payload, message: null };
+    case 'RESET':
+      return { loading: false, message: null, errors: null };
+    default:
+      return state;
+  }
+};
+
+// ===== メインコンポーネント =====
+export default function RegisterSupporterPage() {
+  const router = useRouter();
+  const [state, dispatch] = useReducer(registerReducer, {
+    loading: false,
+    message: null,
+    errors: null
+  });
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    // 状態をリセットして送信開始
+    dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: 'SET_MESSAGE', payload: null });
+    dispatch({ type: 'SET_ERRORS', payload: null });
+
+    const form = new FormData(e.currentTarget);
+    const getStr = (key: string) => (form.get(key) as string) || '';
+
+    // フロントエンドでのバリデーション
+    if (getStr('password') !== getStr('passwordConfirmation')) {
+      dispatch({ type: 'SET_MESSAGE', payload: 'パスワードが一致しません。' });
+      dispatch({ type: 'SET_LOADING', payload: false }); // ローディングを解除
+      return;
+    }
+    if (getStr('email') !== getStr('emailConfirmation')) {
+      dispatch({ type: 'SET_MESSAGE', payload: 'メールアドレスが一致しません。' });
+      dispatch({ type: 'SET_LOADING', payload: false }); // ローディングを解除
+      return;
+    }
+
+    const body: UserDto = {
+      fullName: getStr('fullName'),
+      phoneNumber: getStr('phoneNumber'),
+      email: getStr('email'),
+      password: getStr('password'),
+    };
+
+    try {
+      const response = await registerUser(body);
+      
+      const successMessage = response.user?.fullName
+        ? `${response.user.fullName}さん、登録が完了しました。`
+        : '登録が完了しました。';
+        
+      dispatch({ type: 'SET_MESSAGE', payload: successMessage });
+      
+      if (e.currentTarget) {
+        e.currentTarget.reset();
+      }
+      
+      setTimeout(() => {
+        router.push('/supporter/home');
+      }, 2000);
+
+    } catch (err) {
+      const apiErr = err as ApiError;
+      // バックエンドからの詳細なエラーメッセージがあれば表示
+      dispatch({ type: 'SET_MESSAGE', payload: apiErr.message ?? '登録に失敗しました。' });
+    } finally {
+      // 成功・失敗に関わらずローディングを確実に解除
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }
+
   return (
     <Layout>
       <div className="min-h-screen flex items-start justify-center p-6 sm:p-10">
@@ -10,122 +110,63 @@ export default function RegisterPage() {
             支援者として登録するために、以下の情報を入力してください。
           </p>
 
-          <form className="space-y-8" noValidate>
-            {/* 氏名 */}
+          <form className="space-y-8" noValidate onSubmit={onSubmit}>
+            {/* フォームの各項目は変更ありません */}
             <section>
-              <label htmlFor="fullName" className="block text-sm font-medium mb-1">
-                氏名
-              </label>
-              <input
-                id="fullName"
-                name="fullName"
-                type="text"
-                required
-                className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30"
-                placeholder="例：楽天 太郎"
-              />
+              <label htmlFor="fullName" className="block text-sm font-medium mb-1">氏名</label>
+              <input id="fullName" name="fullName" type="text" required className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30" placeholder="例：楽天 太郎"/>
             </section>
-
-            {/* 電話番号 (追加) */}
             <section>
-              <label htmlFor="phoneNumber" className="block text-sm font-medium mb-1">
-                電話番号
-              </label>
-              <input
-                id="phoneNumber"
-                name="phoneNumber"
-                type="tel"
-                inputMode="tel"
-                required
-                className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30"
-                placeholder="例：090-1234-5678"
-              />
+              <label htmlFor="phoneNumber" className="block text-sm font-medium mb-1">電話番号</label>
+              <input id="phoneNumber" name="phoneNumber" type="tel" inputMode="tel" required className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30" placeholder="例：090-1234-5678"/>
             </section>
-
-            {/* メールアドレス */}
             <section className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-1">
-                  メールアドレス
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30"
-                  placeholder="example@example.com"
-                />
+                <label htmlFor="email" className="block text-sm font-medium mb-1">メールアドレス</label>
+                <input id="email" name="email" type="email" required className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30" placeholder="example@example.com"/>
               </div>
               <div>
-                <label htmlFor="emailConfirmation" className="block text-sm font-medium mb-1">
-                  メールアドレス（確認用）
-                </label>
-                <input
-                  id="emailConfirmation"
-                  name="emailConfirmation"
-                  type="email"
-                  required
-                  className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30"
-                  placeholder="もう一度入力してください"
-                />
+                <label htmlFor="emailConfirmation" className="block text-sm font-medium mb-1">メールアドレス（確認用）</label>
+                <input id="emailConfirmation" name="emailConfirmation" type="email" required className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30" placeholder="もう一度入力してください"/>
               </div>
             </section>
-
-            {/* パスワード */}
             <section className="space-y-4">
               <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-1">
-                  パスワード
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30"
-                  placeholder="8文字以上を推奨"
-                />
+                <label htmlFor="password" className="block text-sm font-medium mb-1">パスワード</label>
+                <input id="password" name="password" type="password" required className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30" placeholder="8文字以上を推奨"/>
               </div>
               <div>
-                <label htmlFor="passwordConfirmation" className="block text-sm font-medium mb-1">
-                  パスワード（確認用）
-                </label>
-                <input
-                  id="passwordConfirmation"
-                  name="passwordConfirmation"
-                  type="password"
-                  required
-                  className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30"
-                  placeholder="もう一度入力してください"
-                />
+                <label htmlFor="passwordConfirmation" className="block text-sm font-medium mb-1">パスワード（確認用）</label>
+                <input id="passwordConfirmation" name="passwordConfirmation" type="password" required className="w-full rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-foreground/30" placeholder="もう一度入力してください"/>
               </div>
             </section>
-
-          
-
+            
             <div className="pt-2">
               <button
-                type="submit" // フォーム送信のためtypeをsubmitに変更
-                className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full"
+                type="submit"
+                disabled={state.loading}
+                className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-60"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="h-4 w-4"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 11-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 11-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clipRule="evenodd"/>
                 </svg>
-                <span>登録する</span>
+                <span>{state.loading ? '登録中...' : '登録する'}</span>
               </button>
             </div>
           </form>
+
+          {/* メッセージ表示エリア */}
+          {state.message && (
+            <p className="text-sm mt-4">{state.message}</p>
+          )}
+          {/* エラー詳細表示エリアを追加 */}
+          {state.errors && (
+            <ul className="text-sm mt-4 list-disc pl-6 text-red-600">
+              {Object.entries(state.errors).map(([key, value]) => (
+                <li key={key}>{`${key}: ${value}`}</li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </Layout>

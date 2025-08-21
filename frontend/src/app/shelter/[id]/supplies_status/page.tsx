@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import type { StoredNeeds, Priority, Category } from "@/types/needs";
 import { getOrdersService } from "@/services/ordersService";
+import Layout from "@/components/Layout";
 
 const RAKUTEN_RED = "#BF0000";
 const RAKUTEN_RED_HOVER = "#990000";
@@ -196,152 +197,154 @@ export default function SuppliesStatusPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-24">
-      <div className="mx-auto max-w-screen-xl px-4 pt-8 pb-4">
-        <h1 className="text-3xl font-extrabold tracking-tight mb-2">品目別オーダーステータス</h1>
-        <p className="text-sm text-gray-600">
-          {data
-            ? <>最終更新：<b>{new Date(data.savedAtISO).toLocaleString()}</b></>
-            : "保存済みの申請データが見つかりません。申請画面で「保存」してください。"}
-        </p>
+    <Layout>
+      <div className="min-h-screen bg-white pb-24">
+        <div className="mx-auto max-w-screen-xl px-4 pt-8 pb-4">
+          <h1 className="text-3xl font-extrabold tracking-tight mb-2">品目別オーダーステータス</h1>
+          <p className="text-sm text-gray-600">
+            {data
+              ? <>最終更新：<b>{new Date(data.savedAtISO).toLocaleString()}</b></>
+              : "保存済みの申請データが見つかりません。申請画面で「保存」してください。"}
+          </p>
 
-        {/* ツールバー */}
-        <div className="mt-4 grid gap-3 sm:grid-cols-5">
-          <input
-            className="rounded-xl border px-3 py-3 sm:col-span-2"
-            placeholder="品名/カテゴリで検索"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-
-          <select
-            className="rounded-xl border px-3 py-3"
-            value={catFilter}
-            onChange={(e) => setCatFilter((e.target.value as any) || "all")}
-          >
-            <option value="all">すべてのカテゴリ</option>
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className="rounded-xl border px-3 py-3"
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as SortKey)}
-          >
-            <option value="category">カテゴリ → 品名</option>
-            <option value="name">品名（五十音順）</option>
-            <option value="quantity">数量の多い順</option>
-            <option value="weight">重量の重い順</option>
-          </select>
-
-          <label className="inline-flex items-center gap-2 text-sm px-2">
-            <input
-              type="checkbox"
-              className="h-4 w-4"
-              checked={onlyDroneable}
-              onChange={(e) => setOnlyDroneable(e.target.checked)}
-            />
-            ドローン搬送可能のみ
-          </label>
-        </div>
-
-        {/* サマリ */}
-        {overview && (
+          {/* ツールバー */}
           <div className="mt-4 grid gap-3 sm:grid-cols-5">
-            <SummaryCard title="避難人数" value={`${overview.evacuees} 人`} />
-            <SummaryCard title="対象日数" value={`${overview.days} 日`} />
-            <SummaryCard title="品目数" value={`${overview.totalUnique} 品目`} />
-            <SummaryCard title="合計数量" value={`${overview.totalUnits.toLocaleString()} 単位`} />
-            <SummaryCard title="総重量" value={`${overview.totalKg.toFixed(1)} kg`} />
-          </div>
-        )}
+            <input
+              className="rounded-xl border px-3 py-3 sm:col-span-2"
+              placeholder="品名/カテゴリで検索"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
 
-        {/* アクション */}
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            onClick={() => getOrdersService().getCurrentDraft().then(setData)}
-            className="rounded-xl px-4 py-2 border hover:bg-gray-50"
-          >
-            再読み込み
-          </button>
-          <button
-            onClick={downloadCSV}
-            className="rounded-xl px-4 py-2 text-white"
-            style={{ backgroundColor: RAKUTEN_RED }}
-            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
-            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
-          >
-            品目別CSVをダウンロード
-          </button>
-          <button
-            onClick={downloadRawJSON}
-            className="rounded-xl px-4 py-2 border hover:bg-gray-50"
-          >
-            元の詳細JSONをダウンロード
-          </button>
-        </div>
-      </div>
+            <select
+              className="rounded-xl border px-3 py-3"
+              value={catFilter}
+              onChange={(e) => setCatFilter((e.target.value as any) || "all")}
+            >
+              <option value="all">すべてのカテゴリ</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
 
-      {/* 品目リスト */}
-      <section className="mx-auto max-w-screen-xl px-4 pb-8">
-        {!payload ? (
-          <EmptyState />
-        ) : rows.length === 0 ? (
-          <div className="rounded-2xl border p-6 text-center text-gray-600">
-            条件に一致する品目はありません。
+            <select
+              className="rounded-xl border px-3 py-3"
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as SortKey)}
+            >
+              <option value="category">カテゴリ → 品名</option>
+              <option value="name">品名（五十音順）</option>
+              <option value="quantity">数量の多い順</option>
+              <option value="weight">重量の重い順</option>
+            </select>
+
+            <label className="inline-flex items-center gap-2 text-sm px-2">
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={onlyDroneable}
+                onChange={(e) => setOnlyDroneable(e.target.checked)}
+              />
+              ドローン搬送可能のみ
+            </label>
           </div>
-        ) : (
-          <div className="divide-y rounded-2xl border overflow-hidden bg-white">
-            {/* ヘッダ行 */}
-            <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-gray-50 text-xs font-semibold text-gray-600">
-              <div className="col-span-5">品目</div>
-              <div className="col-span-2 text-right">数量</div>
-              <div className="col-span-2 text-right">総重量</div>
-              <div className="col-span-3 text-right">優先度（高/中/低）</div>
+
+          {/* サマリ */}
+          {overview && (
+            <div className="mt-4 grid gap-3 sm:grid-cols-5">
+              <SummaryCard title="避難人数" value={`${overview.evacuees} 人`} />
+              <SummaryCard title="対象日数" value={`${overview.days} 日`} />
+              <SummaryCard title="品目数" value={`${overview.totalUnique} 品目`} />
+              <SummaryCard title="合計数量" value={`${overview.totalUnits.toLocaleString()} 単位`} />
+              <SummaryCard title="総重量" value={`${overview.totalKg.toFixed(1)} kg`} />
             </div>
+          )}
 
-            {/* データ行 */}
-            {rows.map((r) => (
-              <div key={r.productId} className="grid grid-cols-12 gap-3 px-4 py-4 items-center">
-                <div className="col-span-5">
-                  <div className="font-semibold leading-tight">{r.productName}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{r.category}</div>
-                  <div className="mt-2">
-                    <DroneBadge
-                      perUnit={r.dronePerUnitEligible}
-                      unitsPerFlight={r.droneUnitsPerFlight}
-                      flights={r.droneFlightsRequired}
-                    />
-                  </div>
-                </div>
-
-                <div className="col-span-2 text-right">
-                  <div className="text-lg font-extrabold tabular-nums">
-                    {r.totalQuantity.toLocaleString()}{" "}
-                    <span className="text-sm font-medium text-gray-500">{r.unit}</span>
-                  </div>
-                </div>
-
-                <div className="col-span-2 text-right">
-                  <div className="text-lg font-semibold tabular-nums">
-                    {(r.totalWeightGrams / 1000).toFixed(1)}{" "}
-                    <span className="text-sm font-medium text-gray-500">kg</span>
-                  </div>
-                </div>
-
-                <div className="col-span-3 text-right">
-                  <PriorityTriplet v={r.priorityUnits} unit={r.unit} />
-                </div>
-              </div>
-            ))}
+          {/* アクション */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              onClick={() => getOrdersService().getCurrentDraft().then(setData)}
+              className="rounded-xl px-4 py-2 border hover:bg-gray-50"
+            >
+              再読み込み
+            </button>
+            <button
+              onClick={downloadCSV}
+              className="rounded-xl px-4 py-2 text-white"
+              style={{ backgroundColor: RAKUTEN_RED }}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
+            >
+              品目別CSVをダウンロード
+            </button>
+            <button
+              onClick={downloadRawJSON}
+              className="rounded-xl px-4 py-2 border hover:bg-gray-50"
+            >
+              元の詳細JSONをダウンロード
+            </button>
           </div>
-        )}
-      </section>
-    </div>
+        </div>
+
+        {/* 品目リスト */}
+        <section className="mx-auto max-w-screen-xl px-4 pb-8">
+          {!payload ? (
+            <EmptyState />
+          ) : rows.length === 0 ? (
+            <div className="rounded-2xl border p-6 text-center text-gray-600">
+              条件に一致する品目はありません。
+            </div>
+          ) : (
+            <div className="divide-y rounded-2xl border overflow-hidden bg-white">
+              {/* ヘッダ行 */}
+              <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-gray-50 text-xs font-semibold text-gray-600">
+                <div className="col-span-5">品目</div>
+                <div className="col-span-2 text-right">数量</div>
+                <div className="col-span-2 text-right">総重量</div>
+                <div className="col-span-3 text-right">優先度（高/中/低）</div>
+              </div>
+
+              {/* データ行 */}
+              {rows.map((r) => (
+                <div key={r.productId} className="grid grid-cols-12 gap-3 px-4 py-4 items-center">
+                  <div className="col-span-5">
+                    <div className="font-semibold leading-tight">{r.productName}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{r.category}</div>
+                    <div className="mt-2">
+                      <DroneBadge
+                        perUnit={r.dronePerUnitEligible}
+                        unitsPerFlight={r.droneUnitsPerFlight}
+                        flights={r.droneFlightsRequired}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="col-span-2 text-right">
+                    <div className="text-lg font-extrabold tabular-nums">
+                      {r.totalQuantity.toLocaleString()}{" "}
+                      <span className="text-sm font-medium text-gray-500">{r.unit}</span>
+                    </div>
+                  </div>
+
+                  <div className="col-span-2 text-right">
+                    <div className="text-lg font-semibold tabular-nums">
+                      {(r.totalWeightGrams / 1000).toFixed(1)}{" "}
+                      <span className="text-sm font-medium text-gray-500">kg</span>
+                    </div>
+                  </div>
+
+                  <div className="col-span-3 text-right">
+                    <PriorityTriplet v={r.priorityUnits} unit={r.unit} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </Layout>
   );
 }
 

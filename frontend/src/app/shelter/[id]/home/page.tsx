@@ -24,12 +24,8 @@ export default function Home() {
       return;
     }
     const fetchStatus = async () => {
-      try {
         const data = await getShelterStatus(idNum);
         setStatus(data);
-      } catch (e) {
-        console.error('避難所状況の取得に失敗しました:', e);
-      }
     };
     fetchStatus();
   }, [shelterId]);
@@ -149,9 +145,9 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">在庫・その他メニュー</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <MenuCard
-                href={`/shelter/${shelterId}/shelter_status`}
+                href={status ? `/shelter/${shelterId}/shelter_status` : `/shelter/${shelterId}/shelter-input`}
                 title="避難所状況"
-                description="避難所状況の登録・更新"
+                description={status ? "避難所状況の登録・更新" : "避難所状況の新規登録"}
                 icon="🏠"
                 color="bg-blue-500"
               />
