@@ -6,6 +6,7 @@ import Layout from '@/components/Layout';
 import { useParams, useRouter } from 'next/navigation';
 import type { InventoryDto } from '@/types/api';
 import { getInventoryByShelter, updateInventoryQuantity, addInventoryItem } from '@/lib/api';
+import BackButton from '@/components/BackButton';
 
 // rakutenカラー
 const RAKUTEN_RED = '#BF0000';
@@ -194,6 +195,9 @@ export default function InventoryPage() {
       <div className="min-h-screen bg-white overflow-x-hidden pb-24">
         {/* ヘッダ */}
         <div className="mx-auto max-w-screen-xl px-4 pt-8 pb-4">
+          <div className="mb-6">
+            <BackButton fallbackHref={`/shelter/${shelterId}/home`} />
+          </div>
           <h1 className="text-3xl font-extrabold tracking-tight mb-4">在庫管理</h1>
 
           {/* 検索＆カテゴリ選択 */}

@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import type { StoredNeeds, Priority, Category } from "@/types/needs";
 import { getOrdersService } from "@/services/ordersService";
 import Layout from "@/components/Layout";
+import BackButton from "@/components/BackButton";
+import { useParams } from "next/navigation";
 
 const RAKUTEN_RED = "#BF0000";
 const RAKUTEN_RED_HOVER = "#990000";
@@ -25,6 +27,7 @@ type GroupedRow = {
 
 export default function SuppliesStatusPage() {
   const [data, setData] = useState<StoredNeeds | null>(null);
+  const params = useParams<{ id: string }>();
 
   const [q, setQ] = useState(""); // 検索
   const [sortKey, setSortKey] = useState<SortKey>("category");
@@ -200,6 +203,9 @@ export default function SuppliesStatusPage() {
     <Layout>
       <div className="min-h-screen bg-white pb-24">
         <div className="mx-auto max-w-screen-xl px-4 pt-8 pb-4">
+          <div className="mb-6">
+            <BackButton fallbackHref={`/shelter/${params?.id}/home`} />
+          </div>
           <h1 className="text-3xl font-extrabold tracking-tight mb-2">品目別オーダーステータス</h1>
           <p className="text-sm text-gray-600">
             {data

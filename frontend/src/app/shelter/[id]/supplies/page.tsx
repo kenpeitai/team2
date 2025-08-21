@@ -12,6 +12,7 @@ import { Product, NeedRow, NeedsListPayload, Priority } from "./types";
 import { useParams, useRouter } from "next/navigation";
 import { createNeedsList } from "@/lib/api/supplies";
 import type { NeedsListDto } from "@/types/api";
+import BackButton from "@/components/BackButton";
 
 // ===== 型定義 =====
 
@@ -210,6 +211,9 @@ export default function NeedsListForm({
   return (
     <Layout>
       <div className="min-h-screen bg-white">
+        <div className="max-w-7xl mx-auto px-4 pt-4 mb-6">
+          <BackButton fallbackHref={`/shelter/${params?.id}/home`} />
+        </div>
         {/* ヒーローセクション */}
         <HeroSection 
           evacueeCount={state.evacueeCount}

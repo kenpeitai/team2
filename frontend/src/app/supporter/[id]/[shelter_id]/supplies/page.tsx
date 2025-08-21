@@ -2,7 +2,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useParams } from 'next/navigation';
 import SupporterLayout from '@/components/SupporterLayout';
-import { addItemToCart, getCart } from '@/lib/api/cart';
+import BackButton from '@/components/BackButton';
+import { addItemToCart } from '@/lib/api/cart';
 
 // ===== Rakutenブランドカラー定義 =====
 const RAKUTEN_RED = "#BF0000";
@@ -205,6 +206,7 @@ export default function SupporterDonationPage() {
   
   const [needsList, setNeedsList] = useState<NeedsListPayload | null>(null);
   const [cart, setCart] = useState<Map<string, CartItem>>(new Map());
+  const [editingQty, setEditingQty] = useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -360,6 +362,9 @@ export default function SupporterDonationPage() {
     <SupporterLayout>
       <div className="min-h-screen bg-gray-50">
         {/* ヘッダー */}
+        <div className="mb-4">
+                  <BackButton fallbackHref={`/supporter/${supporterId}/home`} />
+                </div>
         <div className="bg-white shadow-sm border-b">
           <div className="mx-auto max-w-screen-xl px-4 py-6">
             <div className="flex items-center justify-between">
@@ -425,15 +430,39 @@ export default function SupporterDonationPage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">支援する数量</label>
+                      <label className="block text-sm font-medium text-gray-700" htmlFor={`qty-${item.id}`}>支援する数量</label>
                       <div className="flex items-center gap-3">
                         <div className="flex-1 relative">
                           <input
+                            id={`qty-${item.id}`}
                             type="number"
                             min="0"
                             max={item.quantity}
-                            value={cart.get(item.id)?.quantity ?? 0}
-                            onChange={(e) => handleCartChange(item, parseInt(e.target.value, 10) || 0)}
+                            placeholder="0"
+                            value={editingQty.get(item.id) ?? String(cart.get(item.id)?.quantity ?? "")}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setEditingQty(prev => {
+                                const m = new Map(prev);
+                                m.set(item.id, v);
+                                return m;
+                              });
+                              if (v === "") return;
+                              const n = parseInt(v, 10);
+                              if (!Number.isFinite(n) || n < 0) return;
+                              handleCartChange(item, n);
+                            }}
+                            onBlur={() => {
+                              const v = editingQty.get(item.id) ?? "";
+                              if (v === "") {
+                                setEditingQty(prev => {
+                                  const m = new Map(prev);
+                                  m.set(item.id, "0");
+                                  return m;
+                                });
+                                handleCartChange(item, 0);
+                              }
+                            }}
                             className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-center text-lg font-bold focus:border-blue-500 focus:ring-0"
                             aria-label="支援数量"
                           />
@@ -443,7 +472,7 @@ export default function SupporterDonationPage() {
                       {isFullyStocked && (
                         <p className="text-xs text-green-600 flex items-center gap-1">
                           <span className="text-green-600">✓</span>
-                          必要数が満たされました！
+                          <span>必要数が満たされました！</span>
                         </p>
                       )}
                     </div>
@@ -478,6 +507,8 @@ export default function SupporterDonationPage() {
                     style={{ backgroundColor: isSubmitting ? '#9ca3af' : RAKUTEN_RED }}
                     onMouseOver={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
                     onMouseOut={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
+                    onFocus={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
+                    onBlur={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
                   >
                     {isSubmitting ? (
                       <>

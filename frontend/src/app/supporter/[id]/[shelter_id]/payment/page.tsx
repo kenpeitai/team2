@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import BackButton from "@/components/BackButton";
 import { useRouter } from "next/navigation";
 
 // ===== Types =====
@@ -191,6 +192,9 @@ export default function PaymentPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
+      <div className="mb-6">
+        <BackButton fallbackHref={`/supporter/${supporterId}/home`} />
+      </div>
       <nav className="text-sm mb-4 text-gray-500">
         <Link href="/cart" className="hover:underline">カート</Link>
         <span className="mx-2">›</span>

@@ -7,6 +7,7 @@ import Layout from '@/components/Layout';
 import { getShelterStatus } from '@/lib/api/shelterStatus';
 import type { ShelterStatusDto } from '@/types/api';
 import { UtilityStatus, TrafficStatus } from '@/types/api';
+import BackButton from '@/components/BackButton';
 
 const utilityStatusLabel: Record<UtilityStatus, string> = {
   [UtilityStatus.AVAILABLE]: '利用可',
@@ -122,6 +123,7 @@ export default function ShelterStatusPage() {
     <Layout>
       <div className="min-h-screen flex items-start justify-center p-6 sm:p-10">
         <div className="w-full max-w-2xl">
+          <BackButton fallbackHref={`/shelter/${shelterId}/home`} className="mb-6" />
           {/* ヘッダー */}
           <div className="mb-8">
             <h1 className="text-2xl font-semibold">避難所の状況</h1>

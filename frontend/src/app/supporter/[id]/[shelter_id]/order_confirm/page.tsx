@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import BackButton from "@/components/BackButton";
 
 // 型定義
 interface PaymentData {
@@ -35,6 +36,7 @@ interface OrderData {
 
 export default function OrderConfirmationPage() {
   const router = useRouter();
+  const params = useParams<{ id: string; shelter_id: string }>();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -236,6 +238,9 @@ export default function OrderConfirmationPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <div className="mb-6">
+        <BackButton fallbackHref={`/supporter/${params?.id}/home`} />
+      </div>
       <nav className="text-sm text-gray-600 mb-6">
         <Link href="/" className="hover:underline">ホーム</Link>
         <span className="mx-2">›</span>

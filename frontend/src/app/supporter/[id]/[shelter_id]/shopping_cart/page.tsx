@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { getCart, updateCartItemQuantity, removeItemFromCart, clearCart as clearCartApi } from '@/lib/api/cart';
 import { createOrder } from '@/lib/api/orders';
 import SupporterLayout from '@/components/SupporterLayout';
+import BackButton from '@/components/BackButton';
 
 /* ====== 型（このファイル内で完結） ====== */
 type Yen = number;
@@ -209,6 +210,9 @@ export default function SupporterShoppingCartPage() {
     <SupporterLayout>
       <div className="min-h-screen bg-white pb-28">
         <div className="mx-auto max-w-screen-xl px-4 pt-8">
+          <div className="mb-6">
+            <BackButton fallbackHref={`/supporter/${supporterId}/home`} />
+          </div>
           <h1 className="text-3xl font-extrabold tracking-tight">買い物かご</h1>
           <p className="text-sm text-gray-600 mt-1">
             {loading ? "読み込み中…" : <>最終更新：<b>{new Date(cart.updatedAtISO).toLocaleString()}</b></>}

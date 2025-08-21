@@ -6,6 +6,7 @@ import { useShelter } from '@/hooks/useShelter';
 import { ShelterStatusDto, UtilityStatus, TrafficStatus } from '@/types/api';
 import Layout from '@/components/Layout';
 import { updateShelterStatusRecord } from '@/lib/api/shelterStatus';
+import BackButton from '@/components/BackButton';
 
 type ShelterStatusForm = Omit<ShelterStatusDto, 'id' | 'shelterId' | 'createdAt' | 'updatedAt'>;
 
@@ -148,6 +149,7 @@ export default function ShelterInputPage() {
     <Layout>
       <div className="min-h-screen flex items-start justify-center p-6 sm:p-10">
         <div className="w-full max-w-2xl">
+          <BackButton fallbackHref={`/shelter/${shelterId}/home`} className="mb-6" />
           {/* ヘッダー */}
           <div className="mb-8">
             <h1 className="text-2xl font-semibold">避難所状況の更新</h1>
