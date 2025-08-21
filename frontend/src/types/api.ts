@@ -20,22 +20,11 @@ export enum TrafficStatus {
   UNKNOWN = 'UNKNOWN'
 }
 
-// 商品カテゴリの列挙型
-export enum ProductCategory {
-  MEDICINE = 'MEDICINE',
-  FOOD = 'FOOD',
-  WATER = 'WATER',
-  HYGIENE = 'HYGIENE',
-  TOOLS = 'TOOLS',
-  OTHER = 'OTHER'
-}
+// 商品カテゴリ（バックエンドのEnumに合わせて日本語の文字列）
+export type ProductCategory = '医薬品' | '衛生' | '食料' | '生活用品';
 
-// 優先度の列挙型
-export enum Priority {
-  HIGH = 'HIGH',
-  MEDIUM = 'MEDIUM',
-  LOW = 'LOW'
-}
+// 優先度（バックエンドのEnumに合わせて小文字の文字列）
+export type Priority = 'high' | 'medium' | 'low';
 
 // ユーザーDTOの型定義
 export interface UserDto {

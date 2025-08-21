@@ -8,10 +8,10 @@ import { useProductCatalog } from "./hooks/useProductCatalog";
 import { useNeedsListValidation } from "./hooks/useNeedsListValidation";
 import { RakutenProductManager } from "@/components/RakutenProductManager";
 import { DRONE_MAX_PAYLOAD_G, WATER_L_PER_PERSON_PER_DAY } from "./constants";
-import { Product, NeedRow, NeedsListPayload, Priority, Category } from "./types";
-import { useParams } from "next/navigation";
+import { Product, NeedRow, NeedsListPayload, Priority } from "./types";
+import { useParams, useRouter } from "next/navigation";
 import { createNeedsList } from "@/lib/api/supplies";
-import { Priority as ApiPriority, ProductCategory, type NeedsListDto } from "@/types/api";
+import type { NeedsListDto } from "@/types/api";
 
 // ===== 型定義 =====
 
@@ -40,6 +40,7 @@ export default function NeedsListForm({
   const [currentProducts, setCurrentProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   
   // ===== データ処理 =====
   
@@ -165,18 +166,7 @@ export default function NeedsListForm({
       return;
     }
 
-    const toApiPriority: Record<Priority, ApiPriority> = {
-      high: ApiPriority.HIGH,
-      medium: ApiPriority.MEDIUM,
-      low: ApiPriority.LOW,
-    };
-
-    const toApiCategory: Record<Category, ProductCategory> = {
-      "医薬品": ProductCategory.MEDICINE,
-      "衛生": ProductCategory.HYGIENE,
-      "食料": ProductCategory.FOOD,
-      "生活用品": ProductCategory.OTHER,
-    };
+    // バックエンドは priority: 'high'|'medium'|'low', category: '医薬品'|'衛生'|'食料'|'生活用品' の文字列をそのまま受け取る
 
     const body: NeedsListDto = {
       shelterId,
@@ -189,9 +179,9 @@ export default function NeedsListForm({
         productId: it.productId,
         productName: it.productName,
         unit: it.unit,
-        category: toApiCategory[it.category],
+        category: it.category,
         quantity: it.quantity,
-        priority: toApiPriority[it.priority],
+        priority: it.priority,
         notes: it.notes,
         perUnitWeightGrams: it.perUnitWeightGrams,
         totalWeightGrams: it.totalWeightGrams,
@@ -208,6 +198,7 @@ export default function NeedsListForm({
       if (onSubmit) onSubmit(payload);
       await createNeedsList(body);
       alert("必要物資リストを作成しました");
+      router.push(`/shelter/${shelterId}/home`);
     } catch (e: any) {
       const message = e?.message || "保存に失敗しました";
       alert(`エラー: ${message}`);

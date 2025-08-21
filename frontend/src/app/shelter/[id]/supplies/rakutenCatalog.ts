@@ -18,7 +18,7 @@ export const RAKUTEN_PRODUCT_CATALOG: RakutenProductDefinition[] = [
   {
     id: "p-water-2l",
     name: "飲料水 2L×6本（1ケース）",
-    searchKeywords: ["飲料水 2L 6本", "ミネラルウォーター 2L ケース", "水 2L 6本"],
+    searchKeywords: ["ミネラルウォーター 2L 6本"],
     unit: "ケース",
     weightGrams: 12000,
     category: "食料"
@@ -35,7 +35,7 @@ export const RAKUTEN_PRODUCT_CATALOG: RakutenProductDefinition[] = [
   {
     id: "p-canned-food",
     name: "缶詰(主食) 1缶",
-    searchKeywords: ["非常食 缶詰"],
+    searchKeywords: ["非常食 缶パン"],
     unit: "缶",
     weightGrams: 350,
     category: "食料",
