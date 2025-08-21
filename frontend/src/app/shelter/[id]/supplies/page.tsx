@@ -198,7 +198,6 @@ export default function NeedsListForm({
     (onSubmit ? Promise.resolve(onSubmit(payload)) : Promise.resolve())
       .then(() => createNeedsList(body))
       .then(() => {
-        alert("必要物資リストを作成しました");
         router.push(`/shelter/${shelterId}/home`);
       })
       .catch((e: unknown) => {

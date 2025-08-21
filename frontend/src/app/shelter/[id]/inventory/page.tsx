@@ -187,7 +187,6 @@ export default function InventoryPage() {
         setNewName('');
         setNewQuantity(0);
         setSelectedCode('');
-        alert('在庫を追加しました');
       })
       .catch((e: unknown) => {
         const msg = e instanceof Error ? e.message : '在庫の追加に失敗しました';
@@ -281,8 +280,7 @@ export default function InventoryPage() {
             <div className="flex items-end">
               <button
                 onClick={onAddItem}
-                className="w-full rounded-xl px-5 py-3 text-white whitespace-nowrap disabled:opacity-60 hover:brightness-90 focus:brightness-90"
-                style={{ backgroundColor: RAKUTEN_RED }}
+                className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-50"
                 disabled={adding || loading}
               >
                 {adding ? '追加中...' : '在庫を追加'}
@@ -376,8 +374,7 @@ export default function InventoryPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={saveItems}
-                className="rounded-xl px-5 py-2.5 text-white whitespace-nowrap disabled:opacity-60 hover:brightness-90 focus:brightness-90"
-                style={{ backgroundColor: RAKUTEN_RED }}
+                className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-50"
                 disabled={saving || loading}
               >
                 {saving ? '保存中...' : '保存'}

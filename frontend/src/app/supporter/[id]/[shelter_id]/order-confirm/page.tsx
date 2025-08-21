@@ -180,9 +180,6 @@ export default function OrderConfirmationPage() {
         throw new Error(`注文状態更新に失敗しました: ${updateOrderResponse.status}`);
       }
       
-      // 成功メッセージ
-      alert("注文を確定しました！支払いも完了しました。");
-      
       // 完了ページに遷移（URLパラメータから正しいIDを取得）
       const pathSegments = window.location.pathname.split('/');
       const supporterId = pathSegments[2];

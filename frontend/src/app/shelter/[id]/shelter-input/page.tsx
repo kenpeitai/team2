@@ -33,7 +33,7 @@ const TRAFFIC_STATUS_OPTIONS: { value: TrafficStatus; label: string }[] = [
 export default function ShelterInputPage() {
   const params = useParams();
   const router = useRouter();
-  const shelterId = params.id as string;
+  const id = params.id as string;
   const { shelter, loading, error, refetch } = useShelter();
 
   const [formData, setFormData] = useState<ShelterStatusForm>(DEFAULT_FORM);
@@ -68,20 +68,16 @@ export default function ShelterInputPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!shelter) {
-      alert('避難所情報が取得できませんでした');
-      return;
-    }
 
     setSubmitting(true);
     const payload: ShelterStatusDto = {
-      shelterId: parseInt(shelterId),
+      shelterId: parseInt(id),
       ...DEFAULT_FORM,
       ...formData,
     };
-    updateShelterStatusRecord(parseInt(shelterId), payload)
+    updateShelterStatusRecord(parseInt(id), payload)
       .then(() => {
-        router.push(`/shelter/${shelterId}/shelter-status`);
+        router.push(`/shelter/${id}/shelter-status`);
       })
       .catch(() => {
         alert('更新に失敗しました');
@@ -150,7 +146,7 @@ export default function ShelterInputPage() {
     <Layout>
       <div className="min-h-screen flex items-start justify-center p-6 sm:p-10">
         <div className="w-full max-w-2xl">
-          <BackButton fallbackHref={`/shelter/${shelterId}/home`} className="mb-6" />
+          <BackButton fallbackHref={`/shelter/${id}/home`} className="mb-6" />
           {/* ヘッダー */}
           <div className="mb-8">
             <h1 className="text-2xl font-semibold">避難所状況の更新</h1>
@@ -289,7 +285,7 @@ export default function ShelterInputPage() {
             <div className="flex justify-end space-x-4 pt-4">
               <button
                 type="button"
-                onClick={() => router.push(`/shelter/${shelterId}/shelter-status`)}
+                onClick={() => router.push(`/shelter/${id}/shelter-status`)}
                 className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 disabled={submitting}
               >
