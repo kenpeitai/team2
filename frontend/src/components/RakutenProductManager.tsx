@@ -26,27 +26,6 @@ export function RakutenProductManager({
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // 初期化時に基本商品データを提供
-  useEffect(() => {
-    if (isInitialized && !hasSearched) {
-      const basicProducts = getProductsAsArray();
-      onProductsReady(basicProducts);
-      
-      // データベース保存用のデータも提供
-      if (onDatabaseProductsReady) {
-        const databaseProducts = getProductsForDatabase();
-        onDatabaseProductsReady(databaseProducts);
-      }
-    }
-  }, [isInitialized, hasSearched, getProductsAsArray, getProductsForDatabase, onProductsReady, onDatabaseProductsReady]);
-
-  // 自動で楽天市場から商品を取得
-  useEffect(() => {
-    if (isInitialized && !hasSearched) {
-      handleSearchAllProducts();
-    }
-  }, [isInitialized, hasSearched, handleSearchAllProducts]);
-
   // 楽天市場から全商品を検索
   const handleSearchAllProducts = useCallback(async () => {
     setIsSearching(true);
@@ -73,6 +52,27 @@ export function RakutenProductManager({
       onLoadingChange?.(false);
     }
   }, [searchAllProducts, getProductsAsArray, getProductsForDatabase, onProductsReady, onDatabaseProductsReady, onLoadingChange]);
+
+  // 初期化時に基本商品データを提供
+  useEffect(() => {
+    if (isInitialized && !hasSearched) {
+      const basicProducts = getProductsAsArray();
+      onProductsReady(basicProducts);
+      
+      // データベース保存用のデータも提供
+      if (onDatabaseProductsReady) {
+        const databaseProducts = getProductsForDatabase();
+        onDatabaseProductsReady(databaseProducts);
+      }
+    }
+  }, [isInitialized, hasSearched, getProductsAsArray, getProductsForDatabase, onProductsReady, onDatabaseProductsReady]);
+
+  // 自動で楽天市場から商品を取得
+  useEffect(() => {
+    if (isInitialized && !hasSearched) {
+      handleSearchAllProducts();
+    }
+  }, [isInitialized, hasSearched, handleSearchAllProducts]);
 
   // 検索統計を取得
   const stats = getSearchStats();

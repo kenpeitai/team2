@@ -28,6 +28,14 @@ export interface RakutenProductData extends Product {
 export function useRakutenProducts() {
   const [products, setProducts] = useState<Map<string, RakutenProductData>>(new Map());
   const [isInitialized, setIsInitialized] = useState(false);
+  
+  // 楽天市場API制限設定
+  const API_DELAY_MS = parseInt(process.env.NEXT_PUBLIC_RAKUTEN_API_DELAY || '2000'); // API呼び出し間隔（ミリ秒）
+  const MAX_RETRIES = 3; // 最大リトライ回数
+  
+  // キャッシュ機能
+  const [searchCache, setSearchCache] = useState<Map<string, { data: any; timestamp: number }>>(new Map());
+  const CACHE_DURATION = 30 * 60 * 1000; // 30分間キャッシュ
 
   // 初期化：楽天市場商品カタログから基本データを作成
   useEffect(() => {
@@ -116,15 +124,35 @@ export function useRakutenProducts() {
     }
   }, [products]);
 
-  // 複数の商品を一括検索（遅延処理でAPI制限を回避）
+  // 複数の商品を並列検索（バッチ処理で高速化）
   const searchMultipleProducts = useCallback(async (productIds: string[]) => {
-    for (let i = 0; i < productIds.length; i++) {
-      await searchProduct(productIds[i]);
-      // API制限を避けるため、検索間に1秒の遅延を入れる
-      if (i < productIds.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    const BATCH_SIZE = 3; // 同時に処理する商品数
+    const batches = [];
+    
+    // 商品IDをバッチに分割
+    for (let i = 0; i < productIds.length; i += BATCH_SIZE) {
+      batches.push(productIds.slice(i, i + BATCH_SIZE));
+    }
+    
+    console.log(`楽天市場API並列検索開始: ${productIds.length}商品を${batches.length}バッチで処理`);
+    
+    // バッチごとに並列処理
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      console.log(`バッチ ${batchIndex + 1}/${batches.length} 処理中: ${batch.join(', ')}`);
+      
+      // バッチ内の商品を並列検索
+      const promises = batch.map(productId => searchProduct(productId));
+      await Promise.all(promises);
+      
+      // バッチ間の待機時間（API制限対応）
+      if (batchIndex < batches.length - 1) {
+        console.log(`バッチ間待機: ${API_DELAY_MS}ms待機中...`);
+        await new Promise(resolve => setTimeout(resolve, API_DELAY_MS));
       }
     }
+    
+    console.log('楽天市場API並列検索完了');
   }, [searchProduct]);
 
   // 全商品を検索

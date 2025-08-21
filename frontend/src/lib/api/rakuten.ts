@@ -38,9 +38,20 @@ export async function getCheapestItemByKeyword(keyword: string): Promise<Rakuten
     const res = await fetch(url);
     if (!res.ok) {
       // 429(リクエスト上限)や404などAPI標準のエラーもあり得る
-      // 必要に応じてリトライ/フォールバックを実装
-      console.error(`楽天市場API エラー: ${res.status} ${res.statusText}`);
-      return null;
+      if (res.status === 429) {
+        console.warn('楽天市場APIレート制限に達しました。30秒待機します...');
+        await new Promise(resolve => setTimeout(resolve, 30000)); // 30秒待機
+        // リトライ（1回のみ）
+        const retryRes = await fetch(url);
+        if (!retryRes.ok) {
+          console.error(`楽天市場API リトライ後もエラー: ${retryRes.status} ${retryRes.statusText}`);
+          return null;
+        }
+        // リトライ成功時は後続処理を継続
+      } else {
+        console.error(`楽天市場API エラー: ${res.status} ${res.statusText}`);
+        return null;
+      }
     }
 
     const data = await res.json();
@@ -97,8 +108,20 @@ export async function getItemsByKeyword(keyword: string, limit: number = 10): Pr
   try {
     const res = await fetch(url);
     if (!res.ok) {
-      console.error(`楽天市場API エラー: ${res.status} ${res.statusText}`);
-      return [];
+      if (res.status === 429) {
+        console.warn('楽天市場APIレート制限に達しました。30秒待機します...');
+        await new Promise(resolve => setTimeout(resolve, 30000)); // 30秒待機
+        // リトライ（1回のみ）
+        const retryRes = await fetch(url);
+        if (!retryRes.ok) {
+          console.error(`楽天市場API リトライ後もエラー: ${retryRes.status} ${retryRes.statusText}`);
+          return [];
+        }
+        // リトライ成功時は後続処理を継続
+      } else {
+        console.error(`楽天市場API エラー: ${res.status} ${res.statusText}`);
+        return [];
+      }
     }
 
     const data = await res.json();
