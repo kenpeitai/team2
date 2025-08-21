@@ -86,6 +86,81 @@ export default function PaymentPage() {
 
   const brand = useMemo(() => guessBrand(number), [number]);
 
+  // ===== onContinue Function =====
+  const onContinue = () => {
+    if (method === "card") {
+      // 获取URL参数中的ID
+      const pathSegments = window.location.pathname.split('/');
+      const supporterId = pathSegments[2]; // /supporter/[id]/[shelter_id]/payment
+      const shelterId = pathSegments[3];
+      
+      // 生成订单号
+      const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // 从localStorage获取购物车信息来计算总金额
+      const cartData = localStorage.getItem("cart");
+      let totalAmount = 0;
+      if (cartData) {
+        try {
+          const cart = JSON.parse(cartData);
+          totalAmount = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+        } catch (error) {
+          console.error("购物车数据解析失败:", error);
+        }
+      }
+      
+      let payload: any = { 
+        method,
+        orderId,
+        totalAmount,
+        supporterId,
+        shelterId,
+        timestamp: new Date().toISOString()
+      };
+      
+      if (selectedSavedId) {
+        // 使用保存的卡
+        const saved = savedCards.find((c: SavedCard) => c.id === selectedSavedId);
+        if (saved) {
+          payload.savedCardId = selectedSavedId;
+          payload.oneTimeCard = saved;
+        }
+      } else {
+        // 使用新输入的卡
+        if (saveCard) {
+          const newCard: SavedCard = {
+            id: `card_${Date.now()}`,
+            brand,
+            last4: number.replace(/\D/g, "").slice(-4),
+            holder,
+            exp: expiry
+          };
+          
+          // 保存到localStorage
+          const existing = JSON.parse(localStorage.getItem("savedCards") || "[]");
+          existing.push(newCard);
+          localStorage.setItem("savedCards", JSON.stringify(existing));
+          
+          payload.oneTimeCard = newCard;
+        } else {
+          payload.oneTimeCard = {
+            id: `temp_${Date.now()}`,
+            brand,
+            last4: number.replace(/\D/g, "").slice(-4),
+            holder,
+            exp: expiry
+          };
+        }
+      }
+      
+      // 保存支付信息到paymentData（与order_conplete页面保持一致）
+      localStorage.setItem("paymentData", JSON.stringify(payload));
+      
+      // 跳转到订单确认页面
+      router.push(`/supporter/${supporterId}/${shelterId}/order_confirm`);
+    }
+  };
+
   // ===== Validation =====
   const errors = useMemo(() => {
     const e: Record<string, string> = {};
@@ -102,37 +177,7 @@ export default function PaymentPage() {
     return e;
   }, [method, selectedSavedId, holder, number, expiry, cvc, brand]);
 
-  function onContinue() {
-    if (method === "card" && !selectedSavedId && Object.keys(errors).length) return;
 
-    let payload: any = { method } as any;
-
-    if (method === "card") {
-      if (selectedSavedId) {
-        payload.savedCardId = selectedSavedId;
-      } else {
-        const digits = number.replace(/\D/g, "");
-        const newCard: SavedCard = {
-          id: `card_${Date.now()}`,
-          brand,
-          last4: digits.slice(-4),
-          holder: holder.trim(),
-          exp: expiry,
-        };
-        if (saveCard) {
-          const next = [newCard, ...savedCards].slice(0, 5);
-          localStorage.setItem("savedCards", JSON.stringify(next));
-          setSavedCards(next);
-          payload.savedCardId = newCard.id;
-        } else {
-          payload.oneTimeCard = newCard;
-        }
-      }
-    }
-
-    localStorage.setItem("checkout.payment", JSON.stringify(payload));
-    router.push("/checkout/review");
-  }
 
   // Simple step indicator
   const Step = ({ n, label, active }: { n: number; label: string; active: boolean }) => (

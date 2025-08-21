@@ -15,7 +15,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
       (err as { cause?: unknown }).cause = parsed;
       throw err;
     } catch {
-      const err = new Error(text || `HTTP ${res.status}`);
+      const err = new Error(text ?? `HTTP ${res.status}`);
       (err as { cause?: unknown }).cause = { status: res.status } satisfies Partial<ApiError>;
       throw err;
     }
