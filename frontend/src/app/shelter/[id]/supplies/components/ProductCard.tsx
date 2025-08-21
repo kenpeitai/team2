@@ -1,6 +1,8 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { Product, NeedRow, Priority, Category } from "../types";
 import { RAKUTEN_RED, RAKUTEN_RED_HOVER, WATER_L_PER_PERSON_PER_DAY, ML_PER_L } from "../constants";
+import { RakutenSearchSection } from "@/components/RakutenSearchSection";
+import { RakutenItem } from "@/lib/api/rakuten";
 
 interface ProductCardProps {
   row: NeedRow;
@@ -37,7 +39,7 @@ function calcRecommended(p: Product | undefined, evacueeCount: number, targetDay
   return Math.round(val * 2) / 2; // 0.5刻み
 }
 
-function toSafeNumber(v: any, def = 0, min?: number) {
+function toSafeNumber(v: unknown, def = 0, min?: number) {
   const n = typeof v === "number" ? v : Number(v);
   const f = Number.isFinite(n) ? n : def;
   return typeof min === "number" ? Math.max(min, f) : f;
@@ -58,6 +60,8 @@ export function ProductCard({
   onRemove
 }: ProductCardProps) {
   const rec = calcRecommended(product, evacueeCount, targetDays);
+  const [showRakutenSearch, setShowRakutenSearch] = useState(false);
+  const [selectedRakutenItem, setSelectedRakutenItem] = useState<RakutenItem | null>(null);
 
   return (
     <article className="group bg-white rounded-lg border border-black/10 dark:border-white/20 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
@@ -111,21 +115,46 @@ export function ProductCard({
           </select>
         </div>
 
+        {/* 商品名表示 */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">商品名</label>
+          <div className="bg-gray-50 border border-gray-200 rounded-md p-3 sm:p-4">
+            <div className="flex items-start gap-2">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm sm:text-base text-gray-800 leading-relaxed font-medium break-words whitespace-normal">
+                  {product?.rakutenActualProductName || product?.name || "商品名が設定されていません"}
+                </p>
+                {product?.rakutenActualProductName && (
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1 break-words whitespace-normal">
+                    楽天商品名: {product.rakutenActualProductName}
+                  </p>
+                )}
+
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* 数量とおすすめ */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">必要数量</label>
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <input
                 type="number"
                 min={0}
                 step={product?.id === "p-water-2l" ? 1 : 0.5}
-                className="flex-1 rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 text-right outline-none focus:ring-2 focus:ring-foreground/30 text-sm"
+                className="w-24 sm:w-28 md:w-32 rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 text-right outline-none focus:ring-2 focus:ring-foreground/30 text-sm sm:text-base"
                 value={row.quantity}
                 onChange={(e) => onRowUpdate({ quantity: toSafeNumber(e.target.value, row.quantity, 0) })}
                 aria-label="数量"
               />
-              <span className="text-xs sm:text-sm font-medium text-foreground/70 bg-foreground/5 px-2 sm:px-3 py-2 rounded-md whitespace-nowrap">
+              <span className="text-xs sm:text-sm font-medium text-foreground/70 bg-foreground/5 px-2 sm:px-3 py-2 rounded-md whitespace-nowrap flex-shrink-0">
                 {product?.unit ?? "—"}
               </span>
             </div>
@@ -133,15 +162,15 @@ export function ProductCard({
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">推奨数量</label>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="flex-1 text-sm sm:text-lg font-semibold text-foreground bg-foreground/5 px-2 sm:px-3 py-2 rounded-md border border-black/10 dark:border-white/20 truncate">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <span className="inline-flex items-center justify-end flex-1 min-w-0 text-sm sm:text-base font-semibold text-foreground bg-foreground/5 px-3 py-2 rounded-md border border-black/10 dark:border-white/20 truncate">
                 {rec ?? "—"}{rec != null && product?.unit && ` ${product.unit}`}
               </span>
               <button
                 type="button"
                 disabled={rec == null}
                 onClick={() => rec != null && onRowUpdate({ quantity: rec })}
-                className="btn btn-primary px-3 sm:px-4 py-2 bg-foreground/5 text-foreground hover:bg-foreground/10 disabled:bg-foreground/30 disabled:text-foreground/50 font-medium rounded-md border border-black/10 dark:border-white/20 transition-colors duration-200 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap"
+                className="btn btn-primary px-3 sm:px-4 py-2 bg-foreground/5 text-foreground hover:bg-foreground/10 disabled:bg-foreground/30 disabled:text-foreground/50 font-medium rounded-md border border-black/10 dark:border-white/20 transition-colors duration-200 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
                 title="推奨数量を適用"
               >
                 適用
@@ -261,12 +290,13 @@ function ProductHeroImage({
       return; 
     }
 
-    const given = product.imageUrl ? [product.imageUrl] : [];
+    // 楽天市場の画像を最優先、次にローカルの画像をフォールバック
+    const rakutenImage = product.imageUrl ? [product.imageUrl] : [];
     const id = product.id;
-    const fallbacks = ["/products", "/images"].flatMap((base) =>
+    const localFallbacks = ["/products", "/images"].flatMap((base) =>
       [".png", ".jpg", ".webp"].map((ext) => `${base}/${id}${ext}`)
     );
-    const list = [...given, ...fallbacks];
+    const list = [...rakutenImage, ...localFallbacks];
     onImageStateChange({ candidates: list, src: list[0] ?? null });
   }, [product, allowByPolicy]); // onImageStateChangeを依存配列から削除
 
@@ -278,6 +308,12 @@ function ProductHeroImage({
         <div className="relative z-10">
           <CategoryIcon category={product?.category ?? "生活用品"} size="xl" />
           <p className="text-foreground/50 text-xs sm:text-sm mt-1 sm:mt-2 font-medium text-center">{product?.category ?? "生活用品"}</p>
+          {/* デバッグ情報 */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="text-xs text-gray-400 mt-1">
+              {product?.imageUrl ? '楽天画像あり' : '楽天画像なし'}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -285,7 +321,7 @@ function ProductHeroImage({
 
   return (
     <>
-      <div className="w-full h-32 sm:h-48 overflow-hidden bg-foreground/5">
+      <div className="w-full h-32 sm:h-48 overflow-hidden bg-foreground/5 relative">
         <img
           src={currentSrc}
           alt={product.name}
@@ -293,6 +329,12 @@ function ProductHeroImage({
           onError={onError}
           onClick={() => onImageStateChange({ open: true })}
         />
+        {/* 楽天市場画像のデバッグ情報 */}
+        {process.env.NODE_ENV === 'development' && product?.imageUrl && currentSrc === product.imageUrl && (
+          <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded">
+            楽天画像
+          </div>
+        )}
       </div>
       {currentOpen && (
         <div

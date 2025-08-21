@@ -7,6 +7,7 @@ import Layout from '@/components/Layout';
 import { getShelterStatus } from '@/lib/api/shelterStatus';
 import type { ShelterStatusDto } from '@/types/api';
 import { UtilityStatus, TrafficStatus } from '@/types/api';
+import BackButton from '@/components/BackButton';
 
 const utilityStatusLabel: Record<UtilityStatus, string> = {
   [UtilityStatus.AVAILABLE]: '利用可',
@@ -37,23 +38,19 @@ export default function ShelterStatusPage() {
 
   const fetchStatus = async () => {
     const idNum = Number(shelterId);
-    if (!idNum || Number.isNaN(idNum)) {
-      setStatusError('避難所IDが不正です');
-      setStatusLoading(false);
-      return;
-    }
-    try {
-      setStatusLoading(true);
-      setStatusError(null);
-      const data = await getShelterStatus(idNum);
-      setStatus(data);
-    } catch (e) {
-      console.error('避難所状況の取得に失敗しました:', e);
-      setStatusError('避難所状況の取得に失敗しました');
-      setStatus(null);
-    } finally {
-      setStatusLoading(false);
-    }
+    setStatusLoading(true);
+    setStatusError(null);
+    getShelterStatus(idNum)
+      .then((data) => {
+        setStatus(data);
+      })
+      .catch(() => {
+        setStatusError('避難所状況の取得に失敗しました');
+        setStatus(null);
+      })
+      .finally(() => {
+        setStatusLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -122,6 +119,7 @@ export default function ShelterStatusPage() {
     <Layout>
       <div className="min-h-screen flex items-start justify-center p-6 sm:p-10">
         <div className="w-full max-w-2xl">
+          <BackButton fallbackHref={`/shelter/${shelterId}/home`} className="mb-6" />
           {/* ヘッダー */}
           <div className="mb-8">
             <h1 className="text-2xl font-semibold">避難所の状況</h1>

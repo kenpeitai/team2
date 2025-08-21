@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { getCart, updateCartItemQuantity, removeItemFromCart, clearCart as clearCartApi } from '@/lib/api/cart';
 import { createOrder } from '@/lib/api/orders';
 import SupporterLayout from '@/components/SupporterLayout';
+import BackButton from '@/components/BackButton';
 
 /* ====== 型（このファイル内で完結） ====== */
 type Yen = number;
@@ -206,6 +207,7 @@ export default function SupporterShoppingCartPage() {
     <SupporterLayout>
       <div className="min-h-screen bg-white pb-28">
         <div className="mx-auto max-w-screen-xl px-4 pt-8">
+<<<<<<< HEAD:frontend/src/app/supporter/[id]/[shelter_id]/shopping_cart/page.tsx
           {/* 返回按钮 */}
           <div className="mb-4">
             <a 
@@ -219,6 +221,11 @@ export default function SupporterShoppingCartPage() {
             </a>
           </div>
           
+=======
+          <div className="mb-6">
+            <BackButton fallbackHref={`/supporter/${supporterId}/home`} />
+          </div>
+>>>>>>> origin/main:frontend/src/app/supporter/[id]/[shelter_id]/shopping-cart/page.tsx
           <h1 className="text-3xl font-extrabold tracking-tight">買い物かご</h1>
           <p className="text-sm text-gray-600 mt-1">
             {loading ? "読み込み中…" : <>最終更新：<b>{new Date(cart.updatedAtISO).toLocaleString()}</b></>}
@@ -309,10 +316,7 @@ export default function SupporterShoppingCartPage() {
                 <button
                   disabled={submitting || cart.items.length === 0}
                   onClick={onCheckout}
-                  className="w-full rounded-xl px-5 py-3 text-white disabled:opacity-50"
-                  style={{ backgroundColor: RAKUTEN_RED }}
-                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
-                  onMouseOut={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
+                  className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-50"
                 >
                   {submitting ? "処理中…" : "注文手続きへ"}
                 </button>

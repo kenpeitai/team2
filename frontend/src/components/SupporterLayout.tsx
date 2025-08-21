@@ -49,6 +49,7 @@ export default function SupporterLayout({
 
             {/* 右ナビ（必要に応じて調整） */}
             <div className="flex items-center space-x-4">
+<<<<<<< HEAD
               {shouldShowCartLink && (
                 <Link
                   href={getCartLink()}
@@ -60,6 +61,16 @@ export default function SupporterLayout({
                   かごを見る
                 </Link>
               )}
+=======
+              {/* かごページのパスは運用に合わせて。/cart か /supporter/cart など */}
+              <Link
+                href="/supporter/shopping-cart"
+                className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                かごを見る
+              </Link>
+             
+>>>>>>> origin/main
             </div>
           </div>
         </div>

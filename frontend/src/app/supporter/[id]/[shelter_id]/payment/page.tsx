@@ -2,9 +2,14 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+<<<<<<< HEAD
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import { getUserPaymentInfo, updateUserPaymentInfo, UserPaymentInfo } from "@/lib/api/userPayment";
+=======
+import BackButton from "@/components/BackButton";
+import { useRouter, useParams } from "next/navigation";
+>>>>>>> origin/main
 
 // ===== Types =====
 export type PaymentMethod = "card"; // 避難所向け: カード限定
@@ -53,11 +58,15 @@ function cvcLength(brand: SavedCard["brand"]) {
 // ===== Page =====
 export default function PaymentPage() {
   const router = useRouter();
+<<<<<<< HEAD
   const params = useParams();
   
   // 从URL参数中获取supporterId和shelterId，使用useState来避免SSR问题
   const [supporterId, setSupporterId] = useState<string>("");
   const [shelterId, setShelterId] = useState<string>("");
+=======
+  const params = useParams<{ id: string; shelter_id: string }>();
+>>>>>>> origin/main
 
   const [method, setMethod] = useState<PaymentMethod>("card");
   const [saveCard, setSaveCard] = useState(true);
@@ -130,14 +139,14 @@ export default function PaymentPage() {
       let totalAmount = 0;
       if (cartData) {
         try {
-          const cart = JSON.parse(cartData);
-          totalAmount = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+          const cart = JSON.parse(cartData) as Array<{ price: number; quantity: number }>;
+          totalAmount = cart.reduce((sum: number, item) => sum + (item.price * item.quantity), 0);
         } catch (error) {
           console.error("购物车数据解析失败:", error);
         }
       }
       
-      let payload: any = { 
+      const payload: Record<string, unknown> = { 
         method,
         orderId,
         totalAmount,
@@ -194,7 +203,7 @@ export default function PaymentPage() {
       localStorage.setItem("paymentData", JSON.stringify(payload));
       
       // 跳转到订单确认页面
-      router.push(`/supporter/${supporterId}/${shelterId}/order_confirm`);
+      router.push(`/supporter/${supporterId}/${shelterId}/order-confirm`);
     }
   };
 
@@ -239,6 +248,9 @@ export default function PaymentPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
+      <div className="mb-6">
+        <BackButton fallbackHref={`/supporter/${params?.id}/home`} />
+      </div>
       <nav className="text-sm mb-4 text-gray-500">
         {supporterId && shelterId ? (
           <Link href={`/supporter/${supporterId}/${shelterId}/shopping_cart`} className="hover:underline">カート</Link>
@@ -391,7 +403,7 @@ export default function PaymentPage() {
         )}
         <button
           onClick={onContinue}
-          className="px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 disabled:opacity-50"
+          className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-50"
           disabled={method === "card" && !selectedSavedId && Object.keys(errors).length > 0}
         >
           確認へ進む

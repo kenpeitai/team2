@@ -10,6 +10,12 @@ export interface Product {
   imageUrl?: string;         // 商品画像
   imageVerified?: boolean;   // 画像の正確性が検証済みかどうか
   category: Category;
+  // 楽天市場情報
+  price?: number;            // 楽天市場での価格
+  shop?: string;             // 楽天市場のショップ名
+  url?: string;              // 楽天市場の商品URL
+  rakutenActualProductName?: string; // 楽天市場から取得した実際の商品名
+  searchKeyword?: string;    // 楽天市場検索に使用したキーワード
 }
 
 export interface NeedRow {

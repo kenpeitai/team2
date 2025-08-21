@@ -20,27 +20,15 @@ export enum TrafficStatus {
   UNKNOWN = 'UNKNOWN'
 }
 
-// 商品カテゴリの列挙型
-export enum ProductCategory {
-  MEDICINE = 'MEDICINE',
-  FOOD = 'FOOD',
-  WATER = 'WATER',
-  HYGIENE = 'HYGIENE',
-  TOOLS = 'TOOLS',
-  OTHER = 'OTHER'
-}
+// 商品カテゴリ（バックエンドのEnumに合わせて日本語の文字列）
+export type ProductCategory = '医薬品' | '衛生' | '食料' | '生活用品';
 
-// 優先度の列挙型
-export enum Priority {
-  HIGH = 'HIGH',
-  MEDIUM = 'MEDIUM',
-  LOW = 'LOW'
-}
+// 優先度（バックエンドのEnumに合わせて小文字の文字列）
+export type Priority = 'high' | 'medium' | 'low';
 
 // ユーザーDTOの型定義
 export interface UserDto {
   id?: number;
-  username: string;
   email: string;
   password?: string;
   fullName: string;
@@ -52,6 +40,8 @@ export interface UserDto {
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  // バックエンドDTOには存在しないが、既存コード互換のためオプション化
+  username?: string;
 }
 
 // 避難所DTOの型定義
@@ -225,4 +215,6 @@ export interface ApiError {
   message: string;
   status?: number;
   timestamp?: string;
+  // バリデーションエラーのときに返ってくるフィールド別エラー
+  details?: Record<string, string>;
 }

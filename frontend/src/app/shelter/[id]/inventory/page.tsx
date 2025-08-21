@@ -3,68 +3,107 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Layout from '@/components/Layout';
+import { useParams, useRouter } from 'next/navigation';
+import type { InventoryDto } from '@/types/api';
+import { getInventoryByShelter, updateInventoryQuantity, addInventoryItem } from '@/lib/api';
+import BackButton from '@/components/BackButton';
 
 // rakutenカラー
 const RAKUTEN_RED = '#BF0000';
 const RAKUTEN_RED_HOVER = '#990000';
 
-type Item = {
-  id: string;
+type Item = InventoryDto;
+
+// カタログ（画像・単位付き）
+type CatalogItem = {
+  code: string;
   name: string;
-  quantity: number;
   unit: string;
-  category: string;
-  img: string; // /products/{id}.png を想定
+  category: '食料・水' | '生活用品' | '衛生' | '医薬品';
+  img: string;
 };
 
-// デフォルトアイテム
-const defaultItems: Item[] = [
-  // === 食料・水 ===
-  { id: 'p-water-2l',     name: '飲料水 2L×6本（1ケース）',  quantity: 0, unit: 'ケース', category: '食料・水', img: '/products/p-water-2l.png' },
-  { id: 'p-instant-rice', name: 'サトウのごはん 200g×5食',    quantity: 0, unit: '箱',   category: '食料・水', img: '/products/p-instant-rice.png' },
-  { id: 'p-canned-food',  name: '缶詰(主食) 1缶',             quantity: 0, unit: '缶',   category: '食料・水', img: '/products/p-canned-food.png' },
-
-  // === 生活用品・衛生 ===
-  { id: 'p-blanket',      name: '毛布',                       quantity: 0, unit: '枚',   category: '生活用品', img: '/products/p-blanket.png' },
-  { id: 'p-battery-aa',   name: '単3電池(8本)',               quantity: 0, unit: 'パック', category: '生活用品', img: '/products/p-battery-aa.png' },
-  { id: 'p-mask',         name: '不織布マスク(50枚)',         quantity: 0, unit: '箱',   category: '衛生', img: '/products/p-mask.png' },
-
-  // === 医薬品 ===
-  { id: 'm-acetaminophen', name: '解熱鎮痛剤（アセトアミノフェン）20錠', quantity: 0, unit: '箱', category: '医薬品', img: '/products/m-acetaminophen.png' },
-  { id: 'm-ibuprofen',     name: '解熱鎮痛剤（イブプロフェン）24錠',   quantity: 0, unit: '箱', category: '医薬品', img: '/products/m-ibuprofen.png' },
-  { id: 'm-cold-combo',    name: '総合感冒薬（風邪薬）30錠',          quantity: 0, unit: '箱', category: '医薬品', img: '/products/m-cold-combo.png' },
-  { id: 'm-antihistamine', name: '抗ヒスタミン薬（アレルギー薬）10錠', quantity: 0, unit: '箱', category: '医薬品', img: '/products/m-antihistamine.png' },
-  { id: 'm-anti-diarrhea', name: '下痢止め（ロペラミド等）12錠',       quantity: 0, unit: '箱', category: '医薬品', img: '/products/m-anti-diarrhea.png' },
-  { id: 'm-ors-500',       name: '経口補水液 500mL（1本）',             quantity: 0, unit: '本', category: '医薬品', img: '/products/m-ors-500.png' },
-  { id: 'm-povidone',      name: '消毒液（ポビドンヨード）100mL',      quantity: 0, unit: '本', category: '医薬品', img: '/products/m-povidone.png' },
-  { id: 'm-sterile-gauze', name: '滅菌ガーゼ 10枚入',                   quantity: 0, unit: '袋', category: '医薬品', img: '/products/m-sterile-gauze.png' },
-  { id: 'm-bandage-roll',  name: '包帯 5cm×5m',                         quantity: 0, unit: '巻', category: '医薬品', img: '/products/m-bandage-roll.png' },
-  { id: 'm-surgical-tape', name: 'サージカルテープ 12mm×9m',            quantity: 0, unit: '巻', category: '医薬品', img: '/products/m-surgical-tape.png' },
-  { id: 'm-bandaids',      name: 'ばんそうこう（アソート20枚）',         quantity: 0, unit: '箱', category: '医薬品', img: '/products/m-bandaids.png' },
-  { id: 'm-thermometer',   name: '体温計',                               quantity: 0, unit: '本', category: '医薬品', img: '/products/m-thermometer.png' },
-  { id: 'm-eyedrops',      name: '目薬（人工涙液）',                      quantity: 0, unit: '本', category: '医薬品', img: '/products/m-eyedrops.png' },
-  { id: 'm-cough-syrup',   name: '咳止めシロップ 120mL',                  quantity: 0, unit: '本', category: '医薬品', img: '/products/m-cough-syrup.png' },
-  { id: 'm-throat-candy',  name: 'のど飴',                               quantity: 0, unit: '袋', category: '医薬品', img: '/products/m-throat-candy.png' },
+const catalogItems: CatalogItem[] = [
+  { code: 'p-water-2l',     name: '飲料水 2L×6本（1ケース）', unit: 'ケース', category: '食料・水', img: '/products/p-water-2l.png' },
+  { code: 'p-instant-rice', name: 'サトウのごはん 200g×5食',   unit: '箱',   category: '食料・水', img: '/products/p-instant-rice.png' },
+  { code: 'p-canned-food',  name: '缶詰(主食) 1缶',            unit: '缶',   category: '食料・水', img: '/products/p-canned-food.png' },
+  { code: 'p-blanket',      name: '毛布',                      unit: '枚',   category: '生活用品', img: '/products/p-blanket.png' },
+  { code: 'p-battery-aa',   name: '単3電池(8本)',              unit: 'パック', category: '生活用品', img: '/products/p-battery-aa.png' },
+  { code: 'p-mask',         name: '不織布マスク(50枚)',        unit: '箱',   category: '衛生', img: '/products/p-mask.png' },
+  { code: 'm-acetaminophen', name: '解熱鎮痛剤（アセトアミノフェン）20錠', unit: '箱', category: '医薬品', img: '/products/m-acetaminophen.png' },
+  { code: 'm-ibuprofen',     name: '解熱鎮痛剤（イブプロフェン）24錠',   unit: '箱', category: '医薬品', img: '/products/m-ibuprofen.png' },
+  { code: 'm-cold-combo',    name: '総合感冒薬（風邪薬）30錠',         unit: '箱', category: '医薬品', img: '/products/m-cold-combo.png' },
+  { code: 'm-antihistamine', name: '抗ヒスタミン薬（アレルギー薬）10錠', unit: '箱', category: '医薬品', img: '/products/m-antihistamine.png' },
+  { code: 'm-anti-diarrhea', name: '下痢止め（ロペラミド等）12錠',      unit: '箱', category: '医薬品', img: '/products/m-anti-diarrhea.png' },
+  { code: 'm-ors-500',       name: '経口補水液 500mL（1本）',            unit: '本', category: '医薬品', img: '/products/m-ors-500.png' },
+  { code: 'm-povidone',      name: '消毒液（ポビドンヨード）100mL',     unit: '本', category: '医薬品', img: '/products/m-povidone.png' },
+  { code: 'm-sterile-gauze', name: '滅菌ガーゼ 10枚入',                  unit: '袋', category: '医薬品', img: '/products/m-sterile-gauze.png' },
+  { code: 'm-bandage-roll',  name: '包帯 5cm×5m',                        unit: '巻', category: '医薬品', img: '/products/m-bandage-roll.png' },
+  { code: 'm-surgical-tape', name: 'サージカルテープ 12mm×9m',           unit: '巻', category: '医薬品', img: '/products/m-surgical-tape.png' },
+  { code: 'm-bandaids',      name: 'ばんそうこう（アソート20枚）',        unit: '箱', category: '医薬品', img: '/products/m-bandaids.png' },
+  { code: 'm-thermometer',   name: '体温計',                              unit: '本', category: '医薬品', img: '/products/m-thermometer.png' },
+  { code: 'm-eyedrops',      name: '目薬（人工涙液）',                     unit: '本', category: '医薬品', img: '/products/m-eyedrops.png' },
+  { code: 'm-cough-syrup',   name: '咳止めシロップ 120mL',                 unit: '本', category: '医薬品', img: '/products/m-cough-syrup.png' },
+  { code: 'm-throat-candy',  name: 'のど飴',                              unit: '袋', category: '医薬品', img: '/products/m-throat-candy.png' },
 ];
 
 export default function InventoryPage() {
+  const params = useParams<{ id: string }>();
+  const id = Number(params?.id);
+  const router = useRouter();
+
   const [items, setItems] = useState<Item[] | null>(null);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | '食料・水' | '生活用品' | '衛生' | '医薬品'>('all');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+
+  const [newName, setNewName] = useState('');
+  const [newCategory, setNewCategory] = useState<'食料・水' | '生活用品' | '衛生' | '医薬品'>('食料・水');
+  const [newQuantity, setNewQuantity] = useState<number>(0);
+  const [selectedCode, setSelectedCode] = useState<string>('');
+
+  const selectedCatalog = useMemo(() => catalogItems.find((c) => c.code === selectedCode), [selectedCode]);
+  useEffect(() => {
+    if (selectedCatalog) {
+      setNewName(selectedCatalog.name);
+      setNewCategory(selectedCatalog.category);
+    }
+  }, [selectedCatalog]);
+
+  // 全角数字を半角に正規化
+  const toHalfWidthNumeric = (s: string) =>
+    s
+      .replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xFEE0))
+      .replace(/．/g, '.')
+      .replace(/－/g, '-');
 
   // 初期ロード
   useEffect(() => {
-    const stored = localStorage.getItem('inventory');
-    if (stored) {
-      try {
-        setItems(JSON.parse(stored));
-      } catch {
-        setItems(defaultItems);
-      }
-    } else {
-      setItems(defaultItems);
-    }
-  }, []);
+    if (!Number.isFinite(id)) return;
+    let active = true;
+    setLoading(true);
+    setError(null);
+    getInventoryByShelter(id)
+      .then((data) => {
+        if (!active) return;
+        setItems(Array.isArray(data) ? data : []);
+      })
+      .catch((e) => {
+        if (!active) return;
+        setError(e?.message ?? '在庫の取得に失敗しました');
+        setItems([]);
+      })
+      .finally(() => {
+        if (!active) return;
+        setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   // 合計
   const totalUnits = useMemo(
@@ -72,42 +111,103 @@ export default function InventoryPage() {
     [items]
   );
 
-  if (!items) {
-    return (
-      <Layout>
-        <div className="max-w-screen-xl mx-auto px-4 py-8">
-          <p>Loading...</p>
-        </div>
-      </Layout>
-    );
-  }
-
-  const onInputChange = (id: string, value: string) => {
-    const num = Number(value);
-    if (!Number.isFinite(num) || num < 0) return;
+  const onInputChange = (id: number | undefined, value: string) => {
+    const normalized = toHalfWidthNumeric(value).trim();
+    const num = normalized === '' ? 0 : Number(normalized);
+    if (!Number.isFinite(num) || num < 0 || !id) return;
     setItems((prev) => (prev ? prev.map((it) => (it.id === id ? { ...it, quantity: num } : it)) : prev));
   };
 
-  const saveItems = () => {
-    localStorage.setItem('inventory', JSON.stringify(items));
-    alert('保存しました！');
+  const saveItems = async () => {
+    if (!items) return;
+    setSaving(true);
+    Promise.all(
+      items
+        .filter((it) => typeof it.id === 'number')
+        .map((it) => updateInventoryQuantity(it.id as number, it as InventoryDto))
+    )
+      .then(() => {
+        if (Number.isFinite(id)) {
+          router.push(`/shelter/${id}/home`);
+        }
+      })
+      .catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : '保存に失敗しました';
+        alert(msg);
+      })
+      .finally(() => {
+        setSaving(false);
+      });
   };
 
-  const filteredItems = items.filter((item) => {
+  const filteredItems = (items ?? []).filter((item) => {
     const hitFilter = filter === 'all' || item.category === filter;
     const q = search.trim().toLowerCase();
     const hay = `${item.name} ${item.category} ${item.id}`.toLowerCase();
     return hitFilter && (q === '' || hay.includes(q));
   });
 
+  const onAddItem = async () => {
+    if (!Number.isFinite(id)) return;
+    const name = newName.trim();
+    const quantity = Number(newQuantity);
+    if (!name) {
+      alert('名前を入力してください');
+      return;
+    }
+    if (!Number.isFinite(quantity) || quantity < 0) {
+      alert('数量は0以上の数値で入力してください');
+      return;
+    }
+    if (!selectedCatalog) {
+      alert('カタログから商品を選択してください');
+      return;
+    }
+    setAdding(true);
+    const existing = (items ?? []).find((it) => it.name === name);
+    const promise = existing && typeof existing.id === 'number'
+      ? updateInventoryQuantity(existing.id, {
+          ...existing,
+          quantity: (existing.quantity ?? 0) + quantity,
+        })
+          .then((updated) => {
+            setItems((prev) => (prev ? prev.map((it) => (it.id === existing.id ? updated : it)) : [updated]));
+          })
+      : addInventoryItem({
+          shelterId: id,
+          name,
+          category: selectedCatalog.category,
+          quantity,
+        }).then((created) => {
+          setItems((prev) => [...(prev ?? []), created]);
+        });
+
+    promise
+      .then(() => {
+        setNewName('');
+        setNewQuantity(0);
+        setSelectedCode('');
+      })
+      .catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : '在庫の追加に失敗しました';
+        alert(msg);
+      })
+      .finally(() => {
+        setAdding(false);
+      });
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-white overflow-x-hidden pb-24">
         {/* ヘッダ */}
         <div className="mx-auto max-w-screen-xl px-4 pt-8 pb-4">
+          <div className="mb-6">
+            <BackButton fallbackHref={`/shelter/${id}/home`} />
+          </div>
           <h1 className="text-3xl font-extrabold tracking-tight mb-4">在庫管理</h1>
 
-          {/* 検索＆カテゴリ選択（NeedsListFormテイストに寄せる） */}
+          {/* 検索＆カテゴリ選択 */}
           <div className="grid gap-3 sm:grid-cols-3">
             <input
               type="text"
@@ -115,11 +215,13 @@ export default function InventoryPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="rounded-xl border px-3 py-3 sm:col-span-2"
+              disabled={loading}
             />
             <select
               value={filter}
-              onChange={(e) => setFilter(e.target.value as any)}
+              onChange={(e) => setFilter(e.target.value as 'all' | '食料・水' | '生活用品' | '衛生' | '医薬品')}
               className="rounded-xl border px-3 py-3"
+              disabled={loading}
             >
               <option value="all">すべて</option>
               <option value="食料・水">食料・水</option>
@@ -128,41 +230,117 @@ export default function InventoryPage() {
               <option value="医薬品">医薬品</option>
             </select>
           </div>
+          {/* 追加フォーム（カタログから選択） */}
+          <div className="mt-4 grid gap-3 sm:grid-cols-5">
+            <div className="sm:col-span-2">
+              <label htmlFor="new-product" className="block text-sm text-gray-600 mb-1">カタログから選択</label>
+              <select
+                id="new-product"
+                value={selectedCode}
+                onChange={(e) => setSelectedCode(e.target.value)}
+                className="w-full rounded-xl border px-3 py-3"
+                disabled={loading || adding}
+              >
+                <option value="">選択してください</option>
+                <optgroup label="食料・水">
+                  {catalogItems.filter(c=>c.category==='食料・水').map(c=> (
+                    <option key={c.code} value={c.code}>{c.name}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="生活用品">
+                  {catalogItems.filter(c=>c.category==='生活用品').map(c=> (
+                    <option key={c.code} value={c.code}>{c.name}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="衛生">
+                  {catalogItems.filter(c=>c.category==='衛生').map(c=> (
+                    <option key={c.code} value={c.code}>{c.name}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="医薬品">
+                  {catalogItems.filter(c=>c.category==='医薬品').map(c=> (
+                    <option key={c.code} value={c.code}>{c.name}</option>
+                  ))}
+                </optgroup>
+              </select>
+            </div>
+            <div className="sm:col-span-1">
+              <label htmlFor="new-quantity" className="block text-sm text-gray-600 mb-1">数量</label>
+              <input
+                id="new-quantity"
+                type="number"
+                min={0}
+                step={1}
+                value={newQuantity}
+                onChange={(e) => setNewQuantity(Number(e.target.value))}
+                className="w-full rounded-xl border px-3 py-3 text-right"
+                disabled={loading || adding}
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={onAddItem}
+                className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-50"
+                disabled={adding || loading}
+              >
+                {adding ? '追加中...' : '在庫を追加'}
+              </button>
+            </div>
+            {selectedCatalog && (
+              <div className="sm:col-span-5">
+                <div className="flex items-center gap-4">
+                  <div className="relative w-28 h-20 bg-gray-50 rounded-lg overflow-hidden">
+                    <Image src={selectedCatalog.img} alt={selectedCatalog.name} fill className="object-contain" sizes="112px" />
+                  </div>
+                  <div className="text-sm text-gray-600">単位: {selectedCatalog.unit}</div>
+                </div>
+              </div>
+            )}
+          </div>
+          {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
         </div>
 
-        {/* カードグリッド */}
+        {/* リスト */}
         <section className="mx-auto max-w-screen-xl px-4 pb-8">
-          {filteredItems.length === 0 ? (
+          {loading && <p>Loading...</p>}
+          {!loading && filteredItems.length === 0 && (
             <p className="text-gray-600">該当する在庫がありません</p>
-          ) : (
+          )}
+          {!loading && filteredItems.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredItems.map((item) => (
                 <article
                   key={item.id}
                   className="rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-200 bg-white"
                 >
-                  {/* 画像（NeedsListFormと同じヒーロー配置） */}
-                  <div className="relative w-full h-56 sm:h-64 lg:h-72 rounded-t-3xl overflow-hidden bg-gray-50">
-                    <Image
-                      src={item.img}
-                      alt={item.name}
-                      fill
-                      sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
-                      className="object-contain"
-                      priority
-                    />
-                  </div>
+                  {/* 画像 */}
+                  {(() => {
+                    const cat = catalogItems.find(c => c.name === item.name);
+                    return (
+                      <div className="relative w-full h-56 sm:h-64 lg:h-72 rounded-t-3xl overflow-hidden bg-gray-50">
+                        {cat && (
+                          <Image
+                            src={cat.img}
+                            alt={item.name}
+                            fill
+                            sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
+                            className="object-contain"
+                            priority
+                          />
+                        )}
+                      </div>
+                    );
+                  })()}
 
-                  {/* 本体 */}
                   <div className="p-5 space-y-4">
                     <h3 className="font-semibold leading-tight">{item.name}</h3>
                     <div className="text-sm text-gray-500">{item.category}</div>
 
-                    {/* 数量（NeedsListFormの“数量行”レイアウトに合わせる。プラマイ無し） */}
                     <div>
-                      <label className="block text-sm text-gray-600 mb-1">数量</label>
+                      <label htmlFor={`qty-${item.id}`} className="block text-sm text-gray-600 mb-1">数量</label>
                       <div className="flex items-center gap-2">
                         <input
+                          id={`qty-${item.id}`}
                           type="number"
                           min={0}
                           step={1}
@@ -170,8 +348,14 @@ export default function InventoryPage() {
                           value={item.quantity}
                           onChange={(e) => onInputChange(item.id, e.target.value)}
                           aria-label="数量"
+                          disabled={saving}
                         />
-                        <span className="text-sm text-gray-500 whitespace-nowrap">{item.unit}</span>
+                        {(() => {
+                          const cat = catalogItems.find(c => c.name === item.name);
+                          return (
+                            <span className="text-sm text-gray-500 whitespace-nowrap">{cat?.unit}</span>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -181,7 +365,7 @@ export default function InventoryPage() {
           )}
         </section>
 
-        {/* 固定フッター（NeedsListFormのバーを踏襲） */}
+        {/* 固定フッター */}
         <div className="fixed bottom-0 inset-x-0 z-50 bg-white/85 backdrop-blur border-t">
           <div className="mx-auto max-w-screen-xl px-4 py-3 flex items-center justify-between gap-3">
             <div className="text-sm text-gray-700 whitespace-nowrap">
@@ -190,12 +374,10 @@ export default function InventoryPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={saveItems}
-                className="rounded-xl px-5 py-2.5 text-white whitespace-nowrap"
-                style={{ backgroundColor: RAKUTEN_RED }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
+                className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-50"
+                disabled={saving || loading}
               >
-                保存
+                {saving ? '保存中...' : '保存'}
               </button>
             </div>
           </div>

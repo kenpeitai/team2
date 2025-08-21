@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import MenuCard from '@/components/MenuCard';
 import StatCard from './components/StatCard';
-import SupportTable from './components/SupportTable';
-import RecentActivities from './components/RecentActivities';
 import Layout from '@/components/Layout';
 import { useShelter } from '@/hooks/useShelter';
 import { getShelterStatus } from '@/lib/api/shelterStatus';
@@ -14,35 +12,29 @@ import type { ShelterStatusDto } from '@/types/api';
 
 export default function Home() {
   const params = useParams();
-  const shelterId = params.id as string;
+  const id = params.id as string;
   const { shelter } = useShelter();
   const [status, setStatus] = useState<ShelterStatusDto | null>(null);
 
   useEffect(() => {
-    const idNum = Number(shelterId);
-    if (!idNum || Number.isNaN(idNum)) {
-      return;
-    }
-    const fetchStatus = async () => {
-        const data = await getShelterStatus(idNum);
-        setStatus(data);
+    const shelterId = Number(id);
+
+    const fetchStatus = () => {
+      getShelterStatus(shelterId)
+        .then((data) => {
+          setStatus(data);
+        })
+        .catch((err) => {
+          const statusCode = (err as { cause?: { status?: number } } | undefined)?.cause?.status;
+          if (statusCode === 404) {
+            setStatus(null);
+            return;
+          }
+          setStatus(null);
+        });
     };
     fetchStatus();
-  }, [shelterId]);
-
-  const supportData = [
-    { supporter: '田中建設株式会社', support: '避難所のテント設営', date: '2024-01-15' },
-    { supporter: '地域ボランティアグループ', support: '食料品の配給支援', date: '2024-01-15' },
-    { supporter: '医療チームA', support: '健康診断・医療支援', date: '2024-01-14' },
-    { supporter: '運輸会社B', support: '物資の輸送支援', date: '2024-01-14' },
-    { supporter: '地域消防署', support: '安全確認・巡回', date: '2024-01-13' },
-  ];
-
-  const recentActivities = [
-    { message: '避難所状況が更新されました', time: '2時間前', color: 'bg-green-500' },
-    { message: '必要物資リストが更新されました', time: '4時間前', color: 'bg-blue-500' },
-    { message: '在庫管理が更新されました', time: '6時間前', color: 'bg-orange-500' },
-  ];
+  }, [id]);
 
   return (
     <Layout>
@@ -50,7 +42,7 @@ export default function Home() {
         {/* ページタイトル */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h1 className="text-2xl font-bold text-gray-900">{shelter?.shelterName ?? '災害支援システム'}</h1>
-          <p className="text-gray-600 mt-2">{shelter?.shelterAddress ? `住所: ${shelter.shelterAddress}` : `避難所ID: ${shelterId} の状況と支援情報を管理します`}</p>
+          <p className="text-gray-600 mt-2">{shelter?.shelterAddress ? `住所: ${shelter.shelterAddress}` : `避難所ID: ${id} の状況と支援情報を管理します`}</p>
         </div>
 
         {/* メインコンテンツ */}
@@ -79,64 +71,57 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 支援状況サマリー */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">支援状況サマリー</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <StatCard title="支援記録数" value="5" icon="📋" bgColor="bg-blue-100" textColor="text-blue-600" />
-              <StatCard title="支援者数" value="5" icon="👥" bgColor="bg-purple-100" textColor="text-purple-600" />
-            </div>
-          </div>
-
-          {/* 支援履歴テーブル */}
-          <SupportTable supportData={supportData} />
-
           {/* 必要物資アクション（確認 or 新規注文） */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">必要物資</h2>
+          <section className="mb-10">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">必要物資</h2>
+              <p className="text-sm text-gray-600 mt-1">いまの状況確認と、新規の注文作成</p>
+            </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6 border">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl leading-none rounded-md text-white bg-green-500 w-10 h-10 flex items-center justify-center">
-                  📦
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
+                  <span className="text-2xl leading-none">📦</span>
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900">必要物資リスト</h3>
-                  <p className="text-gray-600 mt-1">現在の注文状況を確認、または新規注文を作成</p>
+                  <p className="text-gray-600 mt-1">現在の注文状況の確認や、新規注文の作成ができます。</p>
                 </div>
               </div>
 
-              <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-                {/* 今の注文を確認 → supplies_status */}
+              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* 今の注文を確認 → supplies-status */}
                 <Link
-                  href="/shelter/supplies_status"
-                  className="group rounded-xl border px-4 py-4 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+                  href={`/shelter/${id}/supplies-status`}
+                  className="group rounded-xl border bg-white p-5 transition-all ring-1 ring-gray-200 hover:-translate-y-0.5 hover:shadow-md hover:ring-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="text-xl">📋</div>
-                    <div>
-                      <div className="font-medium text-gray-900 group-hover:underline">いまの注文を確認</div>
-                      <div className="text-sm text-gray-600 mt-0.5">カテゴリ別・優先度・検索で絞り込み</div>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div>
+                        <div className="font-medium text-gray-900 group-hover:text-blue-700">いまの注文を確認</div>
+                        <div className="text-sm text-gray-600 mt-0.5">カテゴリ別・優先度・検索で絞り込み</div>
+                      </div>
                     </div>
+                    <div className="mt-1 text-gray-300 transition-colors group-hover:text-blue-500">→</div>
                   </div>
                 </Link>
 
                 {/* 新しく注文する → supplies */}
                 <Link
-                  href="/shelter/supplies"
-                  className="group rounded-xl border px-4 py-4 bg-blue-600 text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+                  href={`/shelter/${id}/supplies`}
+                  className="group rounded-xl border bg-white p-5 transition-all ring-1 ring-gray-200 hover:-translate-y-0.5 hover:shadow-md hover:ring-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="text-xl">🆕</div>
-                    <div>
-                      <div className="font-medium group-hover:underline">新しく注文する</div>
-                      <div className="text-sm opacity-90 mt-0.5">不足している物資を申請・送信</div>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div>
+                        <div className="ont-medium text-gray-900 group-hover:text-blue-700">新しく注文する</div>
+                        <div className="text-sm opacity-90 mt-0.5">不足している物資を申請・送信</div>
+                      </div>
                     </div>
+                    <div className="mt-1 opacity-90">→</div>
                   </div>
                 </Link>
               </div>
-
-              <p className="mt-3 text-xs text-gray-500">※ 誤タップ防止のためカード全体クリックは無効、アクションのみクリック可。</p>
             </div>
           </section>
 
@@ -145,21 +130,21 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">在庫・その他メニュー</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <MenuCard
-                href={status ? `/shelter/${shelterId}/shelter_status` : `/shelter/${shelterId}/shelter-input`}
+                href={status ? `/shelter/${id}/shelter-status` : `/shelter/${id}/shelter-input`}
                 title="避難所状況"
                 description={status ? "避難所状況の登録・更新" : "避難所状況の新規登録"}
                 icon="🏠"
                 color="bg-blue-500"
               />
               <MenuCard
-                href={`/shelter/${shelterId}/supplies`}
+                href={`/shelter/${id}/supplies`}
                 title="必要物資リスト"
                 description="必要物資の登録・確認"
                 icon="📦"
                 color="bg-green-500"
               />
               <MenuCard
-                href={`/shelter/${shelterId}/inventory`}
+                href={`/shelter/${id}/inventory`}
                 title="在庫管理"
                 description="物資の在庫状況管理"
                 icon="📊"
@@ -167,9 +152,6 @@ export default function Home() {
               />
             </div>
           </section>
-
-          {/* 最近の活動 */}
-          <RecentActivities activities={recentActivities} />
         </div>
       </div>
     </Layout>

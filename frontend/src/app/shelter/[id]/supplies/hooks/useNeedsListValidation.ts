@@ -3,7 +3,7 @@ import { Product, NeedRow, NeedsListPayload, SuppliesState } from "../types";
 import { WATER_L_PER_PERSON_PER_DAY, ML_PER_L } from "../constants";
 
 // ===== Helpers =====
-function toSafeNumber(v: any, def = 0, min?: number) {
+function toSafeNumber(v: unknown, def = 0, min?: number) {
   const n = typeof v === "number" ? v : Number(v);
   const f = Number.isFinite(n) ? n : def;
   return typeof min === "number" ? Math.max(min, f) : f;

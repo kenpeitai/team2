@@ -3,9 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+<<<<<<< HEAD:frontend/src/app/supporter/[id]/[shelter_id]/order_confirm/page.tsx
 import { getCart } from '@/lib/api/cart';
 import { request } from '@/lib/api/base';
 import { getUserPaymentInfo } from '@/lib/api/userPayment';
+=======
+import BackButton from "@/components/BackButton";
+import Layout from "@/components/Layout";
+>>>>>>> origin/main:frontend/src/app/supporter/[id]/[shelter_id]/order-confirm/page.tsx
 
 // 型定義
 interface PaymentData {
@@ -38,7 +43,11 @@ interface OrderData {
 
 export default function OrderConfirmationPage() {
   const router = useRouter();
+<<<<<<< HEAD:frontend/src/app/supporter/[id]/[shelter_id]/order_confirm/page.tsx
   const params = useParams();
+=======
+  const params = useParams<{ id: string; shelter_id: string }>();
+>>>>>>> origin/main:frontend/src/app/supporter/[id]/[shelter_id]/order-confirm/page.tsx
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -202,8 +211,15 @@ export default function OrderConfirmationPage() {
       
       console.log("订单状态更新成功:", updateOrderResponse);
       
+<<<<<<< HEAD:frontend/src/app/supporter/[id]/[shelter_id]/order_confirm/page.tsx
       // 成功メッセージ
       alert("注文を確定しました！支払いも完了しました。");
+=======
+      // 完了ページに遷移（URLパラメータから正しいIDを取得）
+      const pathSegments = window.location.pathname.split('/');
+      const supporterId = pathSegments[2];
+      const shelterId = pathSegments[3];
+>>>>>>> origin/main:frontend/src/app/supporter/[id]/[shelter_id]/order-confirm/page.tsx
       
       // 完了ページに必要なデータを保存
       const completeData = {
@@ -216,6 +232,7 @@ export default function OrderConfirmationPage() {
       };
       localStorage.setItem("paymentData", JSON.stringify(completeData));
       
+<<<<<<< HEAD:frontend/src/app/supporter/[id]/[shelter_id]/order_confirm/page.tsx
       // データベースのカートをクリア（支払い完了後）
       try {
         await request(`/api/cart/${supporterId}/${shelterId}`, {
@@ -227,6 +244,9 @@ export default function OrderConfirmationPage() {
       }
       
       router.push(`/supporter/${supporterId}/${shelterId}/order_conplete`);
+=======
+      router.push(`/supporter/${supporterId}/${shelterId}/order-complete`);
+>>>>>>> origin/main:frontend/src/app/supporter/[id]/[shelter_id]/order-confirm/page.tsx
       
       // localStorageをクリア（paymentDataは完了ページで使用するため残す）
       localStorage.removeItem("cart");
@@ -250,23 +270,28 @@ export default function OrderConfirmationPage() {
 
   if (!orderData) {
     return (
+      <Layout>
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center py-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">注文データが見つかりません</h1>
           <p className="text-gray-600 mb-6">支払いページから再度お試しください。</p>
           <Link 
-            href="/supporter/1/1/payment" 
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            href={`/supporter/${params?.id}/${params?.shelter_id}/payment`} 
+            className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-50"
           >
             支払いページに戻る
           </Link>
         </div>
       </div>
+      </Layout>
     );
   }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <div className="mb-6">
+        <BackButton fallbackHref={`/supporter/${params?.id}/home`} />
+      </div>
       <nav className="text-sm text-gray-600 mb-6">
         <Link href="/" className="hover:underline">ホーム</Link>
         <span className="mx-2">›</span>
@@ -368,14 +393,14 @@ export default function OrderConfirmationPage() {
 
       <footer className="mt-8 flex flex-col md:flex-row gap-3 justify-between items-center">
         <Link 
-          href="/supporter/1/1/payment" 
-          className="px-4 py-2 rounded-xl border hover:bg-gray-50"
+          href={`/supporter/${params?.id}/${params?.shelter_id}/payment`} 
+          className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-50"
         >
           戻る
         </Link>
         <button
           onClick={confirmOrder}
-          className="px-8 py-3 rounded-xl bg-green-600 text-white font-semibold shadow hover:bg-green-700"
+          className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-50"
         >
           注文を確定する
         </button>
