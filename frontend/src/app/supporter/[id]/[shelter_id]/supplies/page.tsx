@@ -503,12 +503,7 @@ export default function SupporterDonationPage() {
                     type="button"
                     onClick={handleProceed}
                     disabled={isSubmitting}
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-full text-white font-bold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: isSubmitting ? '#9ca3af' : RAKUTEN_RED }}
-                    onMouseOver={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
-                    onMouseOut={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
-                    onFocus={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
-                    onBlur={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
+                    className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <>

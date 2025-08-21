@@ -49,7 +49,7 @@ const catalogItems: CatalogItem[] = [
 
 export default function InventoryPage() {
   const params = useParams<{ id: string }>();
-  const shelterId = Number(params?.id);
+  const id = Number(params?.id);
   const router = useRouter();
 
   const [items, setItems] = useState<Item[] | null>(null);
@@ -82,11 +82,11 @@ export default function InventoryPage() {
 
   // 初期ロード
   useEffect(() => {
-    if (!Number.isFinite(shelterId)) return;
+    if (!Number.isFinite(id)) return;
     let active = true;
     setLoading(true);
     setError(null);
-    getInventoryByShelter(shelterId)
+    getInventoryByShelter(id)
       .then((data) => {
         if (!active) return;
         setItems(Array.isArray(data) ? data : []);
@@ -103,7 +103,7 @@ export default function InventoryPage() {
     return () => {
       active = false;
     };
-  }, [shelterId]);
+  }, [id]);
 
   // 合計
   const totalUnits = useMemo(
@@ -120,22 +120,24 @@ export default function InventoryPage() {
 
   const saveItems = async () => {
     if (!items) return;
-    try {
-      setSaving(true);
-      await Promise.all(
-        items
-          .filter((it) => typeof it.id === 'number')
-          .map((it) => updateInventoryQuantity(it.id as number, it as InventoryDto))
-      );
-      if (Number.isFinite(shelterId)) {
-        router.push(`/shelter/${shelterId}/home`);
-      }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : '保存に失敗しました';
-      alert(msg);
-    } finally {
-      setSaving(false);
-    }
+    setSaving(true);
+    Promise.all(
+      items
+        .filter((it) => typeof it.id === 'number')
+        .map((it) => updateInventoryQuantity(it.id as number, it as InventoryDto))
+    )
+      .then(() => {
+        if (Number.isFinite(id)) {
+          router.push(`/shelter/${id}/home`);
+        }
+      })
+      .catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : '保存に失敗しました';
+        alert(msg);
+      })
+      .finally(() => {
+        setSaving(false);
+      });
   };
 
   const filteredItems = (items ?? []).filter((item) => {
@@ -146,7 +148,7 @@ export default function InventoryPage() {
   });
 
   const onAddItem = async () => {
-    if (!Number.isFinite(shelterId)) return;
+    if (!Number.isFinite(id)) return;
     const name = newName.trim();
     const quantity = Number(newQuantity);
     if (!name) {
@@ -161,35 +163,39 @@ export default function InventoryPage() {
       alert('カタログから商品を選択してください');
       return;
     }
-    try {
-      setAdding(true);
-      // 既存チェック（同名）: あれば数量を加算更新、なければ新規作成
-      const existing = (items ?? []).find((it) => it.name === name);
-      if (existing && typeof existing.id === 'number') {
-        const updated = await updateInventoryQuantity(existing.id, {
+    setAdding(true);
+    const existing = (items ?? []).find((it) => it.name === name);
+    const promise = existing && typeof existing.id === 'number'
+      ? updateInventoryQuantity(existing.id, {
           ...existing,
           quantity: (existing.quantity ?? 0) + quantity,
-        });
-        setItems((prev) => prev ? prev.map(it => it.id === existing.id ? updated : it) : [updated]);
-      } else {
-        const created = await addInventoryItem({
-          shelterId,
+        })
+          .then((updated) => {
+            setItems((prev) => (prev ? prev.map((it) => (it.id === existing.id ? updated : it)) : [updated]));
+          })
+      : addInventoryItem({
+          shelterId: id,
           name,
           category: selectedCatalog.category,
           quantity,
+        }).then((created) => {
+          setItems((prev) => [...(prev ?? []), created]);
         });
-        setItems((prev) => ([...(prev ?? []), created]));
-      }
-      setNewName('');
-      setNewQuantity(0);
-      setSelectedCode('');
-      alert('在庫を追加しました');
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : '在庫の追加に失敗しました';
-      alert(msg);
-    } finally {
-      setAdding(false);
-    }
+
+    promise
+      .then(() => {
+        setNewName('');
+        setNewQuantity(0);
+        setSelectedCode('');
+        alert('在庫を追加しました');
+      })
+      .catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : '在庫の追加に失敗しました';
+        alert(msg);
+      })
+      .finally(() => {
+        setAdding(false);
+      });
   };
 
   return (
@@ -198,7 +204,7 @@ export default function InventoryPage() {
         {/* ヘッダ */}
         <div className="mx-auto max-w-screen-xl px-4 pt-8 pb-4">
           <div className="mb-6">
-            <BackButton fallbackHref={`/shelter/${shelterId}/home`} />
+            <BackButton fallbackHref={`/shelter/${id}/home`} />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight mb-4">在庫管理</h1>
 

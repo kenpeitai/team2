@@ -38,23 +38,19 @@ export default function ShelterStatusPage() {
 
   const fetchStatus = async () => {
     const idNum = Number(shelterId);
-    if (!idNum || Number.isNaN(idNum)) {
-      setStatusError('避難所IDが不正です');
-      setStatusLoading(false);
-      return;
-    }
-    try {
-      setStatusLoading(true);
-      setStatusError(null);
-      const data = await getShelterStatus(idNum);
-      setStatus(data);
-    } catch (e) {
-      console.error('避難所状況の取得に失敗しました:', e);
-      setStatusError('避難所状況の取得に失敗しました');
-      setStatus(null);
-    } finally {
-      setStatusLoading(false);
-    }
+    setStatusLoading(true);
+    setStatusError(null);
+    getShelterStatus(idNum)
+      .then((data) => {
+        setStatus(data);
+      })
+      .catch(() => {
+        setStatusError('避難所状況の取得に失敗しました');
+        setStatus(null);
+      })
+      .finally(() => {
+        setStatusLoading(false);
+      });
   };
 
   useEffect(() => {

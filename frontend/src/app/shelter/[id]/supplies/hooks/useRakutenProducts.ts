@@ -148,48 +148,45 @@ export function useRakutenProducts(onProductsReady?: (products: Product[]) => vo
       return newProducts;
     });
 
-    try {
-      // 楽天市場APIで検索
-      const rakutenItem = await getCheapestItemByKeyword(searchKeyword);
-      
-      // キャッシュに保存
-      setSearchCache(prev => {
-        const newCache = new Map(prev);
-        newCache.set(cacheKey, { data: rakutenItem, timestamp: now });
-        return newCache;
-      });
-      
-      return new Promise<void>((resolve) => {
-        setProducts(prev => {
-          const newProducts = new Map(prev);
-          const rakutenId = generateRakutenProductId(productId, rakutenItem?.itemCode);
-          const updatedProduct: RakutenProductData = {
-            ...product,
-            searchStatus: rakutenItem ? 'success' : 'error',
-            lastSearched: searchKeyword,
-            rakutenItem: rakutenItem || undefined,
-            rakutenId: rakutenItem ? rakutenId : undefined
-          };
-          newProducts.set(productId, updatedProduct);
-          
-          // 状態更新後にresolve
-          setTimeout(() => resolve(), 0);
-          return newProducts;
+    // 楽天市場APIで検索（Promiseチェーンでエラー処理）
+    return getCheapestItemByKeyword(searchKeyword)
+      .then((rakutenItem) => {
+        // キャッシュに保存
+        setSearchCache(prev => {
+          const newCache = new Map(prev);
+          newCache.set(cacheKey, { data: rakutenItem, timestamp: now });
+          return newCache;
+        });
+        return new Promise<void>((resolve) => {
+          setProducts(prev => {
+            const newProducts = new Map(prev);
+            const rakutenId = generateRakutenProductId(productId, rakutenItem?.itemCode);
+            const updatedProduct: RakutenProductData = {
+              ...product,
+              searchStatus: rakutenItem ? 'success' : 'error',
+              lastSearched: searchKeyword,
+              rakutenItem: rakutenItem || undefined,
+              rakutenId: rakutenItem ? rakutenId : undefined
+            };
+            newProducts.set(productId, updatedProduct);
+            // 状態更新後にresolve
+            setTimeout(() => resolve(), 0);
+            return newProducts;
+          });
+        });
+      })
+      .catch(() => {
+        return new Promise<void>((resolve) => {
+          setProducts(prev => {
+            const newProducts = new Map(prev);
+            const updatedProduct = { ...product, searchStatus: 'error' as const, lastSearched: searchKeyword };
+            newProducts.set(productId, updatedProduct);
+            // 状態更新後にresolve
+            setTimeout(() => resolve(), 0);
+            return newProducts;
+          });
         });
       });
-    } catch (error) {
-      return new Promise<void>((resolve) => {
-        setProducts(prev => {
-          const newProducts = new Map(prev);
-          const updatedProduct = { ...product, searchStatus: 'error' as const, lastSearched: searchKeyword };
-          newProducts.set(productId, updatedProduct);
-          
-          // 状態更新後にresolve
-          setTimeout(() => resolve(), 0);
-          return newProducts;
-        });
-      });
-    }
   }, [products, searchCache, generateRakutenProductId]);
 
   /**

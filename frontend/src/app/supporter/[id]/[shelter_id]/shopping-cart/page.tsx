@@ -303,10 +303,7 @@ export default function SupporterShoppingCartPage() {
                 <button
                   disabled={submitting || cart.items.length === 0}
                   onClick={onCheckout}
-                  className="w-full rounded-xl px-5 py-3 text-white disabled:opacity-50"
-                  style={{ backgroundColor: RAKUTEN_RED }}
-                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED_HOVER)}
-                  onMouseOut={(e) => (e.currentTarget.style.backgroundColor = RAKUTEN_RED)}
+                  className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-50"
                 >
                   {submitting ? "処理中…" : "注文手続きへ"}
                 </button>

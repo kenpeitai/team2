@@ -195,17 +195,19 @@ export default function NeedsListForm({
     };
 
     dispatch({ type: 'SET_SAVING', payload: true });
-    try {
-      if (onSubmit) onSubmit(payload);
-      await createNeedsList(body);
-      alert("必要物資リストを作成しました");
-      router.push(`/shelter/${shelterId}/home`);
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "保存に失敗しました";
-      alert(`エラー: ${message}`);
-    } finally {
-      dispatch({ type: 'SET_SAVING', payload: false });
-    }
+    (onSubmit ? Promise.resolve(onSubmit(payload)) : Promise.resolve())
+      .then(() => createNeedsList(body))
+      .then(() => {
+        alert("必要物資リストを作成しました");
+        router.push(`/shelter/${shelterId}/home`);
+      })
+      .catch((e: unknown) => {
+        const message = e instanceof Error ? e.message : "保存に失敗しました";
+        alert(`エラー: ${message}`);
+      })
+      .finally(() => {
+        dispatch({ type: 'SET_SAVING', payload: false });
+      });
   }, [state, validateAndCreatePayload, onSubmit, dispatch, params?.id, router]);
 
   return (

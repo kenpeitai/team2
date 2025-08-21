@@ -73,21 +73,22 @@ export default function ShelterInputPage() {
       return;
     }
 
-    try {
-      setSubmitting(true);
-      const payload: ShelterStatusDto = {
-        shelterId: parseInt(shelterId),
-        ...DEFAULT_FORM,
-        ...formData,
-      };
-      await updateShelterStatusRecord(parseInt(shelterId), payload);
-      router.push(`/shelter/${shelterId}/shelter-status`);
-    } catch (err) {
-      console.error('更新に失敗しました:', err);
-      alert('更新に失敗しました');
-    } finally {
-      setSubmitting(false);
-    }
+    setSubmitting(true);
+    const payload: ShelterStatusDto = {
+      shelterId: parseInt(shelterId),
+      ...DEFAULT_FORM,
+      ...formData,
+    };
+    updateShelterStatusRecord(parseInt(shelterId), payload)
+      .then(() => {
+        router.push(`/shelter/${shelterId}/shelter-status`);
+      })
+      .catch(() => {
+        alert('更新に失敗しました');
+      })
+      .finally(() => {
+        setSubmitting(false);
+      });
   };
 
   // 全角→半角の数値正規化

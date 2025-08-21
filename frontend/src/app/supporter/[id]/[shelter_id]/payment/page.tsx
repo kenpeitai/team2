@@ -340,7 +340,7 @@ export default function PaymentPage() {
         <Link href="/cart" className="px-4 py-2 rounded-xl border hover:bg-gray-50">戻る</Link>
         <button
           onClick={onContinue}
-          className="px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 disabled:opacity-50"
+          className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-50"
           disabled={method === "card" && !selectedSavedId && Object.keys(errors).length > 0}
         >
           確認へ進む

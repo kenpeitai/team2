@@ -14,30 +14,29 @@ import type { ShelterStatusDto } from '@/types/api';
 
 export default function Home() {
   const params = useParams();
-  const shelterId = params.id as string;
+  const id = params.id as string;
   const { shelter } = useShelter();
   const [status, setStatus] = useState<ShelterStatusDto | null>(null);
 
   useEffect(() => {
-    const idNum = Number(shelterId);
-    if (!idNum || Number.isNaN(idNum)) {
-      return;
-    }
-    const fetchStatus = async () => {
-      try {
-        const data = await getShelterStatus(idNum);
-        setStatus(data);
-      } catch (err) {
-        const statusCode = (err as { cause?: { status?: number } } | undefined)?.cause?.status;
-        if (statusCode === 404) {
+    const shelterId = Number(id);
+
+    const fetchStatus = () => {
+      getShelterStatus(shelterId)
+        .then((data) => {
+          setStatus(data);
+        })
+        .catch((err) => {
+          const statusCode = (err as { cause?: { status?: number } } | undefined)?.cause?.status;
+          if (statusCode === 404) {
+            setStatus(null);
+            return;
+          }
           setStatus(null);
-          return;
-        }
-        console.warn('避難所状況の取得に失敗しました', err);
-      }
+        });
     };
     fetchStatus();
-  }, [shelterId]);
+  }, [id]);
 
   const supportData = [
     { supporter: '田中建設株式会社', support: '避難所のテント設営', date: '2024-01-15' },
@@ -59,7 +58,7 @@ export default function Home() {
         {/* ページタイトル */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h1 className="text-2xl font-bold text-gray-900">{shelter?.shelterName ?? '災害支援システム'}</h1>
-          <p className="text-gray-600 mt-2">{shelter?.shelterAddress ? `住所: ${shelter.shelterAddress}` : `避難所ID: ${shelterId} の状況と支援情報を管理します`}</p>
+          <p className="text-gray-600 mt-2">{shelter?.shelterAddress ? `住所: ${shelter.shelterAddress}` : `避難所ID: ${id} の状況と支援情報を管理します`}</p>
         </div>
 
         {/* メインコンテンツ */}
@@ -118,7 +117,7 @@ export default function Home() {
               <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* 今の注文を確認 → supplies-status */}
                 <Link
-                  href={`/shelter/${shelterId}/supplies-status`}
+                  href={`/shelter/${id}/supplies-status`}
                   className="group rounded-xl border px-4 py-4 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
                 >
                   <div className="flex items-start gap-3">
@@ -132,7 +131,7 @@ export default function Home() {
 
                 {/* 新しく注文する → supplies */}
                 <Link
-                  href="/shelter/supplies"
+                  href={`/shelter/${id}/supplies`}
                   className="group rounded-xl border px-4 py-4 bg-blue-600 text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
                 >
                   <div className="flex items-start gap-3">
@@ -141,7 +140,7 @@ export default function Home() {
                       <div className="font-medium group-hover:underline">新しく注文する</div>
                       <div className="text-sm opacity-90 mt-0.5">不足している物資を申請・送信</div>
                     </div>
-                  </div>
+                  </div> 
                 </Link>
               </div>
 
@@ -154,21 +153,21 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">在庫・その他メニュー</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <MenuCard
-                href={status ? `/shelter/${shelterId}/shelter-status` : `/shelter/${shelterId}/shelter-input`}
+                href={status ? `/shelter/${id}/shelter-status` : `/shelter/${id}/shelter-input`}
                 title="避難所状況"
                 description={status ? "避難所状況の登録・更新" : "避難所状況の新規登録"}
                 icon="🏠"
                 color="bg-blue-500"
               />
               <MenuCard
-                href={`/shelter/${shelterId}/supplies`}
+                href={`/shelter/${id}/supplies`}
                 title="必要物資リスト"
                 description="必要物資の登録・確認"
                 icon="📦"
                 color="bg-green-500"
               />
               <MenuCard
-                href={`/shelter/${shelterId}/inventory`}
+                href={`/shelter/${id}/inventory`}
                 title="在庫管理"
                 description="物資の在庫状況管理"
                 icon="📊"

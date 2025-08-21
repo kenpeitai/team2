@@ -29,9 +29,6 @@ function extractErrorsFromApiError(err: unknown): Record<string, string> {
     if (cause.message.includes('避難所名')) duplicateErrors.shelterName = cause.message;
     return duplicateErrors;
   }
-  if (cause?.message || apiErr?.message) {
-    console.error(cause?.message ?? apiErr.message);
-  }
   return {};
 }
 
@@ -67,18 +64,19 @@ export default function RegisterPage() {
       return;
     }
 
-    try {
-      const created = await createShelter(body);
-      const id = created?.id;
-      if (id) {
-        router.push(`/shelter/${id}/home`);
-        return;
-      }
-    } catch (err) {
-      setErrors(extractErrorsFromApiError(err));
-    } finally {
-      setLoading(false);
-    }
+    createShelter(body)
+      .then((created) => {
+        const id = created?.id;
+        if (id) {
+          router.push(`/shelter/${id}/home`);
+        }
+      })
+      .catch((err) => {
+        setErrors(extractErrorsFromApiError(err));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }
 
   return (
