@@ -9,8 +9,12 @@ import { request } from '@/lib/api/base';
 import { getUserPaymentInfo } from '@/lib/api/userPayment';
 =======
 import BackButton from "@/components/BackButton";
+<<<<<<< HEAD
 import Layout from "@/components/Layout";
 >>>>>>> origin/main:frontend/src/app/supporter/[id]/[shelter_id]/order-confirm/page.tsx
+=======
+import Layout from "@/components/ShelterLayout";
+>>>>>>> main
 
 // 型定義
 interface PaymentData {

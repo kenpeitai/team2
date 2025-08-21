@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import Layout from '@/components/Layout';
+import Layout from '@/components/ShelterLayout';
 import { useParams, useRouter } from 'next/navigation';
 import type { InventoryDto } from '@/types/api';
 import { getInventoryByShelter, updateInventoryQuantity, addInventoryItem } from '@/lib/api';

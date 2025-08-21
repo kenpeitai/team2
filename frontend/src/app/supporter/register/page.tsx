@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Layout from '@/components/Layout';
+import Layout from '@/components/ShelterLayout';
 import { registerUser } from '@/lib/api';
 import type { ApiError, UserDto } from '@/types/api';
 import { runValidation, required, minLengthN, emailFmt, phoneFmt, sameAs } from '@/lib/validation';

@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import type { StoredNeeds, Priority, Category } from "@/types/needs";
-import Layout from "@/components/Layout";
+import Layout from "@/components/ShelterLayout";
 import BackButton from "@/components/BackButton";
 import { useParams } from "next/navigation";
 import { getNeedsListsByShelter, getNeedsListById } from "@/lib/api/supplies";

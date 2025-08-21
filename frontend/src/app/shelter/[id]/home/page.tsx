@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import MenuCard from '@/components/MenuCard';
 import StatCard from './components/StatCard';
-import Layout from '@/components/Layout';
+import Layout from '@/components/ShelterLayout';
 import { useShelter } from '@/hooks/useShelter';
 import { getShelterStatus } from '@/lib/api/shelterStatus';
 import type { ShelterStatusDto } from '@/types/api';

@@ -1,5 +1,5 @@
 "use client";
-import Layout from "@/components/Layout";
+import Layout from "@/components/ShelterLayout";
 import React, { useMemo, useCallback, useState } from "react";
 import { ProductCard } from "./components/ProductCard";
 import { SummaryBar } from "./components/SummaryBar";

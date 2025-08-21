@@ -99,7 +99,7 @@ const ShelterCard = ({ shelter, onSupportClick }: { shelter: Shelter; onSupportC
         <button 
           onClick={onSupportClick}
           // ★ 修正点: ボタンのクラスを楽天カラーに変更
-          className="w-full bg-[#BF0000] hover:bg-[#990000] text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+          className="btn btn-primary w-full text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
         >
           支援する
         </button>
