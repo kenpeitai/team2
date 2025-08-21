@@ -27,3 +27,6 @@ export * from './payments';
 
 // 楽天市場API関連
 export * from './rakuten';
+
+// 在庫関連
+export * from './inventory';
