@@ -18,7 +18,7 @@ export const RAKUTEN_PRODUCT_CATALOG: RakutenProductDefinition[] = [
   {
     id: "p-water-2l",
     name: "飲料水 2L×6本（1ケース）",
-    searchKeywords: ["飲料水 2L 6本", "ミネラルウォーター 2L ケース", "水 2L 6本"],
+    searchKeywords: ["ミネラルウォーター 2L 6本"],
     unit: "ケース",
     weightGrams: 12000,
     category: "食料"
@@ -35,7 +35,7 @@ export const RAKUTEN_PRODUCT_CATALOG: RakutenProductDefinition[] = [
   {
     id: "p-canned-food",
     name: "缶詰(主食) 1缶",
-    searchKeywords: ["缶詰 主食", "レトルト 缶詰", "非常食 缶詰"],
+    searchKeywords: ["非常食 缶パン"],
     unit: "缶",
     weightGrams: 350,
     category: "食料",
@@ -46,7 +46,7 @@ export const RAKUTEN_PRODUCT_CATALOG: RakutenProductDefinition[] = [
   {
     id: "p-blanket",
     name: "毛布",
-    searchKeywords: ["毛布", "ブランケット", "防災 毛布"],
+    searchKeywords: [ "防災 毛布"],
     unit: "枚",
     weightGrams: 800,
     category: "生活用品"
@@ -54,7 +54,7 @@ export const RAKUTEN_PRODUCT_CATALOG: RakutenProductDefinition[] = [
   {
     id: "p-battery-aa",
     name: "単3電池(8本)",
-    searchKeywords: ["単3電池 8本", "乾電池 単3 8本", "アルカリ電池 単3"],
+    searchKeywords: ["乾電池 単3 8本"],
     unit: "パック",
     weightGrams: 180,
     category: "生活用品"
@@ -62,7 +62,7 @@ export const RAKUTEN_PRODUCT_CATALOG: RakutenProductDefinition[] = [
   {
     id: "p-mask",
     name: "不織布マスク(50枚)",
-    searchKeywords: ["不織布マスク 50枚", "マスク 50枚", "使い捨てマスク"],
+    searchKeywords: ["不織布マスク 50枚", "マスク 50枚",],
     unit: "箱",
     weightGrams: 200,
     category: "衛生",
@@ -153,8 +153,8 @@ export const RAKUTEN_PRODUCT_CATALOG: RakutenProductDefinition[] = [
   },
   {
     id: "m-surgical-tape",
-    name: "サージカルテープ 12mm×9m",
-    searchKeywords: ["サージカルテープ 12mm", "医療用テープ", "サージカルテープ"],
+    name: "医療用テープ",
+    searchKeywords: [ "医療用テープ"],
     unit: "巻",
     weightGrams: 25,
     category: "医薬品",
@@ -181,7 +181,7 @@ export const RAKUTEN_PRODUCT_CATALOG: RakutenProductDefinition[] = [
   {
     id: "m-eyedrops",
     name: "目薬（人工涙液）",
-    searchKeywords: ["人工涙液", "目薬 人工涙液", "ドライアイ 目薬"],
+    searchKeywords: [ "目薬 人工涙液"],
     unit: "本",
     weightGrams: 20,
     category: "医薬品",
@@ -190,7 +190,7 @@ export const RAKUTEN_PRODUCT_CATALOG: RakutenProductDefinition[] = [
   {
     id: "m-cough-syrup",
     name: "咳止めシロップ 120mL",
-    searchKeywords: ["咳止めシロップ 120mL", "咳止め シロップ", "メジコン"],
+    searchKeywords: ["咳止めシロップ 120mL"],
     unit: "本",
     weightGrams: 160,
     category: "医薬品",
@@ -199,7 +199,7 @@ export const RAKUTEN_PRODUCT_CATALOG: RakutenProductDefinition[] = [
   {
     id: "m-throat-candy",
     name: "のど飴",
-    searchKeywords: ["のど飴", "喉飴", "のど飴 袋"],
+    searchKeywords: ["のど飴"],
     unit: "袋",
     weightGrams: 80,
     category: "医薬品",
