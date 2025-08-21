@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import SupporterLayout from '@/components/SupporterLayout';
+import { getSupporterStats, getActiveSupport, getNotifications } from '@/lib/api/supporter';
 
 // ===== 型定義 =====
 // APIから返ってくる生の避難所データ
@@ -44,11 +45,29 @@ async function getShelters(): Promise<ShelterFromApi[]> {
 }
 async function getSupporterData(supporterId: string) {
     console.log(`Fetching data for supporter ${supporterId}...`);
-    return {
-        stats: { ongoing: 1, completed: 4, totalAmount: '¥18,200' },
-        activeSupport: { supportedShelterName: '中央避難所', itemName: '医薬品セット', status: 'delivery_drone' },
-        notifications: [{ message: '中央避難所から感謝の通知が届きました', time: '1日前', color: 'bg-green-500' }]
-    };
+    
+    try {
+        // 并行获取所有数据
+        const [stats, activeSupport, notifications] = await Promise.all([
+            getSupporterStats(parseInt(supporterId)),
+            getActiveSupport(parseInt(supporterId)),
+            getNotifications(parseInt(supporterId))
+        ]);
+        
+        return {
+            stats,
+            activeSupport,
+            notifications
+        };
+    } catch (error) {
+        console.error('Failed to fetch supporter data:', error);
+        // 如果API调用失败，返回默认数据
+        return {
+            stats: { ongoing: 0, completed: 0, totalAmount: '¥0' },
+            activeSupport: null,
+            notifications: []
+        };
+    }
 }
 
 
@@ -144,7 +163,35 @@ export default function SupporterHomePage() {
         setIsLoading(false);
       }
     };
+
+    // 初始加载
     fetchData();
+
+    // 设置定时刷新（每30秒刷新一次支援者数据）
+    const interval = setInterval(() => {
+      const supporterId = window.location.pathname.split('/')[2];
+      if (supporterId) {
+        getSupporterData(supporterId).then(supporterData => {
+          setStats(supporterData.stats);
+          const validStatuses = ['purchased', 'delivery_drone', 'delivered', 'received'] as const;
+          const activeSupport = supporterData.activeSupport;
+          if (activeSupport && validStatuses.includes(activeSupport.status as typeof validStatuses[number])) {
+            setActiveSupport({
+              ...activeSupport,
+              status: activeSupport.status as 'purchased' | 'delivery_drone' | 'delivered' | 'received'
+            });
+          } else {
+            setActiveSupport(null);
+          }
+          setRecentNotifications(supporterData.notifications);
+        }).catch(err => {
+          console.error('Failed to refresh supporter data:', err);
+        });
+      }
+    }, 30000); // 30秒
+
+    // 清理定时器
+    return () => clearInterval(interval);
   }, []);
 
   const handleSupportNavigation = (shelterId: number) => {
@@ -187,7 +234,39 @@ export default function SupporterHomePage() {
           </header>
 
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">📊 あなたの支援サマリー</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">📊 あなたの支援サマリー</h2>
+              <button
+                onClick={async () => {
+                  const supporterId = window.location.pathname.split('/')[2];
+                  if (supporterId) {
+                    try {
+                      const supporterData = await getSupporterData(supporterId);
+                      setStats(supporterData.stats);
+                      const validStatuses = ['purchased', 'delivery_drone', 'delivered', 'received'] as const;
+                      const activeSupport = supporterData.activeSupport;
+                      if (activeSupport && validStatuses.includes(activeSupport.status as typeof validStatuses[number])) {
+                        setActiveSupport({
+                          ...activeSupport,
+                          status: activeSupport.status as 'purchased' | 'delivery_drone' | 'delivered' | 'received'
+                        });
+                      } else {
+                        setActiveSupport(null);
+                      }
+                      setRecentNotifications(supporterData.notifications);
+                    } catch (err) {
+                      console.error('Failed to refresh data:', err);
+                    }
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                更新
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard title="進行中の支援" value={stats.ongoing} icon="🚚" bgColor="bg-blue-50 border-blue-200" textColor="text-blue-700" />
               <StatCard title="完了した支援" value={stats.completed} icon="✅" bgColor="bg-green-50 border-green-200" textColor="text-green-700" />

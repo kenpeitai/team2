@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { getCart } from '@/lib/api/cart';
+import { request } from '@/lib/api/base';
+import { getUserPaymentInfo } from '@/lib/api/userPayment';
 
 // 型定義
 interface PaymentData {
@@ -35,66 +38,110 @@ interface OrderData {
 
 export default function OrderConfirmationPage() {
   const router = useRouter();
+  const params = useParams();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // localStorageから支払いデータとカートデータを取得
-    const paymentData = localStorage.getItem("paymentData");
-    const cartData = localStorage.getItem("cart");
-    
-    console.log("支払いデータ:", paymentData);
-    console.log("カートデータ:", cartData);
-    
-    if (paymentData) {
+    const loadOrderData = async () => {
       try {
-        const payment = JSON.parse(paymentData);
-        
-        // カートデータがない場合、テストデータを作成
-        let cartItems: CartItem[] = [];
-        let totalAmount = 0;
-        
-        if (cartData) {
-          const cart = JSON.parse(cartData);
-          cartItems = cart.items || [];
-          totalAmount = cartItems.reduce((sum: number, item: CartItem) => 
-            sum + (item.totalPrice || 0), 0);
-        } else {
-          // テスト用のカートデータを作成
-          cartItems = [
-            {
-              id: 1,
-              productId: "m-acetaminophen",
-              productName: "アセトアミノフェン",
-              quantity: 2,
-              unit: "個",
-              pricePerUnit: 500,
-              totalPrice: 1000
-            },
-            {
-              id: 2,
-              productId: "p-water-2l",
-              productName: "水 2L",
-              quantity: 1,
-              unit: "本",
-              pricePerUnit: 120,
-              totalPrice: 120
-            }
-          ];
-          totalAmount = 1120;
+        const supporterId = params.id as string;
+        const shelterId = params.shelter_id as string;
+
+        if (!supporterId || !shelterId) {
+          console.error("URLパラメータが不正です");
+          setLoading(false);
+          return;
         }
-        
-        setOrderData({
-          payment,
-          cartItems,
-          totalAmount
-        });
+
+        // ユーザー固有の支払い情報を取得
+        let payment: PaymentData;
+        try {
+          const userPaymentInfo = await getUserPaymentInfo(parseInt(supporterId));
+          
+                     if (userPaymentInfo.cardNumber && userPaymentInfo.cardExpiry) {
+             // ユーザーに保存された支払い情報がある場合
+             payment = {
+               method: "card",
+               oneTimeCard: {
+                 id: `user_${supporterId}`,
+                 brand: "Unknown", // ブランドは後で判定
+                 last4: userPaymentInfo.cardNumber.replace(/\D/g, "").slice(-4),
+                 holder: userPaymentInfo.cardHolder || userPaymentInfo.fullName || "",
+                 exp: userPaymentInfo.cardExpiry
+               }
+             };
+          } else {
+            // ユーザーに保存された支払い情報がない場合、デフォルトの支払い方法を使用
+            payment = {
+              method: "card",
+              oneTimeCard: {
+                id: `temp_${Date.now()}`,
+                brand: "Unknown",
+                last4: "0000",
+                holder: "TEMP USER",
+                exp: "12/25"
+              }
+            };
+          }
+        } catch (error) {
+          console.log("ユーザーの支払い情報の取得に失敗しました:", error);
+          // デフォルトの支払い方法を使用
+          payment = {
+            method: "card",
+            oneTimeCard: {
+              id: `temp_${Date.now()}`,
+              brand: "Unknown",
+              last4: "0000",
+              holder: "TEMP USER",
+              exp: "12/25"
+            }
+          };
+        }
+
+        // データベースからカートデータを取得
+        try {
+          const cartData = await getCart(parseInt(supporterId), parseInt(shelterId));
+          console.log("データベースから取得したカートデータ:", cartData);
+          
+          const cartItems: CartItem[] = cartData.items?.map((item: any) => ({
+            id: item.id || 0,
+            productId: item.productId,
+            productName: item.productName,
+            quantity: item.quantity,
+            unit: item.unit,
+            pricePerUnit: item.pricePerUnit || 0,
+            totalPrice: item.totalPrice || (item.pricePerUnit || 0) * item.quantity
+          })) || [];
+          
+          const totalAmount = cartItems.reduce((sum: number, item: CartItem) => 
+            sum + (item.totalPrice || 0), 0);
+          
+          console.log("処理されたカートアイテム:", cartItems);
+          console.log("合計金額:", totalAmount);
+          
+          setOrderData({
+            payment,
+            cartItems,
+            totalAmount
+          });
+        } catch (error) {
+          console.error("カートデータの取得に失敗しました:", error);
+          // カートデータの取得に失敗した場合、エラーメッセージを表示
+          alert("カートデータの取得に失敗しました。もう一度お試しください。");
+          router.push(`/supporter/${supporterId}/${shelterId}/shopping_cart`);
+          return;
+        }
       } catch (error) {
         console.error("データの解析に失敗しました:", error);
+        alert("データの解析に失敗しました。もう一度お試しください。");
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
-  }, []);
+    };
+
+    loadOrderData();
+  }, [params.id, params.shelter_id, router]);
 
   // 注文確定処理
   const confirmOrder = async () => {
@@ -103,16 +150,17 @@ export default function OrderConfirmationPage() {
     try {
       console.log("注文データ:", orderData);
       
-      // 1. 注文を作成
-      const orderResponse = await fetch('http://localhost:8080/api/orders', {
+      const supporterId = params.id as string;
+      const shelterId = params.shelter_id as string;
+      
+      // 1. 创建订单
+      const orderResponse = await request(`/api/orders/${supporterId}/${shelterId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
-          userId: 1, // TODO: ユーザーログイン状態から実際のユーザーIDを取得
-          shelterId: 1, // TODO: 現在のコンテキストから実際の避難所IDを取得
-          orderStatus: 'PENDING',
+          userId: parseInt(supporterId),
+          shelterId: parseInt(shelterId),
+          status: 'PENDING',
+          paymentStatus: 'PENDING',
           totalAmount: orderData.totalAmount,
           shippingAddress: 'テスト住所', // TODO: ユーザー情報から取得
           contactPhone: '090-1234-5678', // TODO: ユーザー情報から取得
@@ -124,76 +172,59 @@ export default function OrderConfirmationPage() {
             category: 'general', // TODO: 商品情報から取得
             quantity: item.quantity,
             pricePerUnit: item.pricePerUnit,
-            totalPrice: item.totalPrice
+            totalPrice: item.totalPrice,
+            notes: null
           }))
         })
       });
       
-      if (!orderResponse.ok) {
-        throw new Error(`注文作成に失敗しました: ${orderResponse.status}`);
-      }
+      console.log("订单创建成功:", orderResponse);
       
-      const order = await orderResponse.json();
-      console.log("作成された注文:", order);
-      
-      // 2. 支払い記録を作成
-      const paymentResponse = await fetch('http://localhost:8080/api/payments', {
+      // 2. 创建支付记录
+      const paymentResponse = await request('/api/payments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
-          orderId: order.id,
+          orderId: orderResponse.id,
           paymentMethod: orderData.payment.method,
-          paymentStatus: 'PENDING',
+          paymentStatus: 'COMPLETED',
           amount: orderData.totalAmount,
-          transactionId: `TXN_${Date.now()}`, // ユニークな取引IDを生成
-          notes: `注文ID: ${order.id} の支払い`
+          transactionId: `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          notes: `注文ID: ${orderResponse.id} の支払い`
         })
       });
       
-      if (!paymentResponse.ok) {
-        throw new Error(`支払い記録作成に失敗しました: ${paymentResponse.status}`);
-      }
+      console.log("支付记录创建成功:", paymentResponse);
       
-      const payment = await paymentResponse.json();
-      console.log("作成された支払い:", payment);
-      
-      // 3. 支払いを処理（支払い成功をシミュレート）
-      const processPaymentResponse = await fetch(`http://localhost:8080/api/payments/${payment.id}/process`, {
-        method: 'POST'
-      });
-      
-      if (!processPaymentResponse.ok) {
-        throw new Error(`支払い処理に失敗しました: ${processPaymentResponse.status}`);
-      }
-      
-      // 4. 注文状態を支払い済みに更新
-      const updateOrderResponse = await fetch(`http://localhost:8080/api/orders/${order.id}/status?status=PAID`, {
+      // 3. 更新订单状态为已完成
+      const updateOrderResponse = await request(`/api/orders/${orderResponse.id}/status?status=COMPLETED`, {
         method: 'PUT'
       });
       
-      if (!updateOrderResponse.ok) {
-        throw new Error(`注文状態更新に失敗しました: ${updateOrderResponse.status}`);
-      }
+      console.log("订单状态更新成功:", updateOrderResponse);
       
       // 成功メッセージ
       alert("注文を確定しました！支払いも完了しました。");
       
-      // 完了ページに遷移（URLパラメータから正しいIDを取得）
-      const pathSegments = window.location.pathname.split('/');
-      const supporterId = pathSegments[2];
-      const shelterId = pathSegments[3];
-      
       // 完了ページに必要なデータを保存
       const completeData = {
         ...orderData.payment,
-        orderId: order.id,
+        orderId: orderResponse.id,
+        orderNumber: orderResponse.orderNumber,
         totalAmount: orderData.totalAmount,
         supporterId,
         shelterId
       };
       localStorage.setItem("paymentData", JSON.stringify(completeData));
+      
+      // データベースのカートをクリア（支払い完了後）
+      try {
+        await request(`/api/cart/${supporterId}/${shelterId}`, {
+          method: 'DELETE'
+        });
+        console.log("カートをクリアしました");
+      } catch (error) {
+        console.warn('カートのクリアに失敗しましたが、注文は完了しています');
+      }
       
       router.push(`/supporter/${supporterId}/${shelterId}/order_conplete`);
       

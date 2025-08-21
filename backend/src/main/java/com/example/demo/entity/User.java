@@ -43,6 +43,10 @@ public class User {
     @Column(name = "card_cvc")
     private String cardCvc;
     
+    @Size(max = 100, message = "カード名義人は100文字以内で入力してください")
+    @Column(name = "card_holder")
+    private String cardHolder;
+    
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private UserRole role = UserRole.USER;
@@ -83,6 +87,9 @@ public class User {
     
     public String getCardCvc() { return cardCvc; }
     public void setCardCvc(String cardCvc) { this.cardCvc = cardCvc; }
+    
+    public String getCardHolder() { return cardHolder; }
+    public void setCardHolder(String cardHolder) { this.cardHolder = cardHolder; }
     
     public UserRole getRole() { return role; }
     public void setRole(UserRole role) { this.role = role; }

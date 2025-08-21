@@ -7,6 +7,7 @@ import com.example.demo.entity.User;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.OrderItemRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.PaymentService;
 import com.example.demo.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,13 +29,19 @@ public class OrderService {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private PaymentService paymentService;
+    
     // 创建订单
     public Order createOrder(Order order) {
         // 验证用户是否存在
         User user = userRepository.findById(order.getUserId())
             .orElseThrow(() -> new ResourceNotFoundException("ユーザーが見つかりません: " + order.getUserId()));
         
-        order.setOrderStatus("PENDING");
+        // 如果orderStatus没有设置，则设置为PENDING
+        if (order.getOrderStatus() == null) {
+            order.setOrderStatus("PENDING");
+        }
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
         
@@ -46,10 +53,28 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("注文が見つかりません: " + orderId));
         
+        System.out.println("OrderService.updateOrderStatus - 更新订单状态: orderId=" + orderId + ", oldStatus=" + order.getStatus() + ", newStatus=" + status);
+        
+        // 同时更新status和orderStatus字段
+        order.setStatus(status);
         order.setOrderStatus(status);
         order.setUpdatedAt(LocalDateTime.now());
         
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        System.out.println("OrderService.updateOrderStatus - 订单状态更新成功: orderId=" + orderId + ", newStatus=" + savedOrder.getStatus());
+        
+        // 如果订单状态变为COMPLETED，触发需求清单更新
+        if ("COMPLETED".equals(status)) {
+            System.out.println("OrderService.updateOrderStatus - 订单状态为COMPLETED，触发需求清单更新");
+            try {
+                paymentService.updateNeedsListAfterPayment(orderId);
+            } catch (Exception e) {
+                System.err.println("OrderService.updateOrderStatus - 需求清单更新失败: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        
+        return savedOrder;
     }
     
     // 根据ID获取订单

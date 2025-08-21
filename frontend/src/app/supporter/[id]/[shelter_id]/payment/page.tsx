@@ -3,6 +3,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { getUserPaymentInfo, updateUserPaymentInfo, UserPaymentInfo } from "@/lib/api/userPayment";
 
 // ===== Types =====
 export type PaymentMethod = "card"; // 避難所向け: カード限定
@@ -51,11 +53,18 @@ function cvcLength(brand: SavedCard["brand"]) {
 // ===== Page =====
 export default function PaymentPage() {
   const router = useRouter();
+  const params = useParams();
+  
+  // 从URL参数中获取supporterId和shelterId，使用useState来避免SSR问题
+  const [supporterId, setSupporterId] = useState<string>("");
+  const [shelterId, setShelterId] = useState<string>("");
 
   const [method, setMethod] = useState<PaymentMethod>("card");
   const [saveCard, setSaveCard] = useState(true);
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
   const [selectedSavedId, setSelectedSavedId] = useState<string | null>(null);
+  const [userPaymentInfo, setUserPaymentInfo] = useState<UserPaymentInfo | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // New card fields
   const [holder, setHolder] = useState("");
@@ -64,35 +73,54 @@ export default function PaymentPage() {
   const [cvc, setCvc] = useState("");
 
   useEffect(() => {
-    // Load saved cards
-    const raw = localStorage.getItem("savedCards");
-    if (raw) {
-      try {
-        const list = JSON.parse(raw) as SavedCard[];
-        setSavedCards(list);
-        if (list.length) setSelectedSavedId(list[0].id);
-      } catch {}
+    // 在客户端设置URL参数
+    if (params.id && params.shelter_id) {
+      setSupporterId(params.id as string);
+      setShelterId(params.shelter_id as string);
     }
-    // Preload previous selection if any
-    const prev = localStorage.getItem("checkout.payment");
-    if (prev) {
-      try {
-        const p = JSON.parse(prev);
-        if (p.method) setMethod(p.method);
-        if (p.method === "card" && p.savedCardId) setSelectedSavedId(p.savedCardId);
-      } catch {}
-    }
-  }, []);
+  }, [params.id, params.shelter_id]);
+
+  useEffect(() => {
+    const loadUserPaymentInfo = async () => {
+      if (supporterId) {
+        try {
+          const paymentInfo = await getUserPaymentInfo(parseInt(supporterId));
+          setUserPaymentInfo(paymentInfo);
+          
+          // 如果用户有保存的支付信息，自动填充
+          if (paymentInfo.cardNumber && paymentInfo.cardExpiry) {
+            setHolder(paymentInfo.fullName || "");
+            setNumber(paymentInfo.cardNumber);
+            setExpiry(paymentInfo.cardExpiry);
+            setCvc(paymentInfo.cardCvc || "");
+            
+            // 创建保存的卡片
+            const savedCard: SavedCard = {
+              id: `user_${supporterId}`,
+              brand: guessBrand(paymentInfo.cardNumber),
+              last4: paymentInfo.cardNumber.replace(/\D/g, "").slice(-4),
+              holder: paymentInfo.fullName || "",
+              exp: paymentInfo.cardExpiry
+            };
+            setSavedCards([savedCard]);
+            setSelectedSavedId(savedCard.id);
+          }
+        } catch (error) {
+          console.log("ユーザーの支払い情報が見つかりません");
+        }
+      }
+      setLoading(false);
+    };
+
+    loadUserPaymentInfo();
+  }, [supporterId]);
 
   const brand = useMemo(() => guessBrand(number), [number]);
 
   // ===== onContinue Function =====
-  const onContinue = () => {
+  const onContinue = async () => {
     if (method === "card") {
-      // 获取URL参数中的ID
-      const pathSegments = window.location.pathname.split('/');
-      const supporterId = pathSegments[2]; // /supporter/[id]/[shelter_id]/payment
-      const shelterId = pathSegments[3];
+      // 使用已经获取的supporterId和shelterId
       
       // 生成订单号
       const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -129,17 +157,26 @@ export default function PaymentPage() {
         // 使用新输入的卡
         if (saveCard) {
           const newCard: SavedCard = {
-            id: `card_${Date.now()}`,
+            id: `user_${supporterId}`,
             brand,
             last4: number.replace(/\D/g, "").slice(-4),
             holder,
             exp: expiry
           };
           
-          // 保存到localStorage
-          const existing = JSON.parse(localStorage.getItem("savedCards") || "[]");
-          existing.push(newCard);
-          localStorage.setItem("savedCards", JSON.stringify(existing));
+          // 保存到用户数据库
+          try {
+            await updateUserPaymentInfo(parseInt(supporterId), {
+              cardNumber: number,
+              cardExpiry: expiry,
+              cardCvc: cvc,
+              fullName: holder,
+              cardHolder: holder
+            });
+            console.log("支払い情報が保存されました");
+          } catch (error) {
+            console.error("支払い情報の保存に失敗しました:", error);
+          }
           
           payload.oneTimeCard = newCard;
         } else {
@@ -189,10 +226,25 @@ export default function PaymentPage() {
     </div>
   );
 
+  if (loading) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-6">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">支払い情報を読み込み中...</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
       <nav className="text-sm mb-4 text-gray-500">
-        <Link href="/cart" className="hover:underline">カート</Link>
+        {supporterId && shelterId ? (
+          <Link href={`/supporter/${supporterId}/${shelterId}/shopping_cart`} className="hover:underline">カート</Link>
+        ) : (
+          <span>カート</span>
+        )}
         <span className="mx-2">›</span>
         <span className="text-gray-900 font-medium">支払い方法</span>
         <span className="mx-2">›</span>
@@ -332,7 +384,11 @@ export default function PaymentPage() {
       </section>
 
       <footer className="mt-8 flex flex-col md:flex-row gap-3 justify-between items-center">
-        <Link href="/cart" className="px-4 py-2 rounded-xl border hover:bg-gray-50">戻る</Link>
+        {supporterId && shelterId ? (
+          <Link href={`/supporter/${supporterId}/${shelterId}/shopping_cart`} className="px-4 py-2 rounded-xl border hover:bg-gray-50">戻る</Link>
+        ) : (
+          <button disabled className="px-4 py-2 rounded-xl border bg-gray-100 text-gray-400">戻る</button>
+        )}
         <button
           onClick={onContinue}
           className="px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 disabled:opacity-50"

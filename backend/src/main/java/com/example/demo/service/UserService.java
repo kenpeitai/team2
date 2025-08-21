@@ -38,6 +38,7 @@ public class UserService {
         user.setCardNumber(userDto.getCardNumber());
         user.setCardExpiry(userDto.getCardExpiry());
         user.setCardCvc(userDto.getCardCvc());
+        user.setCardHolder(userDto.getCardHolder());
         user.setRole(userDto.getRole() != null ? userDto.getRole() : UserRole.USER);
         user.setIsActive(true);
         
@@ -78,6 +79,10 @@ public class UserService {
         
         if (userDto.getCardCvc() != null) {
             user.setCardCvc(userDto.getCardCvc());
+        }
+        
+        if (userDto.getCardHolder() != null) {
+            user.setCardHolder(userDto.getCardHolder());
         }
         
         if (userDto.getRole() != null) {
@@ -140,5 +145,17 @@ public class UserService {
             }
         }
         return Optional.empty();
+    }
+    
+    // パスワード更新
+    public User updatePassword(Long id, String newPassword) {
+        User user = getUserById(id);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        return userRepository.save(user);
+    }
+    
+    // ユーザー名で取得（emailを代わりに使用）
+    public User getUserByUsername(String username) {
+        return getUserByEmail(username);
     }
 }

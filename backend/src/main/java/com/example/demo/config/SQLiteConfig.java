@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -15,6 +16,7 @@ import java.sql.Statement;
 import java.util.stream.Collectors;
 
 @Configuration
+@Profile("!docker")  // 只在非Docker环境中运行
 public class SQLiteConfig {
 
     @Autowired

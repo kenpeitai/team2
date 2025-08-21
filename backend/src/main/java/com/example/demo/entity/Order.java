@@ -21,8 +21,14 @@ public class Order {
     @Column(name = "shelter_id", nullable = false)
     private Long shelterId;
     
+    @Column(name = "status", nullable = false)
+    private String status = "PENDING";
+    
     @Column(name = "order_status", nullable = false)
     private String orderStatus = "PENDING";
+    
+    @Column(name = "payment_status", nullable = false)
+    private String paymentStatus = "PENDING";
     
     @Column(name = "total_amount", nullable = false)
     private Double totalAmount;
@@ -79,8 +85,14 @@ public class Order {
     public Long getShelterId() { return shelterId; }
     public void setShelterId(Long shelterId) { this.shelterId = shelterId; }
     
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    
     public String getOrderStatus() { return orderStatus; }
     public void setOrderStatus(String orderStatus) { this.orderStatus = orderStatus; }
+    
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
     
     public Double getTotalAmount() { return totalAmount; }
     public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }

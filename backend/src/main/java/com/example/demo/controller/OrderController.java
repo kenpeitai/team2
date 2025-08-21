@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.OrderDto;
 import com.example.demo.dto.OrderItemDto;
+import com.example.demo.entity.Order;
+import com.example.demo.entity.OrderItem;
 import com.example.demo.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,23 +28,18 @@ public class OrderController {
     public ResponseEntity<OrderDto> createOrder(
             @PathVariable Long userId,
             @PathVariable Long shelterId,
-            @RequestBody String requestBody) {
+            @RequestBody OrderDto orderDto) {
         try {
             System.out.println("收到订单创建请求 - userId: " + userId + ", shelterId: " + shelterId);
-            System.out.println("原始请求体: " + requestBody);
-            
-            // 手动解析JSON
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            OrderDto orderDto = mapper.readValue(requestBody, OrderDto.class);
-            
-            System.out.println("解析后的订单数据: " + orderDto);
+            System.out.println("订单数据: " + orderDto);
             
             // 设置用户ID和避难所ID
             orderDto.setUserId(userId);
             orderDto.setShelterId(shelterId);
             
             // 生成订单号
-            String orderNumber = "ORD-" + System.currentTimeMillis();
+            String orderNumber = "ORD-" + System.currentTimeMillis() + "-" + 
+                java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             orderDto.setOrderNumber(orderNumber);
             
             // 设置默认状态
@@ -53,19 +50,66 @@ public class OrderController {
                 orderDto.setPaymentStatus("PENDING");
             }
             
-            // 设置ID（模拟）
-            orderDto.setId(System.currentTimeMillis());
+            // 转换为Order实体
+            Order order = new Order();
+            order.setOrderNumber(orderDto.getOrderNumber());
+            order.setUserId(orderDto.getUserId());
+            order.setShelterId(orderDto.getShelterId());
+            order.setStatus(orderDto.getStatus());
+            order.setOrderStatus(orderDto.getStatus());
+            order.setPaymentStatus(orderDto.getPaymentStatus());
+            order.setTotalAmount(orderDto.getTotalAmount());
+            order.setShippingAddress(orderDto.getShippingAddress());
+            order.setContactPhone(orderDto.getContactPhone());
+            order.setContactEmail(orderDto.getContactEmail());
+            order.setNotes(orderDto.getNotes());
+            order.setCreatedAt(java.time.LocalDateTime.now());
+            order.setUpdatedAt(java.time.LocalDateTime.now());
             
-            // 确保items字段不为null
-            if (orderDto.getItems() == null) {
-                orderDto.setItems(java.util.Collections.emptyList());
+            // 保存订单
+            Order savedOrder = orderService.createOrder(order);
+            System.out.println("订单保存成功，ID: " + savedOrder.getId());
+            
+            // 保存订单项目
+            if (orderDto.getItems() != null && !orderDto.getItems().isEmpty()) {
+                for (OrderItemDto itemDto : orderDto.getItems()) {
+                    OrderItem orderItem = new OrderItem();
+                    orderItem.setOrderId(savedOrder.getId());
+                    orderItem.setProductId(itemDto.getProductId());
+                    orderItem.setProductName(itemDto.getProductName());
+                    orderItem.setUnit(itemDto.getUnit());
+                    orderItem.setCategory(itemDto.getCategory());
+                    orderItem.setQuantity(itemDto.getQuantity());
+                    orderItem.setPricePerUnit(itemDto.getPricePerUnit());
+                    orderItem.setTotalPrice(itemDto.getTotalPrice());
+                    orderItem.setNotes(itemDto.getNotes());
+                    orderItem.setCreatedAt(java.time.LocalDateTime.now());
+                    orderItem.setUpdatedAt(java.time.LocalDateTime.now());
+                    
+                    orderService.addOrderItem(savedOrder.getId(), orderItem);
+                }
+                System.out.println("订单项目保存成功，共 " + orderDto.getItems().size() + " 个项目");
             }
             
-            System.out.println("返回订单数据: " + orderDto);
+            // 转换为OrderDto返回
+            OrderDto resultDto = new OrderDto();
+            resultDto.setId(savedOrder.getId());
+            resultDto.setOrderNumber(savedOrder.getOrderNumber());
+            resultDto.setUserId(savedOrder.getUserId());
+            resultDto.setShelterId(savedOrder.getShelterId());
+            resultDto.setStatus(savedOrder.getOrderStatus());
+            resultDto.setPaymentStatus(savedOrder.getPaymentStatus());
+            resultDto.setTotalAmount(savedOrder.getTotalAmount());
+            resultDto.setShippingAddress(savedOrder.getShippingAddress());
+            resultDto.setContactPhone(savedOrder.getContactPhone());
+            resultDto.setContactEmail(savedOrder.getContactEmail());
+            resultDto.setNotes(savedOrder.getNotes());
+            resultDto.setCreatedAt(savedOrder.getCreatedAt());
+            resultDto.setUpdatedAt(savedOrder.getUpdatedAt());
             
-            // 这里需要将OrderDto转换为Order实体并保存到数据库
-            // 为了简化，这里返回一个模拟响应
-            return ResponseEntity.ok().body(orderDto);
+            System.out.println("返回订单数据: " + resultDto);
+            
+            return ResponseEntity.ok().body(resultDto);
         } catch (Exception e) {
             System.err.println("订单创建错误: " + e.getMessage());
             e.printStackTrace();
@@ -110,13 +154,33 @@ public class OrderController {
             @PathVariable Long orderId,
             @RequestParam String status) {
         try {
-            // 这里需要实现通过OrderService更新订单状态
-            // 为了简化，这里返回一个模拟响应
+            System.out.println("收到订单状态更新请求 - orderId: " + orderId + ", status: " + status);
+            
+            // 调用OrderService更新订单状态
+            Order updatedOrder = orderService.updateOrderStatus(orderId, status);
+            
+            // 转换为OrderDto
             OrderDto orderDto = new OrderDto();
-            orderDto.setId(orderId);
-            orderDto.setStatus(status);
+            orderDto.setId(updatedOrder.getId());
+            orderDto.setOrderNumber(updatedOrder.getOrderNumber());
+            orderDto.setUserId(updatedOrder.getUserId());
+            orderDto.setShelterId(updatedOrder.getShelterId());
+            orderDto.setStatus(updatedOrder.getOrderStatus());
+            orderDto.setPaymentStatus(updatedOrder.getPaymentStatus());
+            orderDto.setTotalAmount(updatedOrder.getTotalAmount());
+            orderDto.setShippingAddress(updatedOrder.getShippingAddress());
+            orderDto.setContactPhone(updatedOrder.getContactPhone());
+            orderDto.setContactEmail(updatedOrder.getContactEmail());
+            orderDto.setNotes(updatedOrder.getNotes());
+            orderDto.setCreatedAt(updatedOrder.getCreatedAt());
+            orderDto.setUpdatedAt(updatedOrder.getUpdatedAt());
+            
+            System.out.println("订单状态更新成功 - orderId: " + orderId + ", newStatus: " + updatedOrder.getOrderStatus());
+            
             return ResponseEntity.ok(orderDto);
         } catch (Exception e) {
+            System.err.println("订单状态更新错误: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
     }

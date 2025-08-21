@@ -20,4 +20,8 @@ public interface NeedsListRepository extends JpaRepository<NeedsList, Long> {
     
     @Query("SELECT nl FROM NeedsList nl WHERE nl.isActive = true AND nl.totalWeightGrams >= :minWeight")
     List<NeedsList> findByMinWeight(@Param("minWeight") Integer minWeight);
+    
+    // 避難所の最新の必要物資リスト取得
+    @Query("SELECT nl FROM NeedsList nl WHERE nl.shelterId = :shelterId AND nl.isActive = true ORDER BY nl.createdAt DESC")
+    List<NeedsList> findLatestByShelterId(@Param("shelterId") Long shelterId);
 }

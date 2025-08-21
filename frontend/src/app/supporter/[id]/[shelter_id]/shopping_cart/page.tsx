@@ -184,10 +184,7 @@ export default function SupporterShoppingCartPage() {
        const confirmed = confirm(`支援手続きに進みます。注文番号: ${createdOrder.orderNumber || 'N/A'}\n\n確認しますか？`);
        
        if (confirmed) {
-         // カートをクリア
-         await clearCartApi(parseInt(supporterId), parseInt(shelterId));
-         
-         // 支払いページにリダイレクト
+         // 支払いページにリダイレクト（カートは支払い完了後にクリア）
          window.location.href = `/supporter/${supporterId}/${shelterId}/payment?orderId=${createdOrder.id}`;
        }
      } catch (error) {
@@ -209,6 +206,19 @@ export default function SupporterShoppingCartPage() {
     <SupporterLayout>
       <div className="min-h-screen bg-white pb-28">
         <div className="mx-auto max-w-screen-xl px-4 pt-8">
+          {/* 返回按钮 */}
+          <div className="mb-4">
+            <a 
+              href={`/supporter/${supporterId}/${shelterId}/supplies`}
+              className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              物資一覧に戻る
+            </a>
+          </div>
+          
           <h1 className="text-3xl font-extrabold tracking-tight">買い物かご</h1>
           <p className="text-sm text-gray-600 mt-1">
             {loading ? "読み込み中…" : <>最終更新：<b>{new Date(cart.updatedAtISO).toLocaleString()}</b></>}

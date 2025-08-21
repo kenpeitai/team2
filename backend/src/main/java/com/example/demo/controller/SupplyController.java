@@ -148,6 +148,32 @@ public class SupplyController {
         }
     }
     
+    // 避難所の最新の必要物資リスト取得（支援者用）
+    @GetMapping("/needs-lists/shelter/{shelterId}/latest")
+    @Operation(summary = "避難所の最新必要物資リスト取得", description = "指定された避難所の最新の必要物資リストを取得します")
+    public ResponseEntity<NeedsListDto> getLatestNeedsListByShelter(@PathVariable Long shelterId) {
+        try {
+            List<NeedsList> needsLists = needsListRepository.findLatestByShelterId(shelterId);
+            if (needsLists.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            NeedsList latestNeedsList = needsLists.get(0);
+            NeedsListDto needsListDto = convertToNeedsListDto(latestNeedsList);
+            
+            // 明細項目も取得
+            List<NeedsListItem> items = needsListItemRepository.findByNeedsListId(latestNeedsList.getId());
+            List<NeedsListDto.NeedsListItemDto> itemDtos = items.stream()
+                .map(this::convertToNeedsListItemDto)
+                .collect(Collectors.toList());
+            needsListDto.setItems(itemDtos);
+            
+            return ResponseEntity.ok(needsListDto);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
     // 必要物資リスト詳細取得
     @GetMapping("/needs-lists/{id}")
     @Operation(summary = "必要物資リスト詳細取得", description = "指定されたIDの必要物資リストの詳細を取得します")
