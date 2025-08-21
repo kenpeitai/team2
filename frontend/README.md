@@ -7,16 +7,49 @@
 - パッケージマネージャ: npm（`package-lock.json` あり）
 
 ### セットアップ
-```bash
-# 依存関係のインストール（初回 or lockfile 変更時）
-npm ci
-# lockfile を更新したい場合は npm install でも可
-# npm install
 
-# 環境変数の設定
-cp .env.example .env.local
-# .env.localファイルを編集して、実際の値を設定してください
+#### 推奨手順（新規メンバー向け）
+
+```bash
+# 1. フロントエンドディレクトリに移動
+cd frontend
+
+# 2. 依存関係のインストール
+npm ci
+
+# 3. 環境変数ファイルの作成
+touch .env.local
+
+# 4. .env.localファイルを編集して環境変数を設定
+# エディタで.env.localファイルを開いて以下の内容を追加してください
 ```
+
+#### 環境変数の設定
+
+`.env.local`ファイルに以下の内容を追加してください：
+
+```env
+# 楽天市場API設定
+NEXT_PUBLIC_RAKUTEN_APP_ID=your_rakuten_application_id_here
+
+# APIベースURL（デフォルト: http://localhost:8080）
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+
+# 開発環境設定
+NODE_ENV=development
+```
+
+**重要**: `your_rakuten_application_id_here`を実際の楽天市場APIアプリケーションIDに置き換えてください。
+
+#### 楽天市場APIアプリケーションIDの取得手順
+
+1. [楽天ウェブサービス](https://webservice.rakuten.co.jp/)にアクセス
+2. アカウントを作成またはログイン
+3. 「アプリケーションID」を取得
+4. 「商品価格ナビ商品検索API」の利用規約に同意
+5. 取得したアプリケーションIDを`NEXT_PUBLIC_RAKUTEN_APP_ID`に設定
+
+詳細は `RAKUTEN_API_SETUP.md` を参照してください。
 
 ### 開発サーバの起動
 ```bash
@@ -46,15 +79,11 @@ npm run lint
 - サイズは `layout.tsx` 内の `width`/`height` で調整できます。
 - 画像を差し替える場合は同名で置換、または `src` のパスを変更してください。
 
-### 環境変数の設定
+### 注意事項
 
-このプロジェクトでは楽天市場APIを使用しています。以下の手順で環境変数を設定してください：
-
-1. `.env.example`ファイルを`.env.local`にコピー
-2. `.env.local`ファイルを編集して、実際の値を設定
-3. 楽天市場APIのアプリケーションIDを取得して設定
-
-詳細は `RAKUTEN_API_SETUP.md` を参照してください。
+- `.env.local`ファイルはGitにコミットしないでください（機密情報を含むため）
+- 楽天市場APIの利用制限にご注意ください
+- アプリケーションIDは必ず実際の値に置き換えてください
 
 ### メモ
 - App Router では `app/layout.tsx` が自動で各 `page.tsx` に適用されます。各ページに `<Layout>` を書く必要はありません。
