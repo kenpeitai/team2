@@ -2,14 +2,10 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useParams } from 'next/navigation';
 import SupporterLayout from '@/components/SupporterLayout';
-<<<<<<< HEAD
-import { addItemToCart, getCart } from '@/lib/api/cart';
 import { getLatestNeedsListByShelter } from '@/lib/api/supplies';
 import type { NeedsListDto, NeedsListItemDto } from '@/types/api';
-=======
 import BackButton from '@/components/BackButton';
 import { addItemToCart } from '@/lib/api/cart';
->>>>>>> origin/main
 
 // ===== Rakutenブランドカラー定義 =====
 const RAKUTEN_RED = "#BF0000";

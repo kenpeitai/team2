@@ -207,7 +207,6 @@ export default function SupporterShoppingCartPage() {
     <SupporterLayout>
       <div className="min-h-screen bg-white pb-28">
         <div className="mx-auto max-w-screen-xl px-4 pt-8">
-<<<<<<< HEAD:frontend/src/app/supporter/[id]/[shelter_id]/shopping_cart/page.tsx
           {/* 返回按钮 */}
           <div className="mb-4">
             <a 
@@ -221,11 +220,9 @@ export default function SupporterShoppingCartPage() {
             </a>
           </div>
           
-=======
           <div className="mb-6">
             <BackButton fallbackHref={`/supporter/${supporterId}/home`} />
           </div>
->>>>>>> origin/main:frontend/src/app/supporter/[id]/[shelter_id]/shopping-cart/page.tsx
           <h1 className="text-3xl font-extrabold tracking-tight">買い物かご</h1>
           <p className="text-sm text-gray-600 mt-1">
             {loading ? "読み込み中…" : <>最終更新：<b>{new Date(cart.updatedAtISO).toLocaleString()}</b></>}

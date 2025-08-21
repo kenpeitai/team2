@@ -2,14 +2,9 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-<<<<<<< HEAD
-import { useRouter } from "next/navigation";
-import { useParams } from "next/navigation";
 import { getUserPaymentInfo, updateUserPaymentInfo, UserPaymentInfo } from "@/lib/api/userPayment";
-=======
 import BackButton from "@/components/BackButton";
 import { useRouter, useParams } from "next/navigation";
->>>>>>> origin/main
 
 // ===== Types =====
 export type PaymentMethod = "card"; // 避難所向け: カード限定
@@ -58,15 +53,11 @@ function cvcLength(brand: SavedCard["brand"]) {
 // ===== Page =====
 export default function PaymentPage() {
   const router = useRouter();
-<<<<<<< HEAD
-  const params = useParams();
   
   // 从URL参数中获取supporterId和shelterId，使用useState来避免SSR问题
   const [supporterId, setSupporterId] = useState<string>("");
   const [shelterId, setShelterId] = useState<string>("");
-=======
   const params = useParams<{ id: string; shelter_id: string }>();
->>>>>>> origin/main
 
   const [method, setMethod] = useState<PaymentMethod>("card");
   const [saveCard, setSaveCard] = useState(true);

@@ -20,7 +20,7 @@ export default function LoginPage() {
         setMessage('ログインしました。リダイレクト中...');
         // ログイン成功時に支援者のホーム画面に遷移
         setTimeout(() => {
-          router.push('/supporter/home');
+          router.push(`/supporter/${res.user?.id}/home`);
         }, 1000);
       } else {
         setMessage(res.message ?? 'ログインに失敗しました');

@@ -3,18 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-<<<<<<< HEAD:frontend/src/app/supporter/[id]/[shelter_id]/order_confirm/page.tsx
 import { getCart } from '@/lib/api/cart';
 import { request } from '@/lib/api/base';
 import { getUserPaymentInfo } from '@/lib/api/userPayment';
-=======
 import BackButton from "@/components/BackButton";
-<<<<<<< HEAD
-import Layout from "@/components/Layout";
->>>>>>> origin/main:frontend/src/app/supporter/[id]/[shelter_id]/order-confirm/page.tsx
-=======
-import Layout from "@/components/ShelterLayout";
->>>>>>> main
 
 // 型定義
 interface PaymentData {
@@ -45,13 +37,14 @@ interface OrderData {
   totalAmount: number;
 }
 
+interface OrderResponse {
+  id: number;
+  orderNumber: string;
+}
+
 export default function OrderConfirmationPage() {
   const router = useRouter();
-<<<<<<< HEAD:frontend/src/app/supporter/[id]/[shelter_id]/order_confirm/page.tsx
-  const params = useParams();
-=======
   const params = useParams<{ id: string; shelter_id: string }>();
->>>>>>> origin/main:frontend/src/app/supporter/[id]/[shelter_id]/order-confirm/page.tsx
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -189,7 +182,7 @@ export default function OrderConfirmationPage() {
             notes: null
           }))
         })
-      });
+      }) as OrderResponse;
       
       console.log("订单创建成功:", orderResponse);
       
@@ -215,15 +208,10 @@ export default function OrderConfirmationPage() {
       
       console.log("订单状态更新成功:", updateOrderResponse);
       
-<<<<<<< HEAD:frontend/src/app/supporter/[id]/[shelter_id]/order_confirm/page.tsx
-      // 成功メッセージ
-      alert("注文を確定しました！支払いも完了しました。");
-=======
       // 完了ページに遷移（URLパラメータから正しいIDを取得）
       const pathSegments = window.location.pathname.split('/');
-      const supporterId = pathSegments[2];
-      const shelterId = pathSegments[3];
->>>>>>> origin/main:frontend/src/app/supporter/[id]/[shelter_id]/order-confirm/page.tsx
+      const pathSupporterId = pathSegments[2];
+      const pathShelterId = pathSegments[3];
       
       // 完了ページに必要なデータを保存
       const completeData = {
@@ -231,12 +219,11 @@ export default function OrderConfirmationPage() {
         orderId: orderResponse.id,
         orderNumber: orderResponse.orderNumber,
         totalAmount: orderData.totalAmount,
-        supporterId,
-        shelterId
+        supporterId: pathSupporterId,
+        shelterId: pathShelterId
       };
       localStorage.setItem("paymentData", JSON.stringify(completeData));
       
-<<<<<<< HEAD:frontend/src/app/supporter/[id]/[shelter_id]/order_confirm/page.tsx
       // データベースのカートをクリア（支払い完了後）
       try {
         await request(`/api/cart/${supporterId}/${shelterId}`, {
@@ -247,10 +234,7 @@ export default function OrderConfirmationPage() {
         console.warn('カートのクリアに失敗しましたが、注文は完了しています');
       }
       
-      router.push(`/supporter/${supporterId}/${shelterId}/order_conplete`);
-=======
-      router.push(`/supporter/${supporterId}/${shelterId}/order-complete`);
->>>>>>> origin/main:frontend/src/app/supporter/[id]/[shelter_id]/order-confirm/page.tsx
+      router.push(`/supporter/${pathSupporterId}/${pathShelterId}/order-complete`);
       
       // localStorageをクリア（paymentDataは完了ページで使用するため残す）
       localStorage.removeItem("cart");
@@ -274,7 +258,6 @@ export default function OrderConfirmationPage() {
 
   if (!orderData) {
     return (
-      <Layout>
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center py-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">注文データが見つかりません</h1>
@@ -287,7 +270,6 @@ export default function OrderConfirmationPage() {
           </Link>
         </div>
       </div>
-      </Layout>
     );
   }
 

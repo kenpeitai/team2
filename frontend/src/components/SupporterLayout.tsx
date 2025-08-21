@@ -1,18 +1,14 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-<<<<<<< HEAD
 import { usePathname } from "next/navigation";
-=======
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/lib/api";
->>>>>>> main
 
 export default function SupporterLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-<<<<<<< HEAD
   const pathname = usePathname();
   
   // 判断是否应该显示"かごを見る"链接
@@ -22,16 +18,17 @@ export default function SupporterLayout({
                            pathname.includes('/order_confirm');
   
   // 生成购物车链接
-  const getCartLink = () => {
+  const getCartLink = (): string => {
     const pathParts = pathname.split('/');
     if (pathParts.length >= 4) {
       // 从路径中提取supporter ID和shelter ID
       const supporterId = pathParts[2];
       const shelterId = pathParts[3];
-      return `/supporter/${supporterId}/${shelterId}/shopping_cart`;
+      return `/supporter/${supporterId}/${shelterId}/shopping-cart`;
     }
-    return '/supporter/1/1/shopping_cart'; // 默认链接
-=======
+    return '/supporter/1/1/shopping-cart'; // 默认链接
+  };
+
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -50,8 +47,8 @@ export default function SupporterLayout({
       localStorage.removeItem("token");
       router.push("/supporter/login");
     }
->>>>>>> main
   };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 上部ナビゲーション（支援者用） */}
@@ -77,8 +74,6 @@ export default function SupporterLayout({
 
             {/* 右ナビ（必要に応じて調整） */}
             <div className="flex items-center space-x-4">
-<<<<<<< HEAD
-<<<<<<< HEAD
               {shouldShowCartLink && (
                 <Link
                   href={getCartLink()}
@@ -90,9 +85,6 @@ export default function SupporterLayout({
                   かごを見る
                 </Link>
               )}
-=======
-              {/* かごページのパスは運用に合わせて。/cart か /supporter/cart など */}
-=======
               {mounted && isLoggedIn ? (
                 <button
                   onClick={handleLogout}
@@ -115,18 +107,12 @@ export default function SupporterLayout({
               >
                 新規登録
               </Link>
->>>>>>> main
               <Link
                 href="/supporter/shopping-cart"
                 className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 かごを見る
               </Link>
-<<<<<<< HEAD
-             
->>>>>>> origin/main
-=======
->>>>>>> main
             </div>
           </div>
         </div>
