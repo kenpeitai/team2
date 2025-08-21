@@ -5,11 +5,11 @@ import { request } from './base';
 export const getInventoryByShelter = (shelterId: number) =>
   request<InventoryDto[]>(`/api/inventory/${shelterId}`);
 
-// 在庫数量更新
-export const updateInventoryQuantity = (id: number, quantity: number) =>
+// 在庫数量更新（バックエンドの@Validに合わせてDTO全体を送る）
+export const updateInventoryQuantity = (id: number, body: InventoryDto) =>
   request<InventoryDto>(`/api/inventory/${id}`, {
     method: 'PUT',
-    body: JSON.stringify({ quantity }),
+    body: JSON.stringify(body),
   });
 
 // 在庫アイテム追加
