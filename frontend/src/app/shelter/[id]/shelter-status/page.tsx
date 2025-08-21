@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useShelter } from '@/hooks/useShelter';
-import Layout from '@/components/Layout';
+import Layout from '@/components/ShelterLayout';
 import { getShelterStatus } from '@/lib/api/shelterStatus';
 import type { ShelterStatusDto } from '@/types/api';
 import { UtilityStatus, TrafficStatus } from '@/types/api';

@@ -1,9 +1,32 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { logout } from "@/lib/api";
 
 export default function SupporterLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    setIsLoggedIn(!!localStorage.getItem("token"));
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Failed to logout", error);
+    } finally {
+      localStorage.removeItem("token");
+      router.push("/supporter/login");
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 上部ナビゲーション（支援者用） */}
@@ -29,14 +52,34 @@ export default function SupporterLayout({
 
             {/* 右ナビ（必要に応じて調整） */}
             <div className="flex items-center space-x-4">
-              {/* かごページのパスは運用に合わせて。/cart か /supporter/cart など */}
+              {mounted && isLoggedIn ? (
+                <button
+                  onClick={handleLogout}
+                  className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  type="button"
+                >
+                  ログアウト
+                </button>
+              ) : (
+                <Link 
+                  href="/supporter/login" 
+                  className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  ログイン
+                </Link>
+              )}
+              <Link 
+                href="/supporter/register" 
+                className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                新規登録
+              </Link>
               <Link
                 href="/supporter/shopping-cart"
                 className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 かごを見る
               </Link>
-             
             </div>
           </div>
         </div>

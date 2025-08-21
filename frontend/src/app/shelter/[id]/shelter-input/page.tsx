@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useShelter } from '@/hooks/useShelter';
 import { ShelterStatusDto, UtilityStatus, TrafficStatus } from '@/types/api';
-import Layout from '@/components/Layout';
+import Layout from '@/components/ShelterLayout';
 import { updateShelterStatusRecord } from '@/lib/api/shelterStatus';
 import BackButton from '@/components/BackButton';
 

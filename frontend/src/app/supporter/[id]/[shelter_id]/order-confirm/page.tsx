@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import BackButton from "@/components/BackButton";
-import Layout from "@/components/Layout";
+import Layout from "@/components/ShelterLayout";
 
 // 型定義
 interface PaymentData {

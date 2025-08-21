@@ -1,7 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Layout from '@/components/Layout';
+import Layout from '@/components/ShelterLayout';
 import { createShelter } from '@/lib/api';
 import { runValidation, required, minLengthN, emailFmt, phoneFmt } from '@/lib/validation';
 import type { ApiError, ShelterDto } from '@/types/api';
