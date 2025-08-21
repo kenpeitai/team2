@@ -14,14 +14,27 @@ export default function LoginPage() {
     const email = form.get('email');
     const password = form.get('password');
     const body = { email: typeof email === 'string' ? email : '', password: typeof password === 'string' ? password : '' };
+    
     const res = await loginShelter(body);
     if (res.token) {
       localStorage.setItem('token', res.token);
-      setMessage('ログインしました。リダイレクト中...');
-      // ログイン成功時にシェルターのホーム画面に遷移
-      setTimeout(() => {
-        router.push('/shelter/home');
-      }, 1000);
+      
+      // シェルターIDを取得（APIレスポンスから、またはトークンから抽出）
+      let shelterId = res.shelter?.id;
+      if (!shelterId && res.token.includes('dummy-token-')) {
+        shelterId = parseInt(res.token.replace('dummy-token-', ''));
+      }
+      
+      if (shelterId) {
+        localStorage.setItem('shelterId', shelterId.toString());
+        setMessage('ログインしました。リダイレクト中...');
+        // ログイン成功時にシェルターのホーム画面に遷移（IDを含む）
+        setTimeout(() => {
+          router.push(`/shelter/${shelterId}/home`);
+        }, 1000);
+      } else {
+        setMessage('シェルターIDの取得に失敗しました');
+      }
     } else {
       setMessage(res.message ?? 'ログインに失敗しました');
     }

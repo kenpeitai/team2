@@ -201,6 +201,7 @@ export interface AuthResponse {
   token?: string;
   message?: string;
   user?: UserDto;
+  shelter?: ShelterDto;
   timestamp?: string;
 }
 

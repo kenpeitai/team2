@@ -99,11 +99,12 @@ public class AuthController {
             
             if (shelterOpt.isPresent()) {
                 Shelter shelter = shelterOpt.get();
+                ShelterDto shelterDto = convertToShelterDto(shelter);
                 
                 AuthResponse response = new AuthResponse(
                     "dummy-token-" + shelter.getId(), // 実際のJWTトークンを生成する必要があります
                     "避難所ログインが完了しました", 
-                    null
+                    shelterDto
                 );
                 
                 return ResponseEntity.ok(response);
@@ -135,6 +136,28 @@ public class AuthController {
         dto.setIsActive(user.getIsActive());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
+        return dto;
+    }
+    
+    // ShelterエンティティをShelterDtoに変換
+    private ShelterDto convertToShelterDto(Shelter shelter) {
+        ShelterDto dto = new ShelterDto();
+        dto.setId(shelter.getId());
+        dto.setShelterName(shelter.getShelterName());
+        dto.setShelterAddress(shelter.getShelterAddress());
+        dto.setRepresentativeLastName(shelter.getRepresentativeLastName());
+        dto.setRepresentativeFirstName(shelter.getRepresentativeFirstName());
+        dto.setPhoneNumber(shelter.getPhoneNumber());
+        dto.setEmail(shelter.getEmail());
+        dto.setEvacueeCount(shelter.getEvacueeCount());
+        dto.setInjuredCount(shelter.getInjuredCount());
+        dto.setElectricityStatus(shelter.getElectricityStatus());
+        dto.setGasStatus(shelter.getGasStatus());
+        dto.setWaterStatus(shelter.getWaterStatus());
+        dto.setTrafficStatus(shelter.getTrafficStatus());
+        dto.setIsActive(shelter.getIsActive());
+        dto.setCreatedAt(shelter.getCreatedAt());
+        dto.setUpdatedAt(shelter.getUpdatedAt());
         return dto;
     }
 }
