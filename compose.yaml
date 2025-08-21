@@ -12,7 +12,7 @@ services:
       - /app/node_modules
     environment:
       # 使用宿主机IP，让前端能正确调用后端API
-      - REACT_APP_API_URL=http://host.docker.internal:8080
+      - NEXT_PUBLIC_API_BASE_URL=http://host.docker.internal:8080
       - CHOKIDIDAR_USEPOLLING=true  # Windows文件系统兼容性
     # 移除依赖关系，让前端可以独立启动
     # depends_on:

@@ -1,6 +1,7 @@
 import type { ApiError } from '@/types/api';
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
+// const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://backend:8080';
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {

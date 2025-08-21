@@ -2,6 +2,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useParams } from 'next/navigation';
 import SupporterLayout from '@/components/SupporterLayout';
+import { addItemToCart, getCart } from '@/lib/api/cart';
 
 // ===== Rakutenブランドカラー定義 =====
 const RAKUTEN_RED = "#BF0000";
@@ -185,6 +186,17 @@ const getShelterData = (shelterId: string): NeedsListPayload => {
   return shelterDataMap[shelterId] || DEFAULT_SHELTER_DATA;
 };
 
+// 将日文category转换为英文
+const getCategoryInEnglish = (category?: string): string => {
+  switch (category) {
+    case "食料": return "FOOD";
+    case "医薬品": return "MEDICINE";
+    case "衛生": return "HYGIENE";
+    case "生活用品": return "LIVING_SUPPLIES";
+    default: return "OTHER";
+  }
+};
+
 // ===== メインコンポーネント =====
 export default function SupporterDonationPage() {
   const params = useParams();
@@ -260,16 +272,49 @@ export default function SupporterDonationPage() {
       return;
     }
 
+    console.log("开始处理购物车...");
+    console.log("购物车大小:", cart.size);
+    console.log("supporterId:", supporterId);
+    console.log("shelterId:", shelterId);
+
     setIsSubmitting(true);
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 将购物车商品添加到数据库
+      const cartItems = Array.from(cart.values());
+      console.log("准备添加到购物车的商品:", cartItems);
+      
+      const promises = cartItems.map(item => {
+        const needsItem = needsList?.items.find(needsItem => needsItem.id === item.id);
+        const cartItemData = {
+          productId: item.productId,
+          productName: item.productName,
+          unit: item.unit,
+          category: getCategoryInEnglish(needsItem?.category) || "OTHER",
+          quantity: item.quantity,
+          pricePerUnit: needsItem?.estimatedPrice,
+          totalPrice: (needsItem?.estimatedPrice || 0) * item.quantity
+        };
+        console.log("发送到API的数据:", cartItemData);
+        console.log("API URL:", `http://host.docker.internal:8080/api/cart/${supporterId}/${shelterId}/items`);
+        return addItemToCart(parseInt(supporterId), parseInt(shelterId), cartItemData);
+      });
+      
+      console.log("开始执行API调用...");
+      await Promise.all(promises);
+      console.log("所有商品已成功添加到购物车");
       
       // 跳转到购物车页面
       window.location.href = `/supporter/${supporterId}/${shelterId}/shopping_cart`;
     } catch (err) {
       console.error("购物车处理失败:", err);
-      alert("购物车处理失败，请重试。");
+      console.error("错误详情:", err);
+      console.error("错误类型:", typeof err);
+      console.error("错误堆栈:", err instanceof Error ? err.stack : 'No stack trace');
+      if (err instanceof Error) {
+        alert(`购物车处理失败: ${err.message}`);
+      } else {
+        alert("购物车处理失败，请重试。");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -444,7 +489,7 @@ export default function SupporterDonationPage() {
                           className="h-4 w-4"
                           aria-hidden="true"
                         >
-                          <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 S0 11-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 11-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
                         <span>買い物かごに追加</span>
                       </>

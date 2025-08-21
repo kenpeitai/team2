@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useParams } from 'next/navigation';
+import { getCart, updateCartItemQuantity, removeItemFromCart, clearCart as clearCartApi } from '@/lib/api/cart';
+import SupporterLayout from '@/components/SupporterLayout';
 
 /* ====== 型（このファイル内で完結） ====== */
 type Yen = number;
@@ -41,41 +44,110 @@ function saveCart(next: SupporterCart) {
 
 /* ====== ページ本体 ====== */
 export default function SupporterShoppingCartPage() {
+  const params = useParams();
+  const supporterId = params.id as string;
+  const shelterId = params.shelter_id as string;
+  
   const [cart, setCart] = useState<SupporterCart>({ updatedAtISO: new Date().toISOString(), items: [] });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // 初期ロード & 別タブ同期
+  // 从数据库加载购物车数据
   useEffect(() => {
-    setCart(loadCart());
-    setLoading(false);
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === LS_KEY) setCart(loadCart());
+    const loadCartFromDatabase = async () => {
+      try {
+        setLoading(true);
+        const cartData = await getCart(parseInt(supporterId), parseInt(shelterId));
+        const items: CartItem[] = cartData.items?.map(item => ({
+          productId: item.productId,
+          productName: item.productName,
+          unit: item.unit,
+          quantity: item.quantity,
+          unitPriceYen: item.pricePerUnit,
+          imageUrl: undefined // 暂时不处理图片
+        })) || [];
+        
+        setCart({
+          updatedAtISO: cartData.updatedAt || new Date().toISOString(),
+          items
+        });
+      } catch (error) {
+        console.error('Failed to load cart:', error);
+        // 如果加载失败，使用空购物车
+        setCart({ updatedAtISO: new Date().toISOString(), items: [] });
+      } finally {
+        setLoading(false);
+      }
     };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
 
-  // 状態更新＋保存
-  const updateCart = (updater: (prev: SupporterCart) => SupporterCart) => {
-    setCart(prev => saveCart(updater(prev)));
-  };
+    loadCartFromDatabase();
+  }, [supporterId, shelterId]);
 
   // 操作
-  const updateQty = (id: string, qty: number) => {
-    updateCart(prev => {
-      const items = prev.items
-        .map(x => (x.productId === id ? { ...x, quantity: Math.max(0, Math.floor(qty)) } : x))
-        .filter(x => x.quantity > 0);
-      return { ...prev, items };
-    });
+  const updateQty = async (id: string, qty: number) => {
+    const newQty = Math.max(0, Math.floor(qty));
+    try {
+      if (newQty === 0) {
+        await removeItemFromCart(parseInt(supporterId), parseInt(shelterId), id);
+      } else {
+        await updateCartItemQuantity(parseInt(supporterId), parseInt(shelterId), id, newQty);
+      }
+      
+      // 重新加载购物车数据
+      const cartData = await getCart(parseInt(supporterId), parseInt(shelterId));
+      const items: CartItem[] = cartData.items?.map(item => ({
+        productId: item.productId,
+        productName: item.productName,
+        unit: item.unit,
+        quantity: item.quantity,
+        unitPriceYen: item.pricePerUnit,
+        imageUrl: undefined
+      })) || [];
+      
+      setCart({
+        updatedAtISO: cartData.updatedAt || new Date().toISOString(),
+        items
+      });
+    } catch (error) {
+      console.error('Failed to update quantity:', error);
+      alert('数量の更新に失敗しました。');
+    }
   };
-  const removeItem = (id: string) => {
-    updateCart(prev => ({ ...prev, items: prev.items.filter(x => x.productId !== id) }));
+  
+  const removeItem = async (id: string) => {
+    try {
+      await removeItemFromCart(parseInt(supporterId), parseInt(shelterId), id);
+      
+      // 重新加载购物车数据
+      const cartData = await getCart(parseInt(supporterId), parseInt(shelterId));
+      const items: CartItem[] = cartData.items?.map(item => ({
+        productId: item.productId,
+        productName: item.productName,
+        unit: item.unit,
+        quantity: item.quantity,
+        unitPriceYen: item.pricePerUnit,
+        imageUrl: undefined
+      })) || [];
+      
+      setCart({
+        updatedAtISO: cartData.updatedAt || new Date().toISOString(),
+        items
+      });
+    } catch (error) {
+      console.error('Failed to remove item:', error);
+      alert('商品の削除に失敗しました。');
+    }
   };
-  const clearAll = () => {
+  
+  const clearAll = async () => {
     if (confirm("カートを空にしますか？")) {
-      updateCart(() => ({ updatedAtISO: new Date().toISOString(), items: [] }));
+      try {
+        await clearCartApi(parseInt(supporterId), parseInt(shelterId));
+        setCart({ updatedAtISO: new Date().toISOString(), items: [] });
+      } catch (error) {
+        console.error('Failed to clear cart:', error);
+        alert('カートのクリアに失敗しました。');
+      }
     }
   };
 
@@ -100,7 +172,8 @@ export default function SupporterShoppingCartPage() {
   }, [cart]);
 
   return (
-    <div className="min-h-screen bg-white pb-28">
+    <SupporterLayout>
+      <div className="min-h-screen bg-white pb-28">
       <div className="mx-auto max-w-screen-xl px-4 pt-8">
         <h1 className="text-3xl font-extrabold tracking-tight">買い物かご</h1>
         <p className="text-sm text-gray-600 mt-1">
@@ -201,7 +274,7 @@ export default function SupporterShoppingCartPage() {
           </aside>
         </section>
       </div>
-    </div>
+    </SupporterLayout>
   );
 }
 
