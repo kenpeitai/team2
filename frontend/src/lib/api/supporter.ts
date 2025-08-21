@@ -14,23 +14,23 @@ export const updateSupporterProfile = (userId: number, body: Partial<UserDto>) =
 
 // 支援可能避難所一覧
 export const getAvailableSheltersForSupporter = () =>
-  request<object[]>(`/api/supporter/available-shelters`);
+  request<any[]>(`/api/supporter/available-shelters`);
 
 // 支援履歴取得
 export const getSupportHistory = (userId: number) =>
-  request<object[]>(`/api/supporter/support-history/${userId}`);
+  request<any[]>(`/api/supporter/support-history/${userId}`);
 
 // 支援者統計情報
 export const getSupporterStatistics = (userId: number) =>
-  request<object>(`/api/supporter/statistics/${userId}`);
+  request<any>(`/api/supporter/statistics/${userId}`);
 
 // 通知設定取得
 export const getNotificationSettings = (userId: number) =>
-  request<object>(`/api/supporter/notifications/${userId}`);
+  request<any>(`/api/supporter/notifications/${userId}`);
 
 // 通知設定更新
-export const updateNotificationSettings = (userId: number, settings: object) =>
-  request<object>(`/api/supporter/notifications/${userId}`, {
+export const updateNotificationSettings = (userId: number, settings: any) =>
+  request<any>(`/api/supporter/notifications/${userId}`, {
     method: 'PUT',
     body: JSON.stringify(settings),
   });

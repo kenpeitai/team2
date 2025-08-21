@@ -52,9 +52,13 @@ public class CartController {
             @PathVariable Long shelterId,
             @RequestBody CartItemDto itemDto) {
         try {
+            System.out.println("Received cart item request - userId: " + userId + ", shelterId: " + shelterId);
+            System.out.println("Cart item data: " + itemDto);
             CartItemDto addedItem = cartService.addItemToCart(userId, shelterId, itemDto);
             return ResponseEntity.ok(addedItem);
         } catch (Exception e) {
+            System.err.println("Error adding item to cart: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
     }

@@ -31,12 +31,10 @@ spring:
         # PostgreSQL特定配置
         jdbc:
           batch_size: 20
-        # 启用二级缓存
+        # 禁用二级缓存（避免依赖问题）
         cache:
-          use_second_level_cache: true
-          use_query_cache: true
-          region:
-            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+          use_second_level_cache: false
+          use_query_cache: false
   
   # Docker环境禁用Flyway，使用JPA自动建表
   flyway:

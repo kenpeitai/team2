@@ -25,21 +25,19 @@ public class UserService {
     
     // ユーザー登録
     public User createUser(UserDto userDto) {
-        // ユーザー名の重複チェック
-        if (userRepository.existsByUsername(userDto.getUsername())) {
-            throw new DuplicateResourceException("このユーザー名は既に使用されています");
-        }
-        
         // メールアドレスの重複チェック
         if (userRepository.existsByEmail(userDto.getEmail())) {
             throw new DuplicateResourceException("このメールアドレスは既に登録されています");
         }
         
         User user = new User();
-        user.setUsername(userDto.getUsername());
         user.setEmail(userDto.getEmail());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         user.setFullName(userDto.getFullName());
+        user.setPhoneNumber(userDto.getPhoneNumber());
+        user.setCardNumber(userDto.getCardNumber());
+        user.setCardExpiry(userDto.getCardExpiry());
+        user.setCardCvc(userDto.getCardCvc());
         user.setRole(userDto.getRole() != null ? userDto.getRole() : UserRole.USER);
         user.setIsActive(true);
         
@@ -48,50 +46,55 @@ public class UserService {
     
     // ユーザー情報更新
     public User updateUser(Long id, UserDto userDto) {
-        User user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("ユーザーが見つかりません: " + id));
-        
-        // ユーザー名の重複チェック（自分以外）
-        if (!user.getUsername().equals(userDto.getUsername()) && 
-            userRepository.existsByUsername(userDto.getUsername())) {
-            throw new DuplicateResourceException("このユーザー名は既に使用されています");
-        }
+        User user = getUserById(id);
         
         // メールアドレスの重複チェック（自分以外）
-        if (!user.getEmail().equals(userDto.getEmail()) && 
-            userRepository.existsByEmail(userDto.getEmail())) {
-            throw new DuplicateResourceException("このメールアドレスは既に登録されています");
+        if (userDto.getEmail() != null && !userDto.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(userDto.getEmail())) {
+                throw new DuplicateResourceException("このメールアドレスは既に使用されています");
+            }
+            user.setEmail(userDto.getEmail());
         }
         
-        user.setUsername(userDto.getUsername());
-        user.setEmail(userDto.getEmail());
-        user.setFullName(userDto.getFullName());
+        if (userDto.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        }
+        
+        if (userDto.getFullName() != null) {
+            user.setFullName(userDto.getFullName());
+        }
+        
+        if (userDto.getPhoneNumber() != null) {
+            user.setPhoneNumber(userDto.getPhoneNumber());
+        }
+        
+        if (userDto.getCardNumber() != null) {
+            user.setCardNumber(userDto.getCardNumber());
+        }
+        
+        if (userDto.getCardExpiry() != null) {
+            user.setCardExpiry(userDto.getCardExpiry());
+        }
+        
+        if (userDto.getCardCvc() != null) {
+            user.setCardCvc(userDto.getCardCvc());
+        }
+        
         if (userDto.getRole() != null) {
             user.setRole(userDto.getRole());
         }
         
-        return userRepository.save(user);
-    }
-    
-    // パスワード更新
-    public User updatePassword(Long id, String newPassword) {
-        User user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("ユーザーが見つかりません: " + id));
+        if (userDto.getIsActive() != null) {
+            user.setIsActive(userDto.getIsActive());
+        }
         
-        user.setPassword(passwordEncoder.encode(newPassword));
         return userRepository.save(user);
     }
     
-    // ユーザー情報取得
+    // ユーザー取得
     public User getUserById(Long id) {
         return userRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("ユーザーが見つかりません: " + id));
-    }
-    
-    // ユーザー名で取得
-    public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("ユーザーが見つかりません: " + username));
     }
     
     // メールアドレスで取得
@@ -116,8 +119,8 @@ public class UserService {
     }
     
     // 複合検索
-    public List<User> searchUsersAdvanced(String username, String email, UserRole role, Boolean isActive) {
-        return userRepository.searchUsersAdvanced(username, email, role, isActive);
+    public List<User> searchUsersAdvanced(String email, UserRole role, Boolean isActive) {
+        return userRepository.searchUsersAdvanced(email, role, isActive);
     }
     
     // ユーザー削除（論理削除）
@@ -130,18 +133,6 @@ public class UserService {
     // ユーザー認証
     public Optional<User> authenticateUser(String email, String password) {
         Optional<User> userOpt = userRepository.findByEmail(email);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            if (passwordEncoder.matches(password, user.getPassword())) {
-                return Optional.of(user);
-            }
-        }
-        return Optional.empty();
-    }
-    
-    // ユーザー名で認証
-    public Optional<User> authenticateUserByUsername(String username, String password) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             if (passwordEncoder.matches(password, user.getPassword())) {
