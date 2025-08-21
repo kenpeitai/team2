@@ -40,7 +40,7 @@ export default function OrderConfirmationPage() {
 
   useEffect(() => {
     // localStorageから支払いデータとカートデータを取得
-    const paymentData = localStorage.getItem("checkout.payment");
+    const paymentData = localStorage.getItem("paymentData");
     const cartData = localStorage.getItem("cart");
     
     console.log("支払いデータ:", paymentData);
@@ -180,11 +180,24 @@ export default function OrderConfirmationPage() {
       // 成功メッセージ
       alert("注文を確定しました！支払いも完了しました。");
       
-      // 完了ページに遷移
-      router.push(`/supporter/${router.query?.id || '1'}/${router.query?.shelter_id || '1'}/order_conplete`);
+      // 完了ページに遷移（URLパラメータから正しいIDを取得）
+      const pathSegments = window.location.pathname.split('/');
+      const supporterId = pathSegments[2];
+      const shelterId = pathSegments[3];
       
-      // localStorageをクリア
-      localStorage.removeItem("checkout.payment");
+      // 完了ページに必要なデータを保存
+      const completeData = {
+        ...orderData.payment,
+        orderId: order.id,
+        totalAmount: orderData.totalAmount,
+        supporterId,
+        shelterId
+      };
+      localStorage.setItem("paymentData", JSON.stringify(completeData));
+      
+      router.push(`/supporter/${supporterId}/${shelterId}/order_conplete`);
+      
+      // localStorageをクリア（paymentDataは完了ページで使用するため残す）
       localStorage.removeItem("cart");
     } catch (error) {
       console.error("注文の確定に失敗しました:", error);

@@ -17,9 +17,9 @@ export default function OrderConpletePage() {
       try {
         const payment = JSON.parse(paymentData);
         setOrderInfo(payment);
-        setOrderId(payment.orderId);
-        setTotalAmount(payment.totalAmount);
-        setSupporterId(payment.supporterId);
+        setOrderId(payment.orderId || "生成中...");
+        setTotalAmount(payment.totalAmount || 0);
+        setSupporterId(payment.supporterId || "1");
       } catch (error) {
         console.error("支払いデータの解析に失敗しました:", error);
       }
@@ -27,7 +27,15 @@ export default function OrderConpletePage() {
   }, []);
 
   const handleContinue = () => {
-    router.push(`/supporter/${supporterId}`);
+    // 使用正确的URL结构跳转回支持者主页
+    if (supporterId) {
+      router.push(`/supporter/${supporterId}/home`);
+    } else {
+      // 如果supporterId不存在，从URL路径获取
+      const pathSegments = window.location.pathname.split('/');
+      const id = pathSegments[2];
+      router.push(`/supporter/${id}/home`);
+    }
   };
 
   return (
@@ -56,7 +64,7 @@ export default function OrderConpletePage() {
               <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex justify-between">
                   <span>注文番号:</span>
-                  <span className="font-medium">{orderId}</span>
+                  <span className="font-medium">{orderId || "生成中..."}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>注文日時:</span>
@@ -64,7 +72,9 @@ export default function OrderConpletePage() {
                 </div>
                 <div className="flex justify-between">
                   <span>合計金額:</span>
-                  <span className="font-medium">¥{totalAmount?.toLocaleString()}</span>
+                  <span className="font-medium">
+                    {totalAmount ? `¥${totalAmount.toLocaleString()}` : "¥0"}
+                  </span>
                 </div>
               </div>
             </div>
