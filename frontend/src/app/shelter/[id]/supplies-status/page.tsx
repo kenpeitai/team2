@@ -1,10 +1,10 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import type { StoredNeeds, Priority, Category } from "@/types/needs";
-import { getOrdersService } from "@/services/ordersService";
 import Layout from "@/components/Layout";
 import BackButton from "@/components/BackButton";
 import { useParams } from "next/navigation";
+import { getNeedsListsByShelter, getNeedsListById } from "@/lib/api/supplies";
 
 const RAKUTEN_RED = "#BF0000";
 const RAKUTEN_RED_HOVER = "#990000";
@@ -34,15 +34,100 @@ export default function SuppliesStatusPage() {
   const [onlyDroneable, setOnlyDroneable] = useState(false);
   const [catFilter, setCatFilter] = useState<"all" | Category>("all");
 
+  const fetchNeedsFromApi = useCallback(async () => {
+    const idStr = params?.id;
+    const shelterId = Number(idStr);
+    if (!Number.isFinite(shelterId) || shelterId <= 0) {
+      setData(null);
+      return;
+    }
+
+    try {
+      const lists = await getNeedsListsByShelter(shelterId);
+      if (!lists || lists.length === 0) {
+        setData(null);
+        return;
+      }
+      const latest = [...lists].sort((a, b) => {
+        const au = a.updatedAt || a.createdAt || "";
+        const bu = b.updatedAt || b.createdAt || "";
+        return bu.localeCompare(au);
+      })[0];
+      if (!latest?.id) {
+        setData(null);
+        return;
+      }
+      const detail = await getNeedsListById(latest.id);
+      const items = (detail.items || []).map((it) => ({
+        id: String(it.id ?? `${it.productId}-${Math.random().toString(36).slice(2)}`),
+        productId: it.productId,
+        productName: it.productName,
+        unit: it.unit,
+        category: it.category as Category,
+        quantity: it.quantity,
+        priority: it.priority as Priority,
+        notes: it.notes,
+        perUnitWeightGrams: it.perUnitWeightGrams,
+        totalWeightGrams: it.totalWeightGrams,
+        droneEligible: it.droneEligible,
+        droneEligibleWholeOrder: it.droneEligibleWholeOrder,
+        dronePerUnitEligible: it.dronePerUnitEligible,
+        droneUnitsPerFlight: it.droneUnitsPerFlight ?? null,
+        droneFlightsRequired: it.droneFlightsRequired ?? null,
+      }));
+
+      const totalsUnits = items.reduce((s, r) => s + (Number(r.quantity) || 0), 0);
+      const totalsWeight = items.reduce((s, r) => s + (Number(r.totalWeightGrams) || 0), 0);
+      const byPriorityInit = { lineCount: 0, units: 0, weightGrams: 0, itemIds: [] as string[] };
+      const byPriority: Record<Priority, typeof byPriorityInit> = {
+        high: { ...byPriorityInit },
+        medium: { ...byPriorityInit },
+        low: { ...byPriorityInit },
+      };
+      for (const it of items) {
+        const b = byPriority[it.priority];
+        b.lineCount += 1;
+        b.units += Number(it.quantity) || 0;
+        b.weightGrams += Number(it.totalWeightGrams) || 0;
+        b.itemIds.push(it.id);
+      }
+      const droneWholeOk: string[] = [];
+      const droneWholeNg: string[] = [];
+      for (const it of items) {
+        (it.droneEligibleWholeOrder ? droneWholeOk : droneWholeNg).push(it.id);
+      }
+
+      const payload = {
+        evacueeCount: detail.evacueeCount,
+        targetDays: detail.targetDays,
+        items,
+        analytics: {
+          totals: { units: totalsUnits, weightGrams: totalsWeight, waterCases: detail.waterCases ?? 0 },
+          byPriority,
+          drone: {
+            payloadLimitGrams: 0,
+            wholeOrderEligibleIds: droneWholeOk,
+            wholeOrderIneligibleIds: droneWholeNg,
+            flights: items.map((it) => ({
+              id: it.id,
+              productId: it.productId,
+              unitsPerFlight: it.droneUnitsPerFlight,
+              flightsRequired: it.droneFlightsRequired,
+            })),
+          },
+        },
+      } satisfies StoredNeeds["payload"];
+
+      setData({ savedAtISO: detail.updatedAt || detail.createdAt || new Date().toISOString(), payload });
+    } catch (e) {
+      console.error("Failed to load needs from API:", e);
+      setData(null);
+    }
+  }, [params?.id]);
+
   useEffect(() => {
-    const svc = getOrdersService();
-    let unsub = () => {};
-    (async () => {
-      setData(await svc.getCurrentDraft());
-      unsub = svc.subscribeCurrentDraft((d) => setData(d));
-    })();
-    return () => unsub();
-  }, []);
+    fetchNeedsFromApi();
+  }, [fetchNeedsFromApi]);
 
   const payload = data?.payload ?? null;
 
@@ -271,7 +356,7 @@ export default function SuppliesStatusPage() {
           {/* アクション */}
           <div className="mt-4 flex flex-wrap gap-2">
             <button
-              onClick={() => getOrdersService().getCurrentDraft().then(setData)}
+              onClick={fetchNeedsFromApi}
               className="rounded-xl px-4 py-2 border hover:bg-gray-50"
             >
               再読み込み
