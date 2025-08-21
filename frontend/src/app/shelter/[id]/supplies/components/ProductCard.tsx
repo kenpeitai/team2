@@ -118,7 +118,7 @@ export function ProductCard({
         {/* 商品名表示 */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">商品名</label>
-          <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
+          <div className="bg-gray-50 border border-gray-200 rounded-md p-3 sm:p-4">
             <div className="flex items-start gap-2">
               <div className="flex-shrink-0 mt-0.5">
                 <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,11 +126,11 @@ export function ProductCard({
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-800 leading-relaxed font-medium">
+                <p className="text-sm sm:text-base text-gray-800 leading-relaxed font-medium break-words whitespace-normal">
                   {product?.rakutenActualProductName || product?.name || "商品名が設定されていません"}
                 </p>
                 {product?.rakutenActualProductName && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1 break-words whitespace-normal">
                     楽天商品名: {product.rakutenActualProductName}
                   </p>
                 )}
@@ -144,17 +144,17 @@ export function ProductCard({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">必要数量</label>
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <input
                 type="number"
                 min={0}
                 step={product?.id === "p-water-2l" ? 1 : 0.5}
-                className="flex-1 rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 text-right outline-none focus:ring-2 focus:ring-foreground/30 text-sm"
+                className="w-24 sm:w-28 md:w-32 rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 text-right outline-none focus:ring-2 focus:ring-foreground/30 text-sm sm:text-base"
                 value={row.quantity}
                 onChange={(e) => onRowUpdate({ quantity: toSafeNumber(e.target.value, row.quantity, 0) })}
                 aria-label="数量"
               />
-              <span className="text-xs sm:text-sm font-medium text-foreground/70 bg-foreground/5 px-2 sm:px-3 py-2 rounded-md whitespace-nowrap">
+              <span className="text-xs sm:text-sm font-medium text-foreground/70 bg-foreground/5 px-2 sm:px-3 py-2 rounded-md whitespace-nowrap flex-shrink-0">
                 {product?.unit ?? "—"}
               </span>
             </div>
@@ -162,15 +162,15 @@ export function ProductCard({
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">推奨数量</label>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="flex-1 text-sm sm:text-lg font-semibold text-foreground bg-foreground/5 px-2 sm:px-3 py-2 rounded-md border border-black/10 dark:border-white/20 truncate">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <span className="inline-flex items-center justify-end flex-1 min-w-0 text-sm sm:text-base font-semibold text-foreground bg-foreground/5 px-3 py-2 rounded-md border border-black/10 dark:border-white/20 truncate">
                 {rec ?? "—"}{rec != null && product?.unit && ` ${product.unit}`}
               </span>
               <button
                 type="button"
                 disabled={rec == null}
                 onClick={() => rec != null && onRowUpdate({ quantity: rec })}
-                className="btn btn-primary px-3 sm:px-4 py-2 bg-foreground/5 text-foreground hover:bg-foreground/10 disabled:bg-foreground/30 disabled:text-foreground/50 font-medium rounded-md border border-black/10 dark:border-white/20 transition-colors duration-200 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap"
+                className="btn btn-primary px-3 sm:px-4 py-2 bg-foreground/5 text-foreground hover:bg-foreground/10 disabled:bg-foreground/30 disabled:text-foreground/50 font-medium rounded-md border border-black/10 dark:border-white/20 transition-colors duration-200 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
                 title="推奨数量を適用"
               >
                 適用
@@ -223,90 +223,6 @@ export function ProductCard({
             </div>
           </div>
         )}
-
-        {/* 楽天市場価格情報 */}
-        {product?.price && product?.shop && (
-          <div className="bg-orange-50 border border-orange-200 rounded-md p-3 sm:p-4">
-            <div className="flex items-center justify-between text-xs sm:text-sm">
-              <span className="text-orange-800 font-medium">楽天市場最安値</span>
-              <div className="text-right">
-                <div className="text-orange-600 font-bold">
-                  ¥{product.price.toLocaleString()}
-                </div>
-                <div className="text-orange-500 text-xs">
-                  {product.shop}
-                </div>
-              </div>
-            </div>
-            {product.url && (
-              <a
-                href={product.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block mt-2 text-center text-xs bg-orange-600 text-white py-1 px-2 rounded hover:bg-orange-700 transition-colors duration-200"
-              >
-                楽天市場で見る
-              </a>
-            )}
-          </div>
-        )}
-
-        {/* 楽天市場検索セクション */}
-        <div className="border-t border-black/10 dark:border-white/20 pt-4">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-foreground">楽天市場で価格比較</h4>
-            <button
-              type="button"
-              onClick={() => setShowRakutenSearch(!showRakutenSearch)}
-              className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
-            >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-              {showRakutenSearch ? '閉じる' : '検索'}
-            </button>
-          </div>
-
-          {showRakutenSearch && (
-            <div className="mt-3">
-              <RakutenSearchSection
-                title=""
-                description=""
-                showSelectButton={true}
-                onItemSelect={(item) => {
-                  setSelectedRakutenItem(item);
-                  // 備考欄に楽天市場の情報を追加
-                  const rakutenInfo = `楽天市場: ¥${item.price.toLocaleString()} (${item.shop})`;
-                  const currentNotes = row.notes || '';
-                  const newNotes = currentNotes ? `${currentNotes}\n${rakutenInfo}` : rakutenInfo;
-                  onRowUpdate({ notes: newNotes });
-                }}
-              />
-            </div>
-          )}
-
-          {/* 選択された楽天商品の情報表示 */}
-          {selectedRakutenItem && (
-            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-blue-900">選択済み商品</p>
-                  <p className="text-xs text-blue-700 truncate">{selectedRakutenItem.name}</p>
-                  <p className="text-xs text-blue-600">¥{selectedRakutenItem.price.toLocaleString()} - {selectedRakutenItem.shop}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedRakutenItem(null)}
-                  className="text-blue-500 hover:text-blue-700"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </article>
   );

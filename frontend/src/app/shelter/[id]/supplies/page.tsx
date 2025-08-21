@@ -176,7 +176,7 @@ export default function NeedsListForm({
         />
 
         {/* 楽天市場商品データ管理 */}
-        <section className="mx-auto max-w-7xl px-4 py-6">
+        <section className="mx-auto max-w-7xl py-6">
           <RakutenProductManager
             onProductsReady={handleProductsReady}
             onDatabaseProductsReady={handleDatabaseProductsReady}
@@ -185,7 +185,7 @@ export default function NeedsListForm({
         </section>
 
         {/* 商品カードグリッド */}
-        <section className="mx-auto max-w-7xl px-4 pb-24">
+        <section className="mx-auto max-w-7xl pb-24">
           <div className="mb-8">
             <h2 className="text-2xl font-semibold text-foreground mb-2">必要物資リスト</h2>
             <p className="text-sm text-foreground/70">避難所の必要物資を管理し、効率的な支援を実現します</p>
@@ -238,7 +238,7 @@ export default function NeedsListForm({
           <div className="mt-12 text-center">
             <button
               onClick={handleAddRow}
-              className="btn btn-primary inline-flex items-center gap-3 px-8 py-4 rounded-full"
+              className="btn btn-primary inline-flex items-center gap-2 sm:gap-3 px-6 py-3 sm:px-8 sm:py-4 rounded-full text-sm sm:text-base"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
