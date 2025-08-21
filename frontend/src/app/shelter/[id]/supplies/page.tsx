@@ -85,10 +85,10 @@ export default function NeedsListForm({
   
   /**
    * 優先度順ソート（表示用）
-   * high → medium → low の順でソート
+   * HIGH → MEDIUM → LOW の順でソート
    */
   const sortedRows = useMemo(() => {
-    const rank: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
+    const rank: Record<Priority, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
     return [...state.rows].sort((a, b) => rank[a.priority] - rank[b.priority]);
   }, [state.rows]);
 
@@ -142,7 +142,7 @@ export default function NeedsListForm({
       id: Math.random().toString(36).slice(2) + Date.now().toString(36), 
       productId: next.id, 
       quantity: 1, 
-      priority: "medium", 
+      priority: "MEDIUM", 
       notes: "" 
     }});
   }, [state.rows, catalog, dispatch]);
@@ -167,7 +167,7 @@ export default function NeedsListForm({
       return;
     }
 
-    // バックエンドは priority: 'high'|'medium'|'low', category: '医薬品'|'衛生'|'食料'|'生活用品' の文字列をそのまま受け取る
+    // バックエンドは priority: 'HIGH'|'MEDIUM'|'LOW', category: '医薬品'|'衛生'|'食料'|'生活用品' の文字列をそのまま受け取る
 
     const body: NeedsListDto = {
       shelterId,

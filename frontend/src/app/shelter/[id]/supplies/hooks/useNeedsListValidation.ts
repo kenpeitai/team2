@@ -75,6 +75,9 @@ export function useNeedsListValidation(productMap: Map<string, Product>, droneMa
       const wholeOrder = isDroneEligibleWholeOrder(p, r.quantity, droneMaxPayload);
       const plan = dronePlanForItem(p, r.quantity, droneMaxPayload);
 
+      // Priorityの値を大文字に変換（後方互換性のため）
+      const normalizedPriority = r.priority.toUpperCase() as Priority;
+
       return {
         id: r.id,
         productId: r.productId,
@@ -82,7 +85,7 @@ export function useNeedsListValidation(productMap: Map<string, Product>, droneMa
         unit: p.unit,
         category: p.category,
         quantity: r.quantity,
-        priority: r.priority,
+        priority: normalizedPriority,
         notes: r.notes,
 
         perUnitWeightGrams,
@@ -100,7 +103,7 @@ export function useNeedsListValidation(productMap: Map<string, Product>, droneMa
     // 集計 by priority
     const initAgg = { lineCount: 0, units: 0, weightGrams: 0, itemIds: [] as string[] };
     const byPriority: NeedsListPayload["analytics"]["byPriority"] = {
-      high: { ...initAgg }, medium: { ...initAgg }, low: { ...initAgg },
+      HIGH: { ...initAgg }, MEDIUM: { ...initAgg }, LOW: { ...initAgg },
     };
     let totalUnits = 0, totalWeightGrams = 0, waterCases = 0;
     const wholeOrderEligibleIds: string[] = [];

@@ -47,20 +47,20 @@ function generateId() {
 // 重複チェックと修正を行う関数
 function createInitialRows(catalog: Product[]): NeedRow[] {
   if (catalog.length === 0) {
-    return [{
-      id: generateId(),
-      productId: "",
-      quantity: 1,
-      priority: "medium",
-      notes: ""
-    }];
+      return [{
+    id: generateId(),
+    productId: "",
+    quantity: 1,
+    priority: "MEDIUM",
+    notes: ""
+  }];
   }
 
   return [{
     id: generateId(),
     productId: catalog[0].id,
     quantity: 1,
-    priority: "medium",
+    priority: "MEDIUM",
     notes: ""
   }];
 }

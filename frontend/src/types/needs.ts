@@ -1,4 +1,4 @@
-﻿export type Priority = "high" | "medium" | "low";
+﻿export type Priority = "HIGH" | "MEDIUM" | "LOW";
 export type Category = "医薬品" | "衛生" | "食料" | "生活用品";
 
 export interface NeedsListPayload {

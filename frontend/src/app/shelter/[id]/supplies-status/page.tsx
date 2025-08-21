@@ -83,9 +83,9 @@ export default function SuppliesStatusPage() {
         const totalsWeight = items.reduce((s, r) => s + (Number(r.totalWeightGrams) || 0), 0);
         const byPriorityInit = { lineCount: 0, units: 0, weightGrams: 0, itemIds: [] as string[] };
         const byPriority: Record<Priority, typeof byPriorityInit> = {
-          high: { ...byPriorityInit },
-          medium: { ...byPriorityInit },
-          low: { ...byPriorityInit },
+          HIGH: { ...byPriorityInit },
+          MEDIUM: { ...byPriorityInit },
+          LOW: { ...byPriorityInit },
         };
         for (const it of items) {
           const b = byPriority[it.priority];
@@ -149,7 +149,7 @@ export default function SuppliesStatusPage() {
           category: it.category,
           totalQuantity: 0,
           totalWeightGrams: 0,
-          priorityUnits: { high: 0, medium: 0, low: 0 },
+          priorityUnits: { HIGH: 0, MEDIUM: 0, LOW: 0 },
           dronePerUnitEligible: it.dronePerUnitEligible,
           droneUnitsPerFlight: it.droneUnitsPerFlight ?? null,
           droneFlightsRequired: null,
@@ -250,9 +250,9 @@ export default function SuppliesStatusPage() {
       r.totalQuantity,
       r.unit,
       (r.totalWeightGrams / 1000).toFixed(1),
-      r.priorityUnits.high,
-      r.priorityUnits.medium,
-      r.priorityUnits.low,
+      r.priorityUnits.HIGH,
+      r.priorityUnits.MEDIUM,
+      r.priorityUnits.LOW,
       r.dronePerUnitEligible ? "true" : "false",
       r.droneUnitsPerFlight ?? "",
       r.droneFlightsRequired ?? ""
@@ -466,15 +466,15 @@ function PriorityTriplet({
   return (
     <div className="inline-flex items-center gap-1.5 text-sm text-gray-800">
       <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-700 ring-1 ring-red-200">
-        {v.high}
+        {v.HIGH}
         {unit}
       </span>
       <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 ring-1 ring-amber-200">
-        {v.medium}
+        {v.MEDIUM}
         {unit}
       </span>
       <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
-        {v.low}
+        {v.LOW}
         {unit}
       </span>
     </div>

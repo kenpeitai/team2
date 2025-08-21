@@ -23,8 +23,8 @@ export enum TrafficStatus {
 // 商品カテゴリ（バックエンドのEnumに合わせて日本語の文字列）
 export type ProductCategory = '医薬品' | '衛生' | '食料' | '生活用品';
 
-// 優先度（バックエンドのEnumに合わせて小文字の文字列）
-export type Priority = 'high' | 'medium' | 'low';
+// 優先度（バックエンドのEnumに合わせて大文字の文字列）
+export type Priority = 'HIGH' | 'MEDIUM' | 'LOW';
 
 // ユーザーDTOの型定義
 export interface UserDto {
