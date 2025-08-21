@@ -1,6 +1,8 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { Product, NeedRow, Priority, Category } from "../types";
 import { RAKUTEN_RED, RAKUTEN_RED_HOVER, WATER_L_PER_PERSON_PER_DAY, ML_PER_L } from "../constants";
+import { RakutenSearchSection } from "@/components/RakutenSearchSection";
+import { RakutenItem } from "@/lib/api/rakuten";
 
 interface ProductCardProps {
   row: NeedRow;
@@ -58,6 +60,8 @@ export function ProductCard({
   onRemove
 }: ProductCardProps) {
   const rec = calcRecommended(product, evacueeCount, targetDays);
+  const [showRakutenSearch, setShowRakutenSearch] = useState(false);
+  const [selectedRakutenItem, setSelectedRakutenItem] = useState<RakutenItem | null>(null);
 
   return (
     <article className="group bg-white rounded-lg border border-black/10 dark:border-white/20 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
@@ -109,6 +113,36 @@ export function ProductCard({
               </optgroup>
             ))}
           </select>
+        </div>
+
+        {/* 商品名表示 */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">商品名</label>
+          <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
+            <div className="flex items-start gap-2">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-800 leading-relaxed font-medium">
+                  {product?.rakutenActualProductName || product?.name || "商品名が設定されていません"}
+                </p>
+                {/* デバッグ情報 */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="text-xs text-gray-400 mt-1">
+                    <div>Product ID: {product?.id}</div>
+                    <div>Row Product ID: {row.productId}</div>
+                    <div>楽天商品名: {product?.rakutenActualProductName || 'なし'}</div>
+                    <div>検索キーワード: {product?.searchKeyword || 'なし'}</div>
+                    <div>楽天データあり: {product?.rakutenActualProductName ? 'はい' : 'いいえ'}</div>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 数量とおすすめ */}
@@ -194,6 +228,90 @@ export function ProductCard({
             </div>
           </div>
         )}
+
+        {/* 楽天市場価格情報 */}
+        {product?.price && product?.shop && (
+          <div className="bg-orange-50 border border-orange-200 rounded-md p-3 sm:p-4">
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-orange-800 font-medium">楽天市場最安値</span>
+              <div className="text-right">
+                <div className="text-orange-600 font-bold">
+                  ¥{product.price.toLocaleString()}
+                </div>
+                <div className="text-orange-500 text-xs">
+                  {product.shop}
+                </div>
+              </div>
+            </div>
+            {product.url && (
+              <a
+                href={product.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block mt-2 text-center text-xs bg-orange-600 text-white py-1 px-2 rounded hover:bg-orange-700 transition-colors duration-200"
+              >
+                楽天市場で見る
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* 楽天市場検索セクション */}
+        <div className="border-t border-black/10 dark:border-white/20 pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium text-foreground">楽天市場で価格比較</h4>
+            <button
+              type="button"
+              onClick={() => setShowRakutenSearch(!showRakutenSearch)}
+              className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              {showRakutenSearch ? '閉じる' : '検索'}
+            </button>
+          </div>
+
+          {showRakutenSearch && (
+            <div className="mt-3">
+              <RakutenSearchSection
+                title=""
+                description=""
+                showSelectButton={true}
+                onItemSelect={(item) => {
+                  setSelectedRakutenItem(item);
+                  // 備考欄に楽天市場の情報を追加
+                  const rakutenInfo = `楽天市場: ¥${item.price.toLocaleString()} (${item.shop})`;
+                  const currentNotes = row.notes || '';
+                  const newNotes = currentNotes ? `${currentNotes}\n${rakutenInfo}` : rakutenInfo;
+                  onRowUpdate({ notes: newNotes });
+                }}
+              />
+            </div>
+          )}
+
+          {/* 選択された楽天商品の情報表示 */}
+          {selectedRakutenItem && (
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-xs font-medium text-blue-900">選択済み商品</p>
+                  <p className="text-xs text-blue-700 truncate">{selectedRakutenItem.name}</p>
+                  <p className="text-xs text-blue-600">¥{selectedRakutenItem.price.toLocaleString()} - {selectedRakutenItem.shop}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRakutenItem(null)}
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </article>
   );
@@ -261,12 +379,13 @@ function ProductHeroImage({
       return; 
     }
 
-    const given = product.imageUrl ? [product.imageUrl] : [];
+    // 楽天市場の画像を最優先、次にローカルの画像をフォールバック
+    const rakutenImage = product.imageUrl ? [product.imageUrl] : [];
     const id = product.id;
-    const fallbacks = ["/products", "/images"].flatMap((base) =>
+    const localFallbacks = ["/products", "/images"].flatMap((base) =>
       [".png", ".jpg", ".webp"].map((ext) => `${base}/${id}${ext}`)
     );
-    const list = [...given, ...fallbacks];
+    const list = [...rakutenImage, ...localFallbacks];
     onImageStateChange({ candidates: list, src: list[0] ?? null });
   }, [product, allowByPolicy]); // onImageStateChangeを依存配列から削除
 
@@ -278,6 +397,12 @@ function ProductHeroImage({
         <div className="relative z-10">
           <CategoryIcon category={product?.category ?? "生活用品"} size="xl" />
           <p className="text-foreground/50 text-xs sm:text-sm mt-1 sm:mt-2 font-medium text-center">{product?.category ?? "生活用品"}</p>
+          {/* デバッグ情報 */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="text-xs text-gray-400 mt-1">
+              {product?.imageUrl ? '楽天画像あり' : '楽天画像なし'}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -285,7 +410,7 @@ function ProductHeroImage({
 
   return (
     <>
-      <div className="w-full h-32 sm:h-48 overflow-hidden bg-foreground/5">
+      <div className="w-full h-32 sm:h-48 overflow-hidden bg-foreground/5 relative">
         <img
           src={currentSrc}
           alt={product.name}
@@ -293,6 +418,12 @@ function ProductHeroImage({
           onError={onError}
           onClick={() => onImageStateChange({ open: true })}
         />
+        {/* 楽天市場画像のデバッグ情報 */}
+        {process.env.NODE_ENV === 'development' && product?.imageUrl && currentSrc === product.imageUrl && (
+          <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded">
+            楽天画像
+          </div>
+        )}
       </div>
       {currentOpen && (
         <div

@@ -1,12 +1,13 @@
 "use client";
 import Layout from "@/components/Layout";
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState } from "react";
 import { ProductCard } from "./components/ProductCard";
 import { SummaryBar } from "./components/SummaryBar";
 import { useSuppliesState } from "./hooks/useSuppliesState";
 import { useProductCatalog } from "./hooks/useProductCatalog";
 import { useNeedsListValidation } from "./hooks/useNeedsListValidation";
-import { DEFAULT_CATALOG, DRONE_MAX_PAYLOAD_G, WATER_L_PER_PERSON_PER_DAY } from "./constants";
+import { RakutenProductManager } from "@/components/RakutenProductManager";
+import { DRONE_MAX_PAYLOAD_G, WATER_L_PER_PERSON_PER_DAY } from "./constants";
 import { Product, NeedRow, NeedsListPayload, Priority } from "./types";
 
 // ===== Component =====
@@ -23,7 +24,12 @@ export default function NeedsListForm({
   onSubmit?: (payload: NeedsListPayload) => void;
   enforceVerifiedImages?: boolean;
 }) {
-  const catalog = products && products.length > 0 ? products : DEFAULT_CATALOG;
+  const [currentProducts, setCurrentProducts] = useState<Product[]>([]);
+  const [databaseProducts, setDatabaseProducts] = useState<Product[]>([]); // データベース保存用
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // 楽天市場商品データまたはpropsから渡された商品データを使用
+  const catalog = products && products.length > 0 ? products : currentProducts;
   
   const { state, dispatch } = useSuppliesState({
     initialEvacueeCount,
@@ -113,35 +119,64 @@ export default function NeedsListForm({
           onTargetDaysChange={(value) => dispatch({ type: 'SET_TARGET_DAYS', payload: value })}
         />
 
+        {/* 楽天市場商品データ管理 */}
+        <section className="mx-auto max-w-7xl px-4 py-6">
+          <RakutenProductManager
+            onProductsReady={setCurrentProducts}
+            onDatabaseProductsReady={setDatabaseProducts}
+            onLoadingChange={setIsLoading}
+          />
+        </section>
+
         {/* 商品カードグリッド */}
         <section className="mx-auto max-w-7xl px-4 pb-24">
           <div className="mb-8">
             <h2 className="text-2xl font-semibold text-foreground mb-2">必要物資リスト</h2>
             <p className="text-sm text-foreground/70">避難所の必要物資を管理し、効率的な支援を実現します</p>
+            {isLoading && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                  <span className="text-blue-700">楽天市場から商品データを取得中...</span>
+                </div>
+              </div>
+            )}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            {sortedRows.map((row) => (
-              <ProductCard
-                key={row.id}
-                row={row}
-                product={productMap.get(row.productId)}
-                grouped={grouped}
-                selectedIds={selectedIds}
-                evacueeCount={state.evacueeCount}
-                targetDays={state.targetDays}
-                imageState={state.imageStates[row.productId]}
-                enforceVerifiedImages={enforceVerifiedImages}
-                onProductChange={handleProductChange}
-                onRowUpdate={(updates) => dispatch({ type: 'UPDATE_ROW', payload: { id: row.id, updates } })}
-                onImageStateChange={(updates) => dispatch({ 
-                  type: 'SET_IMAGE_STATE', 
-                  payload: { productId: row.productId, updates } 
-                })}
-                onRemove={() => handleRemoveRow(row.id)}
-              />
-            ))}
-          </div>
+          {catalog.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-500 mb-4">
+                <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <p className="text-lg font-medium">商品データを読み込み中...</p>
+                <p className="text-sm">楽天市場から商品情報を取得しています</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+              {sortedRows.map((row) => (
+                <ProductCard
+                  key={row.id}
+                  row={row}
+                  product={productMap.get(row.productId)}
+                  grouped={grouped}
+                  selectedIds={selectedIds}
+                  evacueeCount={state.evacueeCount}
+                  targetDays={state.targetDays}
+                  imageState={state.imageStates[row.productId]}
+                  enforceVerifiedImages={enforceVerifiedImages}
+                  onProductChange={handleProductChange}
+                  onRowUpdate={(updates) => dispatch({ type: 'UPDATE_ROW', payload: { id: row.id, updates } })}
+                  onImageStateChange={(updates) => dispatch({ 
+                    type: 'SET_IMAGE_STATE', 
+                    payload: { productId: row.productId, updates } 
+                  })}
+                  onRemove={() => handleRemoveRow(row.id)}
+                />
+              ))}
+            </div>
+          )}
 
           {/* 追加ボタン */}
           <div className="mt-12 text-center">
