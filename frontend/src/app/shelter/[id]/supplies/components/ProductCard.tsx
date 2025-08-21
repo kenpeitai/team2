@@ -264,7 +264,7 @@ function ProductHeroImage({
     const given = product.imageUrl ? [product.imageUrl] : [];
     const id = product.id;
     const fallbacks = ["/products", "/images"].flatMap((base) =>
-      [".jpg", ".png", ".webp"].map((ext) => `${base}/${id}${ext}`)
+      [".png", ".jpg", ".webp"].map((ext) => `${base}/${id}${ext}`)
     );
     const list = [...given, ...fallbacks];
     onImageStateChange({ candidates: list, src: list[0] ?? null });
