@@ -24,10 +24,11 @@ export async function getCheapestItemByKeyword(keyword: string): Promise<Rakuten
     format: "json",
     formatVersion: "2",          // レスポンスをフラット化
     keyword,                     // 製品名や型番/JANでもOK
+    orFlag: "0",                // AND検索（すべての語を含む）
     availability: "1",           // 在庫ありのみ
     imageFlag: "1",              // 画像ありのみ
     sort: "+itemPrice",          // 価格昇順 = 最安から
-    hits: "1",                   // 1件だけ取得
+    hits: "10",                  // 複数件取得してクライアント側で厳格フィルタ
     elements:
       "itemName,itemPrice,itemUrl,mediumImageUrls,shopName,reviewAverage,reviewCount,itemCode"
   });
@@ -54,27 +55,40 @@ export async function getCheapestItemByKeyword(keyword: string): Promise<Rakuten
       }
     }
 
-    const data = await res.json();
-    
+    const dataJson = await res.json();
+
     // レスポンスの構造を確認（Items または items）
-    const items = data.Items || data.items;
-    const item = items?.[0];
-    if (!item) {
+    const rawItems = (dataJson.Items || dataJson.items || []) as any[];
+    if (!Array.isArray(rawItems) || rawItems.length === 0) {
       return null;
     }
 
-    return {
-      name: item.itemName as string,
-      price: item.itemPrice as number,
-      url: item.itemUrl as string,
-      image: Array.isArray(item.mediumImageUrls) && item.mediumImageUrls.length > 0 
-        ? item.mediumImageUrls[0] as string 
+    const terms = keyword
+      .split(/\s+/)
+      .map((t: string) => t.trim())
+      .filter((t: string) => t.length > 0);
+
+    // 楽天レスポンスを正規化
+    const mapped: RakutenItem[] = rawItems.map((it: any) => ({
+      name: it.itemName as string,
+      price: it.itemPrice as number,
+      url: it.itemUrl as string,
+      image: Array.isArray(it.mediumImageUrls) && it.mediumImageUrls.length > 0
+        ? (it.mediumImageUrls[0] as string)
         : undefined,
-      shop: item.shopName as string,
-      rating: item.reviewAverage as number | undefined,
-      reviews: item.reviewCount as number | undefined,
-      itemCode: item.itemCode as string | undefined
-    };
+      shop: it.shopName as string,
+      rating: (it.reviewAverage as number | undefined),
+      reviews: (it.reviewCount as number | undefined),
+      itemCode: it.itemCode as string | undefined,
+    }));
+
+    // 両語（全語）含有フィルタ
+    const filtered = terms.length > 0
+      ? mapped.filter((i) => terms.every((t) => i.name.includes(t)))
+      : mapped;
+
+    const target = (filtered.length > 0 ? filtered : []).sort((a, b) => a.price - b.price)[0];
+    return target ?? null;
   } catch (error) {
     console.error('楽天市場API呼び出し中にエラーが発生しました:', error);
     return null;
@@ -95,6 +109,7 @@ export async function getItemsByKeyword(keyword: string, limit: number = 10): Pr
     format: "json",
     formatVersion: "2",
     keyword,
+    orFlag: "0", // AND検索
     availability: "1",
     imageFlag: "1",
     sort: "+itemPrice",

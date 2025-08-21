@@ -8,7 +8,10 @@ import { useProductCatalog } from "./hooks/useProductCatalog";
 import { useNeedsListValidation } from "./hooks/useNeedsListValidation";
 import { RakutenProductManager } from "@/components/RakutenProductManager";
 import { DRONE_MAX_PAYLOAD_G, WATER_L_PER_PERSON_PER_DAY } from "./constants";
-import { Product, NeedRow, NeedsListPayload, Priority } from "./types";
+import { Product, NeedRow, NeedsListPayload, Priority, Category } from "./types";
+import { useParams } from "next/navigation";
+import { createNeedsList } from "@/lib/api/supplies";
+import { Priority as ApiPriority, ProductCategory, type NeedsListDto } from "@/types/api";
 
 // ===== 型定義 =====
 
@@ -35,8 +38,8 @@ export default function NeedsListForm({
 }: NeedsListFormProps) {
   // ===== 状態管理 =====
   const [currentProducts, setCurrentProducts] = useState<Product[]>([]);
-  const [databaseProducts, setDatabaseProducts] = useState<Product[]>([]); // データベース保存用
   const [isLoading, setIsLoading] = useState(false);
+  const params = useParams<{ id: string }>();
   
   // ===== データ処理 =====
   
@@ -49,9 +52,10 @@ export default function NeedsListForm({
   
   /**
    * データベース保存用商品データの準備完了時のハンドラー
+   * 現状は未使用だが、将来的な拡張のために受け取っておく
    */
-  const handleDatabaseProductsReady = useCallback((products: Product[]) => {
-    setDatabaseProducts(products);
+  const handleDatabaseProductsReady = useCallback((_products: Product[]) => {
+    // no-op
   }, []);
   
   /**
@@ -155,14 +159,62 @@ export default function NeedsListForm({
     const payload = validateAndCreatePayload(state);
     if (!payload) return;
 
+    const shelterId = Number(params?.id);
+    if (!Number.isFinite(shelterId) || shelterId <= 0) {
+      alert("URLの避難所IDが不正です");
+      return;
+    }
+
+    const toApiPriority: Record<Priority, ApiPriority> = {
+      high: ApiPriority.HIGH,
+      medium: ApiPriority.MEDIUM,
+      low: ApiPriority.LOW,
+    };
+
+    const toApiCategory: Record<Category, ProductCategory> = {
+      "医薬品": ProductCategory.MEDICINE,
+      "衛生": ProductCategory.HYGIENE,
+      "食料": ProductCategory.FOOD,
+      "生活用品": ProductCategory.OTHER,
+    };
+
+    const body: NeedsListDto = {
+      shelterId,
+      evacueeCount: payload.evacueeCount,
+      targetDays: payload.targetDays,
+      totalUnits: payload.analytics.totals.units,
+      totalWeightGrams: payload.analytics.totals.weightGrams,
+      waterCases: payload.analytics.totals.waterCases,
+      items: payload.items.map((it) => ({
+        productId: it.productId,
+        productName: it.productName,
+        unit: it.unit,
+        category: toApiCategory[it.category],
+        quantity: it.quantity,
+        priority: toApiPriority[it.priority],
+        notes: it.notes,
+        perUnitWeightGrams: it.perUnitWeightGrams,
+        totalWeightGrams: it.totalWeightGrams,
+        droneEligible: it.droneEligible,
+        droneEligibleWholeOrder: it.droneEligibleWholeOrder,
+        dronePerUnitEligible: it.dronePerUnitEligible,
+        droneUnitsPerFlight: it.droneUnitsPerFlight ?? 0,
+        droneFlightsRequired: it.droneFlightsRequired ?? 0,
+      })),
+    };
+
     dispatch({ type: 'SET_SAVING', payload: true });
     try {
-      onSubmit ? onSubmit(payload) : console.log("NeedsListPayload", payload);
+      if (onSubmit) onSubmit(payload);
+      await createNeedsList(body);
       alert("必要物資リストを作成しました");
+    } catch (e: any) {
+      const message = e?.message || "保存に失敗しました";
+      alert(`エラー: ${message}`);
     } finally {
       dispatch({ type: 'SET_SAVING', payload: false });
     }
-  }, [state, validateAndCreatePayload, onSubmit, dispatch]);
+  }, [state, validateAndCreatePayload, onSubmit, dispatch, params?.id]);
 
   return (
     <Layout>
