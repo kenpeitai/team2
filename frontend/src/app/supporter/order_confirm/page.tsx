@@ -15,10 +15,7 @@ export default function OrderConfirmationPage() {
     cardInfo.slice(0, -4).replace(/./g, "*") + cardInfo.slice(-4);
 
   // 合計金額
-  const total = products.reduce(
-    (sum, p) => sum + p.price * p.quantity,
-    0
-  );
+  const total = products.reduce((sum, p) => sum + p.price * p.quantity, 0);
 
   // ダミー：注文確定押したとき
   const confirmOrder = () => {
@@ -27,8 +24,9 @@ export default function OrderConfirmationPage() {
 
   return (
     <div className="container">
+      {/* タイトル */}
       <h1 className="title">注文確認</h1>
-      <hr className="divider" />
+
       <p className="warning">
         ＊ まだ注文は確定しておりません ＊ <br />
         内容をご確認の上、ページ下部の『注文確定』をタップお願いいたします。
@@ -123,13 +121,11 @@ export default function OrderConfirmationPage() {
           padding-bottom: 80px; /* 下のボタン領域分 */
         }
         .title {
-          text-align: center;
-          margin-bottom: 8px;
-        }
-        .divider {
-          border: none;
-          border-top: 2px solid #ccc;
-          margin: 8px 0 16px;
+          text-align: left;
+          font-size: 28px;
+          margin: 16px 0;
+          margin-left: 12px; /* 少し右に */
+          font-weight: bold;
         }
         .warning {
           color: firebrick;
