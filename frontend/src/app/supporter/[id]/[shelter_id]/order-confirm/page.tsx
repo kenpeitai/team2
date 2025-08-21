@@ -197,7 +197,7 @@ export default function OrderConfirmationPage() {
       };
       localStorage.setItem("paymentData", JSON.stringify(completeData));
       
-      router.push(`/supporter/${supporterId}/${shelterId}/order_conplete`);
+      router.push(`/supporter/${supporterId}/${shelterId}/order-complete`);
       
       // localStorageをクリア（paymentDataは完了ページで使用するため残す）
       localStorage.removeItem("cart");

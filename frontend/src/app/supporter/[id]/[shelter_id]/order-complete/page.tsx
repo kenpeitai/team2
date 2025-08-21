@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import BackButton from "@/components/BackButton";
 
-export default function OrderConpletePage() {
+export default function OrderCompletePage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const [orderInfo, setOrderInfo] = useState<Record<string, unknown> | null>(null);

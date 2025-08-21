@@ -31,7 +31,7 @@ export default function SupporterLayout({
             <div className="flex items-center space-x-4">
               {/* かごページのパスは運用に合わせて。/cart か /supporter/cart など */}
               <Link
-                href="/supporter/shopping_cart"
+                href="/supporter/shopping-cart"
                 className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 かごを見る

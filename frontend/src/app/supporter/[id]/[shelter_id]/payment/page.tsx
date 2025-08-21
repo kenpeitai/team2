@@ -159,7 +159,7 @@ export default function PaymentPage() {
       localStorage.setItem("paymentData", JSON.stringify(payload));
       
       // 跳转到订单确认页面
-      router.push(`/supporter/${supporterId}/${shelterId}/order_confirm`);
+      router.push(`/supporter/${supporterId}/${shelterId}/order-confirm`);
     }
   };
 

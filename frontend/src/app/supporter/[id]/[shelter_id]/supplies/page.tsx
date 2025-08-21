@@ -310,7 +310,7 @@ export default function SupporterDonationPage() {
       console.log("所有商品已成功添加到购物车");
       
       // 跳转到购物车页面
-      window.location.href = `/supporter/${supporterId}/${shelterId}/shopping_cart`;
+      window.location.href = `/supporter/${supporterId}/${shelterId}/shopping-cart`;
     } catch (err) {
       console.error("购物车处理失败:", err);
       console.error("错误详情:", err);
