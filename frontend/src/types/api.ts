@@ -29,7 +29,6 @@ export type Priority = 'high' | 'medium' | 'low';
 // ユーザーDTOの型定義
 export interface UserDto {
   id?: number;
-  username: string;
   email: string;
   password?: string;
   fullName: string;
@@ -41,6 +40,8 @@ export interface UserDto {
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  // バックエンドDTOには存在しないが、既存コード互換のためオプション化
+  username?: string;
 }
 
 // 避難所DTOの型定義
@@ -214,4 +215,6 @@ export interface ApiError {
   message: string;
   status?: number;
   timestamp?: string;
+  // バリデーションエラーのときに返ってくるフィールド別エラー
+  details?: Record<string, string>;
 }

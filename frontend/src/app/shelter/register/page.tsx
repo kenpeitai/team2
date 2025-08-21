@@ -1,50 +1,48 @@
 "use client";
-import { useReducer } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { createShelter } from '@/lib/api';
+import { runValidation, required, minLengthN, emailFmt, phoneFmt } from '@/lib/validation';
 import type { ApiError, ShelterDto } from '@/types/api';
 
-type RegisterState = {
-  loading: boolean;
-  message: string | null;
-  errors: Record<string, string> | null;
-};
+function validateShelterInput(body: ShelterDto): Record<string, string> {
+  return runValidation(body, {
+    shelterName: [required('避難所名は必須です')],
+    shelterAddress: [required('住所は必須です')],
+    representativeLastName: [required('苗字は必須です')],
+    representativeFirstName: [required('名は必須です')],
+    phoneNumber: [required('電話番号は必須です'), phoneFmt()],
+    email: [required('メールアドレスは必須です'), emailFmt()],
+    password: [required('パスワードは必須です'), minLengthN(8, 'パスワードは8文字以上で入力してください')],
+  });
+}
 
-type RegisterAction = 
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_MESSAGE'; payload: string | null }
-  | { type: 'SET_ERRORS'; payload: Record<string, string> | null }
-  | { type: 'RESET' };
-
-const registerReducer = (state: RegisterState, action: RegisterAction): RegisterState => {
-  switch (action.type) {
-    case 'SET_LOADING':
-      return { ...state, loading: action.payload };
-    case 'SET_MESSAGE':
-      return { ...state, message: action.payload };
-    case 'SET_ERRORS':
-      return { ...state, errors: action.payload };
-    case 'RESET':
-      return { loading: false, message: null, errors: null };
-    default:
-      return state;
+function extractErrorsFromApiError(err: unknown): Record<string, string> {
+  const apiErr = err as ApiError;
+  const cause = (apiErr as any)?.cause as { status?: number; message?: string; details?: Record<string, string> } | undefined;
+  if (cause?.details) return cause.details;
+  if (cause?.status === 409 && cause?.message) {
+    const duplicateErrors: Record<string, string> = {};
+    if (cause.message.includes('メールアドレス')) duplicateErrors.email = cause.message;
+    if (cause.message.includes('避難所名')) duplicateErrors.shelterName = cause.message;
+    return duplicateErrors;
   }
-};
+  if (cause?.message || apiErr?.message) {
+    console.error(cause?.message ?? apiErr.message);
+  }
+  return {};
+}
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [state, dispatch] = useReducer(registerReducer, {
-    loading: false,
-    message: null,
-    errors: null
-  });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    dispatch({ type: 'SET_LOADING', payload: true });
-    dispatch({ type: 'SET_MESSAGE', payload: null });
-    dispatch({ type: 'SET_ERRORS', payload: null });
+    setLoading(true);
+    setErrors({});
 
     const form = new FormData(e.currentTarget);
     const getStr = (key: string) => {
@@ -61,22 +59,24 @@ export default function RegisterPage() {
       password: getStr('password'),
     };
 
+    const clientErrors = validateShelterInput(body);
+    if (Object.keys(clientErrors).length > 0) {
+      setErrors(clientErrors);
+      setLoading(false);
+      return;
+    }
+
     try {
-      await createShelter(body);
-      dispatch({ type: 'SET_MESSAGE', payload: '登録が完了しました' });
-      // フォームのリセット処理を安全に行う
-      if (e.currentTarget) {
-        e.currentTarget.reset();
+      const created = await createShelter(body);
+      const id = created?.id;
+      if (id) {
+        router.push(`/shelter/${id}/home`);
+        return;
       }
-      // 登録成功後、home画面に遷移
-      setTimeout(() => {
-        router.push('/shelter/home');
-      }, 1500);
     } catch (err) {
-      const apiErr = err as ApiError;
-      dispatch({ type: 'SET_MESSAGE', payload: apiErr.message ?? '登録に失敗しました' });
+      setErrors(extractErrorsFromApiError(err));
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      setLoading(false);
     }
   }
 
@@ -93,6 +93,9 @@ export default function RegisterPage() {
               <label htmlFor="shelterName" className="block text-sm font-medium mb-1">
                 避難所名
               </label>
+              {errors?.shelterName && (
+                <p className="text-sm text-red-600 mb-1">{errors.shelterName}</p>
+              )}
               <input
                 id="shelterName"
                 name="shelterName"
@@ -107,6 +110,9 @@ export default function RegisterPage() {
               <label htmlFor="shelterAddress" className="block text-sm font-medium mb-1">
                 避難所の住所
               </label>
+              {errors?.shelterAddress && (
+                <p className="text-sm text-red-600 mb-1">{errors.shelterAddress}</p>
+              )}
               <input
                 id="shelterAddress"
                 name="shelterAddress"
@@ -126,6 +132,9 @@ export default function RegisterPage() {
                   <label htmlFor="representativeLastName" className="sr-only">
                     苗字
                   </label>
+                  {errors?.representativeLastName && (
+                    <p className="text-sm text-red-600 mb-1">{errors.representativeLastName}</p>
+                  )}
                   <input
                     id="representativeLastName"
                     name="representativeLastName"
@@ -139,6 +148,9 @@ export default function RegisterPage() {
                   <label htmlFor="representativeFirstName" className="sr-only">
                     名
                   </label>
+                  {errors?.representativeFirstName && (
+                    <p className="text-sm text-red-600 mb-1">{errors.representativeFirstName}</p>
+                  )}
                   <input
                     id="representativeFirstName"
                     name="representativeFirstName"
@@ -157,6 +169,9 @@ export default function RegisterPage() {
               <label htmlFor="phoneNumber" className="block text-sm font-medium mb-1">
                 電話番号
               </label>
+              {errors?.phoneNumber && (
+                <p className="text-sm text-red-600 mb-1">{errors.phoneNumber}</p>
+              )}
               <input
                 id="phoneNumber"
                 name="phoneNumber"
@@ -172,6 +187,9 @@ export default function RegisterPage() {
               <label htmlFor="email" className="block text-sm font-medium mb-1">
                 メールアドレス
               </label>
+              {errors?.email && (
+                <p className="text-sm text-red-600 mb-1">{errors.email}</p>
+              )}
               <input
                 id="email"
                 name="email"
@@ -186,6 +204,9 @@ export default function RegisterPage() {
               <label htmlFor="password" className="block text-sm font-medium mb-1">
                 パスワード
               </label>
+              {errors?.password && (
+                <p className="text-sm text-red-600 mb-1">{errors.password}</p>
+              )}
               <input
                 id="password"
                 name="password"
@@ -198,7 +219,7 @@ export default function RegisterPage() {
           </section>
 
           <div className="pt-2">
-            <button type="submit" disabled={state.loading} className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-60">
+            <button type="submit" disabled={loading} className="btn btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-full disabled:opacity-60">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -208,19 +229,9 @@ export default function RegisterPage() {
               >
                 <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 11-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
-              <span>{state.loading ? '送信中...' : '登録'}</span>
+              <span>{loading ? '送信中...' : '登録'}</span>
             </button>
           </div>
-          {state.message && (
-            <p className="text-sm mt-2">{state.message}</p>
-          )}
-          {state.errors && (
-            <ul className="text-sm mt-2 list-disc pl-6">
-              {Object.entries(state.errors).map(([k, v]) => (
-                <li key={k}>{k}: {v}</li>
-              ))}
-            </ul>
-          )}
         </form>
       </div>
     </div>
