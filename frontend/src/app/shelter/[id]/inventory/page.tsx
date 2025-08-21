@@ -130,8 +130,9 @@ export default function InventoryPage() {
       if (Number.isFinite(shelterId)) {
         router.push(`/shelter/${shelterId}/home`);
       }
-    } catch (e: any) {
-      alert(e?.message ?? '保存に失敗しました');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '保存に失敗しました';
+      alert(msg);
     } finally {
       setSaving(false);
     }
@@ -183,8 +184,9 @@ export default function InventoryPage() {
       setNewQuantity(0);
       setSelectedCode('');
       alert('在庫を追加しました');
-    } catch (e: any) {
-      alert(e?.message ?? '在庫の追加に失敗しました');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '在庫の追加に失敗しました';
+      alert(msg);
     } finally {
       setAdding(false);
     }
@@ -212,7 +214,7 @@ export default function InventoryPage() {
             />
             <select
               value={filter}
-              onChange={(e) => setFilter(e.target.value as any)}
+              onChange={(e) => setFilter(e.target.value as 'all' | '食料・水' | '生活用品' | '衛生' | '医薬品')}
               className="rounded-xl border px-3 py-3"
               disabled={loading}
             >

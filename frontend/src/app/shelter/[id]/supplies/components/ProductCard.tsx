@@ -39,7 +39,7 @@ function calcRecommended(p: Product | undefined, evacueeCount: number, targetDay
   return Math.round(val * 2) / 2; // 0.5刻み
 }
 
-function toSafeNumber(v: any, def = 0, min?: number) {
+function toSafeNumber(v: unknown, def = 0, min?: number) {
   const n = typeof v === "number" ? v : Number(v);
   const f = Number.isFinite(n) ? n : def;
   return typeof min === "number" ? Math.max(min, f) : f;

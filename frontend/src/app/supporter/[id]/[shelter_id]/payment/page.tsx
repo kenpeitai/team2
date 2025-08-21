@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import BackButton from "@/components/BackButton";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 // ===== Types =====
 export type PaymentMethod = "card"; // 避難所向け: カード限定
@@ -52,6 +52,7 @@ function cvcLength(brand: SavedCard["brand"]) {
 // ===== Page =====
 export default function PaymentPage() {
   const router = useRouter();
+  const params = useParams<{ id: string; shelter_id: string }>();
 
   const [method, setMethod] = useState<PaymentMethod>("card");
   const [saveCard, setSaveCard] = useState(true);
@@ -103,14 +104,14 @@ export default function PaymentPage() {
       let totalAmount = 0;
       if (cartData) {
         try {
-          const cart = JSON.parse(cartData);
-          totalAmount = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+          const cart = JSON.parse(cartData) as Array<{ price: number; quantity: number }>;
+          totalAmount = cart.reduce((sum: number, item) => sum + (item.price * item.quantity), 0);
         } catch (error) {
           console.error("购物车数据解析失败:", error);
         }
       }
       
-      let payload: any = { 
+      const payload: Record<string, unknown> = { 
         method,
         orderId,
         totalAmount,
@@ -193,7 +194,7 @@ export default function PaymentPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
       <div className="mb-6">
-        <BackButton fallbackHref={`/supporter/${supporterId}/home`} />
+        <BackButton fallbackHref={`/supporter/${params?.id}/home`} />
       </div>
       <nav className="text-sm mb-4 text-gray-500">
         <Link href="/cart" className="hover:underline">カート</Link>

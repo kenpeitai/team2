@@ -200,13 +200,13 @@ export default function NeedsListForm({
       await createNeedsList(body);
       alert("必要物資リストを作成しました");
       router.push(`/shelter/${shelterId}/home`);
-    } catch (e: any) {
-      const message = e?.message || "保存に失敗しました";
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "保存に失敗しました";
       alert(`エラー: ${message}`);
     } finally {
       dispatch({ type: 'SET_SAVING', payload: false });
     }
-  }, [state, validateAndCreatePayload, onSubmit, dispatch, params?.id]);
+  }, [state, validateAndCreatePayload, onSubmit, dispatch, params?.id, router]);
 
   return (
     <Layout>

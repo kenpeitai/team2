@@ -6,9 +6,11 @@ import { checkRakutenApiStatus } from '@/lib/api/rakuten';
 
 // ===== 型定義 =====
 
+import type { Product } from '@/app/shelter/[id]/supplies/types';
+
 interface RakutenProductManagerProps {
-  onProductsReady: (products: any[]) => void;
-  onDatabaseProductsReady?: (products: any[]) => void; // データベース保存用
+  onProductsReady: (products: Product[]) => void;
+  onDatabaseProductsReady?: (products: Product[]) => void; // データベース保存用
   onLoadingChange?: (loading: boolean) => void;
 }
 

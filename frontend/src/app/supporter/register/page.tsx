@@ -68,7 +68,8 @@ export default function RegisterSupporterPage() {
       router.push('/supporter/home');
       return;
     } catch (err) {
-      const cause = (err as any)?.cause as { details?: Record<string, string>; message?: string } | undefined;
+      const maybe = err as unknown as { cause?: { details?: Record<string, string>; message?: string } };
+      const cause = maybe?.cause;
       if (cause?.details) {
         setErrors(cause.details);
       } else {

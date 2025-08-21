@@ -10,6 +10,34 @@ export interface RakutenItem {
   itemCode?: string;  // 楽天市場の商品コード
 }
 
+// 楽天の検索API(20220601, formatVersion=2) で返るフラット化アイテムの最小型
+type RakutenFlatItem = {
+  itemName: string;
+  itemPrice: number;
+  itemUrl: string;
+  mediumImageUrls?: Array<string | { imageUrl: string }>
+  shopName: string;
+  reviewAverage?: number;
+  reviewCount?: number;
+  itemCode?: string;
+};
+
+type RakutenSearchFlatResponse = {
+  Items?: RakutenFlatItem[];
+  items?: RakutenFlatItem[];
+};
+
+function getFirstImageUrl(input: unknown): string | undefined {
+  if (!Array.isArray(input) || input.length === 0) return undefined;
+  const first = input[0] as unknown;
+  if (typeof first === 'string') return first;
+  if (typeof first === 'object' && first !== null && 'imageUrl' in first) {
+    const img = (first as { imageUrl?: unknown }).imageUrl;
+    return typeof img === 'string' ? img : undefined;
+  }
+  return undefined;
+}
+
 // 最安1件を取る：キーワードは「製品名 型番」など具体的に。
 export async function getCheapestItemByKeyword(keyword: string): Promise<RakutenItem | null> {
   const appId = process.env.NEXT_PUBLIC_RAKUTEN_APP_ID;
@@ -55,10 +83,14 @@ export async function getCheapestItemByKeyword(keyword: string): Promise<Rakuten
       }
     }
 
-    const dataJson = await res.json();
+    const dataJson: unknown = await res.json();
 
     // レスポンスの構造を確認（Items または items）
-    const rawItems = (dataJson.Items || dataJson.items || []) as any[];
+    const rawItems: RakutenFlatItem[] = (
+      (dataJson as RakutenSearchFlatResponse).Items ||
+      (dataJson as RakutenSearchFlatResponse).items ||
+      []
+    );
     if (!Array.isArray(rawItems) || rawItems.length === 0) {
       return null;
     }
@@ -69,17 +101,15 @@ export async function getCheapestItemByKeyword(keyword: string): Promise<Rakuten
       .filter((t: string) => t.length > 0);
 
     // 楽天レスポンスを正規化
-    const mapped: RakutenItem[] = rawItems.map((it: any) => ({
-      name: it.itemName as string,
-      price: it.itemPrice as number,
-      url: it.itemUrl as string,
-      image: Array.isArray(it.mediumImageUrls) && it.mediumImageUrls.length > 0
-        ? (it.mediumImageUrls[0] as string)
-        : undefined,
-      shop: it.shopName as string,
-      rating: (it.reviewAverage as number | undefined),
-      reviews: (it.reviewCount as number | undefined),
-      itemCode: it.itemCode as string | undefined,
+    const mapped: RakutenItem[] = rawItems.map((it) => ({
+      name: it.itemName,
+      price: it.itemPrice,
+      url: it.itemUrl,
+      image: getFirstImageUrl(it.mediumImageUrls),
+      shop: it.shopName,
+      rating: it.reviewAverage,
+      reviews: it.reviewCount,
+      itemCode: it.itemCode,
     }));
 
     // 両語（全語）含有フィルタ
@@ -139,22 +169,24 @@ export async function getItemsByKeyword(keyword: string, limit: number = 10): Pr
       }
     }
 
-    const data = await res.json();
+    const data: unknown = await res.json();
     
     // レスポンスの構造を確認（Items または items）
-    const items = data.Items || data.items || [];
+    const items: RakutenFlatItem[] = (
+      (data as RakutenSearchFlatResponse).Items ||
+      (data as RakutenSearchFlatResponse).items ||
+      []
+    );
 
-    return items.map((item: any) => ({
-      name: item.itemName as string,
-      price: item.itemPrice as number,
-      url: item.itemUrl as string,
-      image: Array.isArray(item.mediumImageUrls) && item.mediumImageUrls.length > 0 
-        ? item.mediumImageUrls[0] as string 
-        : undefined,
-      shop: item.shopName as string,
-      rating: item.reviewAverage as number | undefined,
-      reviews: item.reviewCount as number | undefined,
-      itemCode: item.itemCode as string | undefined
+    return items.map((item) => ({
+      name: item.itemName,
+      price: item.itemPrice,
+      url: item.itemUrl,
+      image: getFirstImageUrl(item.mediumImageUrls),
+      shop: item.shopName,
+      rating: item.reviewAverage,
+      reviews: item.reviewCount,
+      itemCode: item.itemCode
     }));
   } catch (error) {
     console.error('楽天市場API呼び出し中にエラーが発生しました:', error);

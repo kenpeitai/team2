@@ -1,5 +1,5 @@
 export type FieldErrors = Record<string, string>;
-export type RuleFn = (value: any, allValues?: Record<string, any>) => string | null;
+export type RuleFn = (value: unknown, allValues?: Record<string, unknown>) => string | null;
 
 export function isNonEmpty(value: string | undefined | null): boolean {
   return typeof value === 'string' && value.trim().length > 0;
@@ -32,15 +32,16 @@ export function collectErrors(rules: Array<{ key: string; error: string | null }
   return errs;
 }
 
-export function runValidation<T extends Record<string, any>>(
-  values: T,
+export function runValidation(
+  values: unknown,
   schema: Record<string, RuleFn[]>
 ): FieldErrors {
   const errs: FieldErrors = {};
+  const dict = values as Record<string, unknown>;
   for (const key of Object.keys(schema)) {
     const rules = schema[key] || [];
     for (const rule of rules) {
-      const msg = rule((values as any)[key], values as any);
+      const msg = rule(dict[key], dict);
       if (msg) {
         errs[key] = msg;
         break;
@@ -51,13 +52,19 @@ export function runValidation<T extends Record<string, any>>(
 }
 
 // カリー化ルール（ページ側の記述を最小化）
-export const required = (message?: string): RuleFn => (v) => validateRequired(v, message);
-export const minLengthN = (min: number, message?: string): RuleFn => (v) => validateMinLength(v, min, message);
-export const emailFmt = (message?: string): RuleFn => (v) => validateEmail(v, message);
-export const phoneFmt = (message?: string): RuleFn => (v) => validatePhone(v, message);
+export const required = (message?: string): RuleFn => (v) =>
+  validateRequired((typeof v === 'string' || v == null) ? v : String(v), message);
+export const minLengthN = (min: number, message?: string): RuleFn => (v) =>
+  validateMinLength((typeof v === 'string' || v == null) ? v : String(v), min, message);
+export const emailFmt = (message?: string): RuleFn => (v) =>
+  validateEmail((typeof v === 'string' || v == null) ? v : String(v), message);
+export const phoneFmt = (message?: string): RuleFn => (v) =>
+  validatePhone((typeof v === 'string' || v == null) ? v : String(v), message);
 export const sameAs = (otherKey: string, message: string): RuleFn => (v, all) => {
   if (!all) return null;
-  return v === (all as any)[otherKey] ? null : message;
+  const other = (all as Record<string, unknown>)[otherKey];
+  if (typeof v !== 'string' || typeof other !== 'string') return null;
+  return v === other ? null : message;
 };
 
 

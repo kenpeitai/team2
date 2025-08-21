@@ -7,7 +7,7 @@ import BackButton from "@/components/BackButton";
 export default function OrderConpletePage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
-  const [orderInfo, setOrderInfo] = useState<any>(null);
+  const [orderInfo, setOrderInfo] = useState<Record<string, unknown> | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [totalAmount, setTotalAmount] = useState<number | null>(null);
   const [supporterId, setSupporterId] = useState<string | null>(null);

@@ -48,7 +48,7 @@ export function useRakutenProducts(onProductsReady?: (products: Product[]) => vo
   // ===== 状態管理 =====
   const [products, setProducts] = useState<Map<string, RakutenProductData>>(new Map());
   const [isInitialized, setIsInitialized] = useState(false);
-  const [searchCache, setSearchCache] = useState<Map<string, { data: any; timestamp: number }>>(new Map());
+  const [searchCache, setSearchCache] = useState<Map<string, { data: RakutenProductData['rakutenItem'] | null; timestamp: number }>>(new Map());
 
   // ===== 初期化処理 =====
   
@@ -190,7 +190,7 @@ export function useRakutenProducts(onProductsReady?: (products: Product[]) => vo
         });
       });
     }
-  }, [products, searchCache, CACHE_DURATION, generateRakutenProductId]);
+  }, [products, searchCache, generateRakutenProductId]);
 
   /**
    * 複数の商品を順次検索（レート制限対応）

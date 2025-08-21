@@ -187,7 +187,7 @@ export default function SuppliesStatusPage() {
   const rows = useMemo(() => {
     const kw = q.trim().toLowerCase();
     const f = grouped.filter((r) => {
-      if (kw && !(r.productName.toLowerCase().includes(kw) || r.category.includes(q as any)))
+      if (kw && !(r.productName.toLowerCase().includes(kw) || r.category.includes(q as string)))
         return false;
       if (onlyDroneable && !r.dronePerUnitEligible) return false;
       if (catFilter !== "all" && r.category !== catFilter) return false;
@@ -310,7 +310,10 @@ export default function SuppliesStatusPage() {
             <select
               className="rounded-xl border px-3 py-3"
               value={catFilter}
-              onChange={(e) => setCatFilter((e.target.value as any) || "all")}
+              onChange={(e) => {
+                const v = e.target.value;
+                setCatFilter(v === "all" ? "all" : (v as Category));
+              }}
             >
               <option value="all">すべてのカテゴリ</option>
               {categories.map((c) => (

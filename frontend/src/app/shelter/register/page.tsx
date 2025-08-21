@@ -20,7 +20,8 @@ function validateShelterInput(body: ShelterDto): Record<string, string> {
 
 function extractErrorsFromApiError(err: unknown): Record<string, string> {
   const apiErr = err as ApiError;
-  const cause = (apiErr as any)?.cause as { status?: number; message?: string; details?: Record<string, string> } | undefined;
+  const maybe = apiErr as unknown as { cause?: { status?: number; message?: string; details?: Record<string, string> } };
+  const cause = maybe?.cause;
   if (cause?.details) return cause.details;
   if (cause?.status === 409 && cause?.message) {
     const duplicateErrors: Record<string, string> = {};
