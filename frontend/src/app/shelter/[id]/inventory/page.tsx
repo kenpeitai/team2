@@ -179,7 +179,6 @@ export default function InventoryPage() {
         setItems((prev) => ([...(prev ?? []), created]));
       }
       setNewName('');
-      setNewCategory('食料・水');
       setNewQuantity(0);
       setSelectedCode('');
       alert('在庫を追加しました');
@@ -253,12 +252,6 @@ export default function InventoryPage() {
                   ))}
                 </optgroup>
               </select>
-            </div>
-            <div>
-              <div className="block text-sm text-gray-600 mb-1">カテゴリ</div>
-              <div className="px-3 py-3 rounded-xl border bg-gray-50 text-gray-700">
-                {selectedCatalog?.category ?? newCategory}
-              </div>
             </div>
             <div className="sm:col-span-1">
               <label htmlFor="new-quantity" className="block text-sm text-gray-600 mb-1">数量</label>

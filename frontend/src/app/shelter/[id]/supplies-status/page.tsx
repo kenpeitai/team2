@@ -179,7 +179,7 @@ export default function SuppliesStatusPage() {
     const a = document.createElement("a");
     a.href = url;
     const ts = data?.savedAtISO?.replace(/[:.]/g, "-") ?? "latest";
-    a.download = `supplies_status-by-product-${ts}.csv`;
+    a.download = `supplies-status-by-product-${ts}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }

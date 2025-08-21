@@ -24,8 +24,17 @@ export default function Home() {
       return;
     }
     const fetchStatus = async () => {
+      try {
         const data = await getShelterStatus(idNum);
         setStatus(data);
+      } catch (err) {
+        const statusCode = (err as { cause?: { status?: number } } | undefined)?.cause?.status;
+        if (statusCode === 404) {
+          setStatus(null);
+          return;
+        }
+        console.warn('避難所状況の取得に失敗しました', err);
+      }
     };
     fetchStatus();
   }, [shelterId]);
@@ -107,9 +116,9 @@ export default function Home() {
               </div>
 
               <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-                {/* 今の注文を確認 → supplies_status */}
+                {/* 今の注文を確認 → supplies-status */}
                 <Link
-                  href="/shelter/supplies_status"
+                  href={`/shelter/${shelterId}/supplies-status`}
                   className="group rounded-xl border px-4 py-4 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
                 >
                   <div className="flex items-start gap-3">
@@ -145,7 +154,7 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">在庫・その他メニュー</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <MenuCard
-                href={status ? `/shelter/${shelterId}/shelter_status` : `/shelter/${shelterId}/shelter-input`}
+                href={status ? `/shelter/${shelterId}/shelter-status` : `/shelter/${shelterId}/shelter-input`}
                 title="避難所状況"
                 description={status ? "避難所状況の登録・更新" : "避難所状況の新規登録"}
                 icon="🏠"

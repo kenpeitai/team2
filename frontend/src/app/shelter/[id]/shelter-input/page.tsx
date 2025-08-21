@@ -36,6 +36,8 @@ export default function ShelterInputPage() {
   const { shelter, loading, error, refetch } = useShelter();
 
   const [formData, setFormData] = useState<ShelterStatusForm>(DEFAULT_FORM);
+  const [evacueeInput, setEvacueeInput] = useState<string>('0');
+  const [injuredInput, setInjuredInput] = useState<string>('0');
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -50,6 +52,8 @@ export default function ShelterInputPage() {
         waterStatus: shelter.waterStatus ?? DEFAULT_FORM.waterStatus,
         trafficStatus: shelter.trafficStatus ?? DEFAULT_FORM.trafficStatus,
       });
+      setEvacueeInput(String(shelter.evacueeCount ?? DEFAULT_FORM.evacueeCount));
+      setInjuredInput(String(shelter.injuredCount ?? DEFAULT_FORM.injuredCount));
     }
   }, [shelter]);
 
@@ -76,8 +80,7 @@ export default function ShelterInputPage() {
         ...formData,
       };
       await updateShelterStatusRecord(parseInt(shelterId), payload);
-      alert('避難所情報が更新されました');
-      router.push(`/shelter/${shelterId}/shelter_status`);
+      router.push(`/shelter/${shelterId}/shelter-status`);
     } catch (err) {
       console.error('更新に失敗しました:', err);
       alert('更新に失敗しました');
@@ -85,6 +88,13 @@ export default function ShelterInputPage() {
       setSubmitting(false);
     }
   };
+
+  // 全角→半角の数値正規化
+  const toHalfWidthNumeric = (s: string) =>
+    s
+      .replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xFEE0))
+      .replace(/．/g, '.')
+      .replace(/－/g, '-');
 
   if (loading) {
     return (
@@ -159,10 +169,17 @@ export default function ShelterInputPage() {
                   </label>
                   <input
                     id="evacueeCount"
-                    type="number"
-                    min={0}
-                    value={formData.evacueeCount ?? 0}
-                    onChange={(e) => handleInputChange('evacueeCount', Number(e.target.value) || 0)}
+                    type="text"
+                    inputMode="numeric"
+                    value={evacueeInput}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      setEvacueeInput(raw);
+                      const normalized = toHalfWidthNumeric(raw).trim();
+                      const num = normalized === '' ? 0 : Number(normalized);
+                      if (!Number.isFinite(num) || num < 0) return;
+                      handleInputChange('evacueeCount', num);
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -172,10 +189,17 @@ export default function ShelterInputPage() {
                   </label>
                   <input
                     id="injuredCount"
-                    type="number"
-                    min={0}
-                    value={formData.injuredCount ?? 0}
-                    onChange={(e) => handleInputChange('injuredCount', Number(e.target.value) || 0)}
+                    type="text"
+                    inputMode="numeric"
+                    value={injuredInput}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      setInjuredInput(raw);
+                      const normalized = toHalfWidthNumeric(raw).trim();
+                      const num = normalized === '' ? 0 : Number(normalized);
+                      if (!Number.isFinite(num) || num < 0) return;
+                      handleInputChange('injuredCount', num);
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -262,7 +286,7 @@ export default function ShelterInputPage() {
             <div className="flex justify-end space-x-4 pt-4">
               <button
                 type="button"
-                onClick={() => router.push(`/shelter/${shelterId}/shelter_status`)}
+                onClick={() => router.push(`/shelter/${shelterId}/shelter-status`)}
                 className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 disabled={submitting}
               >
@@ -271,7 +295,7 @@ export default function ShelterInputPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                className="btn btn-primary px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
                 {submitting ? '更新中...' : '更新する'}
               </button>
