@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Layout from '@/components/Layout';
 
-// Rakutenカラー（NeedsListFormに合わせる）
+// Rakutenカラー
 const RAKUTEN_RED = '#BF0000';
 const RAKUTEN_RED_HOVER = '#990000';
 
