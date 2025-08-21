@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import Layout from '@/components/Layout'; // ご指定の共通Layoutコンポーネントをインポート
+import SupporterLayout from '@/components/SupporterLayout'; // 支援者用Layoutコンポーネントをインポート
 
 // ===== 型定義 =====
 interface Shelter {
@@ -68,6 +68,17 @@ const ProgressStep = ({ icon, label, isActive, isCompleted }: { icon: string; la
 export default function SupporterHomePage() {
   const [selectedShelterId, setSelectedShelterId] = useState<number | null>(null);
 
+  // 跳转到物资页面的函数
+  const handleViewSupplies = () => {
+    if (selectedShelterId) {
+      // 获取当前URL中的supporter ID
+      const currentPath = window.location.pathname;
+      const supporterId = currentPath.split('/')[2]; // /supporter/[id]/home -> [id]
+      // 跳转到特定避难所的物资页面
+      window.location.href = `/supporter/${supporterId}/${selectedShelterId}/supplies`;
+    }
+  };
+
   const sheltersList: Shelter[] = [
     { id: 1, name: '中区役所避難所', address: '愛知県名古屋市中区栄四丁目1番8号', imageUrl: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=160&fit=crop', evacueeCount: 95, urgentNeeds: ['飲料水', '医薬品'], lastUpdated: '2時間前' },
     { id: 2, name: '中村スポーツセンター', address: '愛知県名古屋市中村区中村町字待屋43番地の1', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=160&fit=crop', evacueeCount: 150, urgentNeeds: ['食料品', '毛布'], lastUpdated: '30分前' },
@@ -86,7 +97,7 @@ export default function SupporterHomePage() {
   };
 
   return (
-    <Layout>
+    <SupporterLayout>
       <div className="min-h-screen bg-gray-50 p-6 sm:p-10">
         <div className="max-w-7xl mx-auto space-y-8">
           
@@ -133,7 +144,12 @@ export default function SupporterHomePage() {
             {selectedShelterId && (
               <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between">
                 <p className="text-blue-800 font-medium">📋 選択された避難所: <span className="font-bold">{sheltersList.find(s => s.id === selectedShelterId)?.name}</span></p>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200">この避難所の支援リストを見る →</button>
+                <button 
+                  onClick={handleViewSupplies}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
+                >
+                  この避難所の支援リストを見る →
+                </button>
               </div>
             )}
           </section>
@@ -156,6 +172,6 @@ export default function SupporterHomePage() {
           )}
         </div>
       </div>
-    </Layout>
+    </SupporterLayout>
   );
 }
