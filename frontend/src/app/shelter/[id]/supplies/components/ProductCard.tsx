@@ -256,7 +256,11 @@ function PriorityChip({ priority }: { priority: Priority }) {
       icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
     },
   };
-  const v = map[priority];
+  
+  // 優先度の値を正規化（大文字に変換）
+  const normalizedPriority = priority?.toUpperCase() as Priority;
+  const v = map[normalizedPriority] || map.MEDIUM; // デフォルトは中優先度
+  
   return (
     <span className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-semibold border ${v.cls}`}>
       <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
