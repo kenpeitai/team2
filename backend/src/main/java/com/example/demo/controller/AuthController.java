@@ -35,8 +35,8 @@ public class AuthController {
             UserDto createdUserDto = convertToDto(user);
             
             AuthResponse response = new AuthResponse(
+                "dummy-token-" + user.getId(), // 登録後もトークンを返す
                 "登録が完了しました", 
-                "ユーザー登録が正常に完了しました", 
                 createdUserDto
             );
             
@@ -130,6 +130,7 @@ public class AuthController {
     private UserDto convertToDto(User user) {
         UserDto dto = new UserDto();
         dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setFullName(user.getFullName());
         dto.setRole(user.getRole());

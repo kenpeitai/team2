@@ -44,14 +44,7 @@ export default function RegisterSupporterPage() {
       return;
     }
 
-    // バックエンド互換: 一時的にusername必須のため自動生成して送信
-    const username = (values.email.split('@')[0] || values.fullName || values.phoneNumber || 'user')
-      .toString()
-      .replace(/\s+/g, '')
-      .slice(0, 50);
-
     const body: UserDto = {
-      username,
       fullName: values.fullName,
       phoneNumber: values.phoneNumber,
       email: values.email,
@@ -61,6 +54,13 @@ export default function RegisterSupporterPage() {
     try {
       const resp = await registerUser(body);
       const id = resp?.user?.id;
+      const token = resp?.token;
+      
+      // 保存token到localStorage
+      if (token) {
+        localStorage.setItem("token", token);
+      }
+      
       if (id) {
         router.push(`/supporter/${id}/home`);
         return;

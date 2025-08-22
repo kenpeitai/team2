@@ -25,12 +25,24 @@ public class UserService {
     
     // ユーザー登録
     public User createUser(UserDto userDto) {
+        // ユーザー名が空の場合は自動生成
+        String username = userDto.getUsername();
+        if (username == null || username.trim().isEmpty()) {
+            username = generateUsername();
+        }
+        
+        // ユーザー名の重複チェック
+        if (userRepository.existsByUsername(username)) {
+            throw new DuplicateResourceException("このユーザー名は既に使用されています");
+        }
+        
         // メールアドレスの重複チェック
         if (userRepository.existsByEmail(userDto.getEmail())) {
             throw new DuplicateResourceException("このメールアドレスは既に登録されています");
         }
         
         User user = new User();
+        user.setUsername(username);
         user.setEmail(userDto.getEmail());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         user.setFullName(userDto.getFullName());
@@ -45,9 +57,29 @@ public class UserService {
         return userRepository.save(user);
     }
     
+    // ユーザー名自動生成メソッド
+    private String generateUsername() {
+        String[] adjectives = {"happy", "brave", "kind", "wise", "bright", "calm", "gentle", "smart", "quick", "warm"};
+        String[] nouns = {"helper", "supporter", "friend", "hero", "star", "angel", "guardian", "champion", "warrior", "protector"};
+        
+        String adj = adjectives[(int) (Math.random() * adjectives.length)];
+        String noun = nouns[(int) (Math.random() * nouns.length)];
+        int randomNum = (int) (Math.random() * 1000);
+        
+        return adj + "_" + noun + "_" + randomNum;
+    }
+    
     // ユーザー情報更新
     public User updateUser(Long id, UserDto userDto) {
         User user = getUserById(id);
+        
+        // ユーザー名の重複チェック（自分以外）
+        if (userDto.getUsername() != null && !userDto.getUsername().equals(user.getUsername())) {
+            if (userRepository.existsByUsername(userDto.getUsername())) {
+                throw new DuplicateResourceException("このユーザー名は既に使用されています");
+            }
+            user.setUsername(userDto.getUsername());
+        }
         
         // メールアドレスの重複チェック（自分以外）
         if (userDto.getEmail() != null && !userDto.getEmail().equals(user.getEmail())) {

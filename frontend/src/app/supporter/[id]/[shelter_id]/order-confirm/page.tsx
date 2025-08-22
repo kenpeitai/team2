@@ -6,6 +6,8 @@ import Link from "next/link";
 import { getCart } from '@/lib/api/cart';
 import { request } from '@/lib/api/base';
 import { getUserPaymentInfo } from '@/lib/api/userPayment';
+import { getShelterById } from '@/lib/api/shelters';
+import { getUserById } from '@/lib/api/users';
 import BackButton from "@/components/BackButton";
 
 // 型定義
@@ -35,6 +37,13 @@ interface OrderData {
   payment: PaymentData;
   cartItems: CartItem[];
   totalAmount: number;
+  shelter?: {
+    id: number;
+    shelterName: string;
+    shelterAddress: string;
+    phoneNumber: string;
+    email: string;
+  };
 }
 
 interface OrderResponse {
@@ -105,6 +114,26 @@ export default function OrderConfirmationPage() {
           };
         }
 
+        // 避難所情報を取得
+        let shelterInfo;
+        try {
+          shelterInfo = await getShelterById(parseInt(shelterId));
+          console.log("避難所情報:", shelterInfo);
+        } catch (error) {
+          console.error("避難所情報の取得に失敗しました:", error);
+          // 避難所情報の取得に失敗した場合でも注文は続行
+        }
+
+        // ユーザー情報を取得
+        let userInfo;
+        try {
+          userInfo = await getUserById(parseInt(supporterId));
+          console.log("ユーザー情報:", userInfo);
+        } catch (error) {
+          console.error("ユーザー情報の取得に失敗しました:", error);
+          // ユーザー情報の取得に失敗した場合でも注文は続行
+        }
+
         // データベースからカートデータを取得
         try {
           const cartData = await getCart(parseInt(supporterId), parseInt(shelterId));
@@ -126,11 +155,24 @@ export default function OrderConfirmationPage() {
           console.log("処理されたカートアイテム:", cartItems);
           console.log("合計金額:", totalAmount);
           
-          setOrderData({
-            payment,
-            cartItems,
-            totalAmount
-          });
+                     setOrderData({
+             payment,
+             cartItems,
+             totalAmount,
+             shelter: shelterInfo ? {
+               id: shelterInfo.id,
+               shelterName: shelterInfo.shelterName,
+               shelterAddress: shelterInfo.shelterAddress,
+               phoneNumber: shelterInfo.phoneNumber,
+               email: shelterInfo.email
+             } : undefined,
+             user: userInfo ? {
+               id: userInfo.id,
+               fullName: userInfo.fullName,
+               phoneNumber: userInfo.phoneNumber,
+               email: userInfo.email
+             } : undefined
+           });
         } catch (error) {
           console.error("カートデータの取得に失敗しました:", error);
           // カートデータの取得に失敗した場合、エラーメッセージを表示
@@ -360,20 +402,23 @@ export default function OrderConfirmationPage() {
             </div>
           </div>
 
-          {/* 配送情報 */}
-          <div className="space-y-4">
-            <h3 className="font-semibold">配送情報</h3>
-            <div className="p-4 border rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">配送先住所</p>
-              <p className="font-medium">テスト住所</p>
-              
-              <p className="text-sm text-gray-600 mb-1 mt-3">連絡先電話番号</p>
-              <p className="font-medium">090-1234-5678</p>
-              
-              <p className="text-sm text-gray-600 mb-1 mt-3">連絡先メール</p>
-              <p className="font-medium">test@example.com</p>
-            </div>
-          </div>
+                     {/* 配送情報 */}
+           <div className="space-y-4">
+             <h3 className="font-semibold">配送情報</h3>
+             <div className="p-4 border rounded-lg">
+               <p className="text-sm text-gray-600 mb-1">避難所名</p>
+               <p className="font-medium">{orderData.shelter?.shelterName || '避難所情報なし'}</p>
+               
+               <p className="text-sm text-gray-600 mb-1 mt-3">配送先住所</p>
+               <p className="font-medium">{orderData.shelter?.shelterAddress || '住所情報なし'}</p>
+               
+               <p className="text-sm text-gray-600 mb-1 mt-3">避難所連絡先電話番号</p>
+               <p className="font-medium">{orderData.shelter?.phoneNumber || '電話番号情報なし'}</p>
+               
+               <p className="text-sm text-gray-600 mb-1 mt-3">避難所連絡先メール</p>
+               <p className="font-medium">{orderData.shelter?.email || 'メール情報なし'}</p>
+             </div>
+           </div>
         </div>
       </div>
 
