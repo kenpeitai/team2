@@ -210,7 +210,7 @@ export default function NeedsListForm({
   }, [state, validateAndCreatePayload, onSubmit, dispatch, params?.id, router]);
 
   return (
-    <Layout>
+    <Layout shelterId={params?.id ?? ""}>
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-4 pt-4 mb-6">
           <BackButton fallbackHref={`/shelter/${params?.id}/home`} />

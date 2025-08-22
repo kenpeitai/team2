@@ -279,7 +279,7 @@ export default function SuppliesStatusPage() {
   }
 
   return (
-    <Layout>
+    <Layout shelterId={params?.id ?? ""}>
       <div className="min-h-screen bg-white pb-24">
         <div className="mx-auto max-w-screen-xl px-4 pt-8 pb-4">
           <div className="mb-6">
