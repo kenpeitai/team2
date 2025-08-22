@@ -2,7 +2,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/lib/api";
 
@@ -29,23 +28,30 @@ export default function SupporterLayout({
     return '/supporter/1/1/shopping-cart'; // 默认链接
   };
 
-  const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // 生成支援者主页链接
+  const getHomeLink = (): string => {
+    const pathParts = pathname.split('/');
+    if (pathParts.length >= 3) {
+      // 从路径中提取supporter ID
+      const supporterId = pathParts[2];
+      return `/supporter/${supporterId}/home`;
+    }
+    return '/supporter/1/home'; // 默认链接
+  };
 
-  useEffect(() => {
-    setMounted(true);
-    setIsLoggedIn(!!localStorage.getItem("token"));
-  }, []);
+  const router = useRouter();
 
   const handleLogout = async () => {
     try {
+      // 调用后端logout API
       await logout();
     } catch (error) {
       console.error("Failed to logout", error);
     } finally {
+      // 无论API调用成功与否，都清除本地token并跳转
       localStorage.removeItem("token");
-      router.push("/supporter/login");
+      // 强制跳转到登录页面
+      window.location.href = "/supporter/login";
     }
   };
 
@@ -58,7 +64,7 @@ export default function SupporterLayout({
             {/* ロゴとタイトル */}
             <div className="flex items-center space-x-4">
               {/* ← 支援者側ホームへ */}
-              <Link href="/supporter/home" aria-label="Supporter Home" className="inline-flex items-center">
+              <Link href={getHomeLink()} aria-label="Supporter Home" className="inline-flex items-center">
                 <Image
                   src="/rakuten-logo.png"
                   alt="楽天ロゴ"
@@ -72,48 +78,27 @@ export default function SupporterLayout({
               </h1>
             </div>
 
-            {/* 右ナビ（必要に応じて調整） */}
-            <div className="flex items-center space-x-4">
-              {shouldShowCartLink && (
-                <Link
-                  href={getCartLink()}
-                  className="inline-flex items-center gap-2 text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-                  </svg>
-                  かごを見る
-                </Link>
-              )}
-              {mounted && isLoggedIn ? (
-                <button
-                  onClick={handleLogout}
-                  className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                  type="button"
-                >
-                  ログアウト
-                </button>
-              ) : (
-                <Link 
-                  href="/supporter/login" 
-                  className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  ログイン
-                </Link>
-              )}
-              <Link 
-                href="/supporter/register" 
-                className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                新規登録
-              </Link>
-              <Link
-                href="/supporter/shopping-cart"
-                className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                かごを見る
-              </Link>
-            </div>
+                         {/* 右ナビ（必要に応じて調整） */}
+             <div className="flex items-center space-x-4">
+               {shouldShowCartLink && (
+                 <Link
+                   href={getCartLink()}
+                   className="inline-flex items-center gap-2 text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                 >
+                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                   </svg>
+                   かごを見る
+                 </Link>
+               )}
+               <button
+                 onClick={handleLogout}
+                 className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                 type="button"
+               >
+                 ログアウト
+               </button>
+             </div>
           </div>
         </div>
       </header>

@@ -12,6 +12,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @Size(max = 50, message = "ユーザー名は50文字以内で入力してください")
+    @Column(name = "username", nullable = true, unique = true)
+    private String username;
+    
     @NotBlank(message = "メールアドレスは必須です")
     @Email(message = "メールアドレスの形式が正しくありません")
     @Column(name = "email", nullable = false, unique = true)
@@ -66,6 +70,9 @@ public class User {
     // Getter and Setter methods
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
     
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
