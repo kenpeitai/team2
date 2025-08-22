@@ -144,12 +144,12 @@ export function ProductCard({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">必要数量</label>
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="flex items-center gap-1 sm:gap-1 min-w-0">
               <input
                 type="number"
                 min={0}
                 step={product?.id === "p-water-2l" ? 1 : 0.5}
-                className="w-24 sm:w-28 md:w-32 rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 text-right outline-none focus:ring-2 focus:ring-foreground/30 text-sm sm:text-base"
+                className="w-24 sm:w-28 md:w-24 rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 text-right outline-none focus:ring-2 focus:ring-foreground/30 text-sm sm:text-base"
                 value={row.quantity}
                 onChange={(e) => onRowUpdate({ quantity: toSafeNumber(e.target.value, row.quantity, 0) })}
                 aria-label="数量"
@@ -162,15 +162,24 @@ export function ProductCard({
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">推奨数量</label>
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <span className="inline-flex items-center justify-end flex-1 min-w-0 text-sm sm:text-base font-semibold text-foreground bg-foreground/5 px-3 py-2 rounded-md border border-black/10 dark:border-white/20 truncate">
-                {rec ?? "—"}{rec != null && product?.unit && ` ${product.unit}`}
-              </span>
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex-1 min-w-0 bg-foreground/5 rounded-md border border-black/10 dark:border-white/20 px-3 py-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm sm:text-base font-semibold text-foreground">
+                    {rec ?? "—"}
+                  </span>
+                  {rec != null && product?.unit && (
+                    <span className="text-xs sm:text-sm text-foreground/70 ml-2 whitespace-nowrap">
+                      {product.unit}
+                    </span>
+                  )}
+                </div>
+              </div>
               <button
                 type="button"
                 disabled={rec == null}
                 onClick={() => rec != null && onRowUpdate({ quantity: rec })}
-                className="btn btn-primary px-3 sm:px-4 py-2 bg-foreground/5 text-foreground hover:bg-foreground/10 disabled:bg-foreground/30 disabled:text-foreground/50 font-medium rounded-md border border-black/10 dark:border-white/20 transition-colors duration-200 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
+                className="px-3 sm:px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-medium rounded-md transition-colors duration-200 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
                 title="推奨数量を適用"
               >
                 適用

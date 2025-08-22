@@ -33,16 +33,6 @@ export const RAKUTEN_PRODUCT_CATALOG: RakutenProductDefinition[] = [
     recommendedPerPersonPerDay: 0.2
   },
 
-  // === 生活用品・衛生 ===
-  {
-    id: "p-blanket",
-    name: "毛布",
-    searchKeywords: [ "防災 毛布"],
-    unit: "枚",
-    weightGrams: 800,
-    category: "生活用品"
-  },
-
   // === 医薬品 ===
   {
     id: "m-acetaminophen",
