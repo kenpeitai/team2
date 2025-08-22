@@ -198,7 +198,7 @@ export default function InventoryPage() {
   };
 
   return (
-    <Layout>
+    <Layout shelterId={params?.id ?? ""}>
       <div className="min-h-screen bg-white overflow-x-hidden pb-24">
         {/* ヘッダ */}
         <div className="mx-auto max-w-screen-xl px-4 pt-8 pb-4">

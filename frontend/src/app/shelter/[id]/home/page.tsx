@@ -37,7 +37,7 @@ export default function Home() {
   }, [id]);
 
   return (
-    <Layout>
+    <Layout shelterId={id}>
       <div className="space-y-6">
         {/* ページタイトル */}
         <div className="bg-white rounded-lg shadow-sm p-6">

@@ -7,8 +7,10 @@ import { logout } from "@/lib/api";
 
 export default function Layout({
   children,
+  shelterId,
 }: Readonly<{
   children: React.ReactNode;
+  shelterId: string;
 }>) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -37,7 +39,7 @@ export default function Layout({
           <div className="flex items-center justify-between h-16">
             {/* ロゴとタイトル */}
             <div className="flex items-center space-x-4">
-              <Link href="/shelter/home" aria-label="Home" className="inline-flex items-center">
+              <Link href={`/shelter/${shelterId}/home`} aria-label="Home" className="inline-flex items-center">
                 <Image
                   src="/rakuten-logo.png"
                   alt="楽天ロゴ"

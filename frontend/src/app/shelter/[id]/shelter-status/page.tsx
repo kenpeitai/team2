@@ -66,7 +66,7 @@ export default function ShelterStatusPage() {
 
   if (loading || statusLoading) {
     return (
-      <Layout>
+      <Layout shelterId={shelterId}>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -79,7 +79,7 @@ export default function ShelterStatusPage() {
 
   if (error || statusError) {
     return (
-      <Layout>
+      <Layout shelterId={shelterId}>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="text-red-600 mb-4">
@@ -105,7 +105,7 @@ export default function ShelterStatusPage() {
 
   if (!shelter || !status) {
     return (
-      <Layout>
+      <Layout shelterId={shelterId}>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <p className="text-gray-600">避難所が見つかりません</p>
@@ -116,7 +116,7 @@ export default function ShelterStatusPage() {
   }
 
   return (
-    <Layout>
+    <Layout shelterId={shelterId}>
       <div className="min-h-screen flex items-start justify-center p-6 sm:p-10">
         <div className="w-full max-w-2xl">
           <BackButton fallbackHref={`/shelter/${shelterId}/home`} className="mb-6" />
