@@ -18,9 +18,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // メールアドレスの重複チェック
     boolean existsByEmail(String email);
     
-    // ユーザー名の重複チェック
-    boolean existsByUsername(String username);
-    
     // ロールで検索
     List<User> findByRole(UserRole role);
     

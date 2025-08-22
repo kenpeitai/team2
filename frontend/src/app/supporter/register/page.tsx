@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Layout from '@/components/ShelterLayout';
 import { registerUser } from '@/lib/api';
 import type { ApiError, UserDto } from '@/types/api';
 import { runValidation, required, minLengthN, emailFmt, phoneFmt, sameAs } from '@/lib/validation';
+import SupporterLayout from '@/components/SupporterLayout';
+
 
 export default function RegisterSupporterPage() {
   const router = useRouter();
@@ -81,7 +82,7 @@ export default function RegisterSupporterPage() {
   }
 
   return (
-    <Layout>
+    <SupporterLayout>
       <div className="min-h-screen flex items-start justify-center p-6 sm:p-10">
         <div className="w-full max-w-2xl">
           <h1 className="text-2xl font-semibold mb-2">支援者情報登録</h1>
@@ -152,6 +153,6 @@ export default function RegisterSupporterPage() {
           </form>
         </div>
       </div>
-    </Layout>
+    </SupporterLayout>
   );
 }
