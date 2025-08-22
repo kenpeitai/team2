@@ -40,8 +40,6 @@ export interface UserDto {
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  // バックエンドDTOには存在しないが、既存コード互換のためオプション化
-  username?: string;
 }
 
 // 避難所DTOの型定義
