@@ -179,7 +179,7 @@ export function ProductCard({
                 type="button"
                 disabled={rec == null}
                 onClick={() => rec != null && onRowUpdate({ quantity: rec })}
-                className="px-3 sm:px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-medium rounded-md transition-colors duration-200 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
+                className="btn-primary px-3 sm:px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-medium rounded-md transition-colors duration-200 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
                 title="推奨数量を適用"
               >
                 適用
