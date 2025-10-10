@@ -50,7 +50,7 @@ A comprehensive disaster relief management platform that connects shelters with 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/kenpeitai/team2.git
+   git clone https://github.com/kenpeitai/DisasterReliefManagementSystem.git
    cd team2
    ```
 
